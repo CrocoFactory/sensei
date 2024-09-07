@@ -1,0 +1,37 @@
+[tool.poetry]
+name = 'sensei'
+version = '0.1.0.alpha1'
+description = 'The python framework, providing fast and robust way to build client-side API wrappers.'
+authors = ['Alexey  <axbelenkov@gmail.com>']
+license = 'MIT'
+readme = 'README.md'
+repository = 'https://github.com/blnkoff/sensei'
+homepage = 'https://github.com/blnkoff/sensei'
+classifiers = [
+    'Development Status :: 2 - Pre-Alpha',
+    'Intended Audience :: Developers',
+    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3 :: Only',
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: MacOS'
+]
+packages = [{ include = 'sensei' }]
+
+[tool.poetry.dependencies]
+python = '^3.11'
+pydantic = "^2.9.0"
+typing-extensions = "^4.12.2"
+httpx = "^0.27.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.2.2"
+python-dotenv = "^1.0.1"
+build = "^1.2.1"
+twine = "^5.1.1"
+croco-cli = "^0.3.1"
+
+[build-system]
+requires = ['poetry-core']
+build-backend = 'poetry.core.masonry.api'
