@@ -8,7 +8,7 @@ readme = 'README.md'
 repository = 'https://github.com/blnkoff/sensei'
 homepage = 'https://github.com/blnkoff/sensei'
 classifiers = [
-    'Development Status :: 2 - Pre-Alpha',
+    'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',
     'Topic :: Software Development :: Libraries :: Python Modules',
     'Programming Language :: Python :: 3.11',
