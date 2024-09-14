@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'sensei'
-version = '0.1.0.alpha1'
+version = '0.1.0.beta1'
 description = 'The python framework, providing fast and robust way to build client-side API wrappers.'
 authors = ['Alexey  <axbelenkov@gmail.com>']
 license = 'MIT'

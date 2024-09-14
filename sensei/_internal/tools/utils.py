@@ -98,7 +98,7 @@ def set_method_type(func: Callable):
         else:
             first_arg = args[0]
 
-            func_name = getattr(first_arg, func.__name__)
+            func_name = getattr(first_arg, func.__name__, None)
             is_first_self = hasattr(first_arg, func.__name__) and getattr(func_name, '__self__', None) is first_arg
 
             if is_first_self:

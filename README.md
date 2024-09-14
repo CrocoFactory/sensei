@@ -6,14 +6,14 @@
 [![Development Status](https://img.shields.io/pypi/status/sensei)](https://pypi.org/project/sensei/)
 
 The python framework, providing fast and robust way to build client-side API wrappers.
-         
+                       
 - **[Bug reports](https://github.com/blnkoff/sensei/issues)**
 
-Source code is made available under the [MIT License](LICENSE)
+Source code is made available under the [MIT License](LICENSE).  
                    
 # Quick Overview
 
-Here is example of code.
+Here is example of OOP style.
 
 ```python
 from typing import Annotated
@@ -67,7 +67,7 @@ print(user == users[0])
 
 ```
 
-Another example
+Example of functional style.
 
 ```python
 from typing import Annotated
