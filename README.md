@@ -6,76 +6,77 @@
 [![Development Status](https://img.shields.io/pypi/status/sensei)](https://pypi.org/project/sensei/)
 
 The python framework, providing fast and robust way to build client-side API wrappers.
-         
+                       
 - **[Bug reports](https://github.com/blnkoff/sensei/issues)**
 
-Source code is made available under the [MIT License](LICENSE)
+Source code is made available under the [MIT License](LICENSE).  
                    
 # Quick Overview
 
-Here is example of code.
+Here is example of OOP style.
 
 ```python
 from typing import Annotated
 from httpx import Response
-from sensei import Router, Query, Path, BaseModel
+from sensei import Router, Query, Path, APIModel
 
 router = Router('https://reqres.in/api')
 
 
-class User(BaseModel):
+class User(APIModel):
     email: str
     id: int
     first_name: str
     last_name: str
     avatar: str
 
+    @classmethod
+    @router.get('/users')
+    def query(
+            cls,
+            page: Annotated[int, Query(1)],
+            per_page: Annotated[int, Query(3, le=7)],
+    ) -> list["User"]:
+        ...
 
-@router.get('/users')
-def get_users(
-        page: Annotated[int, Query(1)],
-        per_page: Annotated[int, Query(3, le=7)],
-) -> list[User]:
-    ...
+    @staticmethod
+    @query.finalizer()
+    def _query_out(
+            response: Response,
+    ) -> list["User"]:
+        json = response.json()
+        users = [User(**user) for user in json['data']]
+        return users
+
+    @classmethod
+    @router.get('/users/{id_}')
+    def get(cls, id_: Annotated[int, Path(alias='id')]) -> "User":
+        ...
+
+    @staticmethod
+    @get.finalizer
+    def _get_out(response: Response) -> "User":
+        json = response.json()
+        return User(**json['data'])
 
 
-@get_users.finalizer
-def _get_users_out(
-        response: Response,
-) -> list[User]:
-    json = response.json()
-    users = [User(**user) for user in json['data']]
-    return users
+users = User.query(per_page=7)
+user_id = users[0].id
+user = User.get(user_id)
+print(user == users[0])
 
-
-@router.get('/users/{id_}')
-def get_user(id_: Annotated[int, Path(alias='id')]) -> User:
-    ...
-
-
-@get_user.finalizer
-def _get_user_out(response: Response) -> User:
-    json = response.json()
-    return User(**json['data'])
-        
-
-users = get_users(per_page=7)
-user_id = users[1].id
-
-user = get_user(user_id)
-print(user == users[1])
 ```
 
-Another example
+Example of functional style.
 
 ```python
 from typing import Annotated
-from sensei import Router, Path, BaseModel
+from sensei import Router, Path, APIModel
 
 router = Router('https://pokeapi.co/api/v2/')
 
 
-class Pokemon(BaseModel):
+class Pokemon(APIModel):
     name: str
     id: int
     height: int
