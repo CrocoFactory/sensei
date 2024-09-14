@@ -1,4 +1,5 @@
-from typing import Literal
+from typing import Literal, Self
+from enum import StrEnum
 
 HTTPMethod = Literal[
     "GET",
@@ -11,3 +12,13 @@ HTTPMethod = Literal[
     "CONNECT",
     "TRACE"
 ]
+
+
+class MethodType(StrEnum):
+    INSTANCE = "instance"
+    CLASS = "class"
+    STATIC = "static"
+
+    @classmethod
+    def self_method(cls, method: Self) -> bool:
+        return method in (cls.CLASS, cls.INSTANCE)
