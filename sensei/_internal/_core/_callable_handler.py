@@ -3,7 +3,7 @@ from typing import Callable, TypeVar, Generic, Any, Self
 from pydantic import BaseModel
 from sensei.client import Manager, AsyncClient, Client
 from sensei._base_client import BaseClient
-from ._endpoint import Endpoint, ResponseModel, ResponseTypes
+from ._endpoint import Endpoint, ResponseModel, ResponseTypes, CaseConverter
 from ._requester import Requester, Finalizer
 from ..tools import HTTPMethod, args_to_kwargs, MethodType
 
@@ -21,8 +21,9 @@ class _CallableHandler(Generic[_Client]):
             default_host: str,
             request_args: _RequestArgs,
             method_type: MethodType,
-            manager: Manager[_Client] | None = None,
-            finalizer: Finalizer | None = None
+            manager: Manager[_Client] | None,
+            finalizer: Finalizer | None,
+            case_converters: dict[str, CaseConverter]
     ):
         self._func = func
         self._manager = manager
@@ -33,6 +34,7 @@ class _CallableHandler(Generic[_Client]):
         self._method_type = method_type
         self._temp_client: _Client | None = None
         self._finalizer = finalizer
+        self._converters = case_converters
 
     def __make_endpoint(self) -> Endpoint:
         params = {}
@@ -56,7 +58,8 @@ class _CallableHandler(Generic[_Client]):
 
         return_type = sig.return_annotation if sig.return_annotation is not inspect.Signature.empty else None
 
-        if return_type is not None and return_type not in ResponseTypes and not isinstance(return_type, type(BaseModel)):
+        if return_type is not None and return_type not in ResponseTypes and not isinstance(return_type,
+                                                                                           type(BaseModel)):
             if return_type == Self:
                 if MethodType.self_method(method_type):
                     return_type = func.__self__  # type: ignore
@@ -67,7 +70,7 @@ class _CallableHandler(Generic[_Client]):
             else:
                 return_type = dict
 
-        endpoint = Endpoint(self._path, self._method, params=params, response=return_type)
+        endpoint = Endpoint(self._path, self._method, params=params, response=return_type, **self._converters)
         return endpoint
 
     def _make_requester(self, client: BaseClient) -> Requester:
@@ -97,7 +100,8 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
             request_args: _RequestArgs,
             method_type: MethodType,
             manager: Manager[AsyncClient] | None = None,
-            finalizer: Finalizer | None = None
+            finalizer: Finalizer | None = None,
+            case_converters: dict[str, CaseConverter]
     ):
         super().__init__(
             func=func,
@@ -107,7 +111,8 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
             method=method,
             method_type=method_type,
             path=path,
-            finalizer=finalizer
+            finalizer=finalizer,
+            case_converters=case_converters
         )
 
     async def __aenter__(self) -> ResponseModel:
@@ -141,6 +146,7 @@ class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
             method_type: MethodType,
             manager: Manager[Client] | None = None,
             finalizer: Finalizer | None = None,
+            case_converters: dict[str, CaseConverter]
     ):
         super().__init__(
             func=func,
@@ -150,7 +156,8 @@ class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
             method_type=method_type,
             method=method,
             path=path,
-            finalizer=finalizer
+            finalizer=finalizer,
+            case_converters=case_converters
         )
 
     def __enter__(self) -> ResponseModel:

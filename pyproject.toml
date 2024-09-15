@@ -1,12 +1,12 @@
 [tool.poetry]
 name = 'sensei'
-version = '0.1.0.beta1'
+version = '0.1.0.beta2'
 description = 'The python framework, providing fast and robust way to build client-side API wrappers.'
 authors = ['Alexey  <axbelenkov@gmail.com>']
 license = 'MIT'
 readme = 'README.md'
-repository = 'https://github.com/blnkoff/sensei'
-homepage = 'https://github.com/blnkoff/sensei'
+repository = 'https://github.com/CrocoFactory/sensei'
+homepage = 'https://github.com/CrocoFactory/sensei'
 classifiers = [
     'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',

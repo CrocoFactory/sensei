@@ -2,6 +2,7 @@ import inspect
 from abc import ABC, abstractmethod
 from typing import Callable, TypeVar
 from sensei.client import Manager
+from ._endpoint import CaseConverter
 from ..tools import HTTPMethod, MethodType
 from sensei._base_client import BaseClient
 from ._callable_handler import CallableHandler
@@ -18,7 +19,8 @@ class Route(ABC):
             /, *,
             func: Callable,
             manager: Manager[_Client],
-            default_host: str
+            default_host: str,
+            case_converters: dict[str, CaseConverter]
     ):
         if inspect.iscoroutinefunction(func):
             instance = super().__new__(_AsyncRoute)
@@ -27,8 +29,16 @@ class Route(ABC):
             instance = super().__new__(_SyncRoute)
             is_async = False
 
-        instance.__init__(path, method, func=func, manager=manager, default_host=default_host)
+        instance.__init__(
+            path,
+            method,
+            func=func,
+            manager=manager,
+            default_host=default_host,
+            case_converters=case_converters
+        )
         instance._is_async = is_async
+
         return instance
 
     def __init__(
@@ -38,7 +48,8 @@ class Route(ABC):
             /, *,
             func: Callable,
             manager: Manager[_Client],
-            default_host: str
+            default_host: str,
+            case_converters: dict[str, CaseConverter]
     ):
         self._path = path
         self._method = method
@@ -51,6 +62,8 @@ class Route(ABC):
         self._finalizer: Finalizer | None = None
         self._method_type: MethodType = MethodType.STATIC
         self._is_async = None
+
+        self._case_converters = case_converters
 
     def _wraps(self, func: Callable) -> None:
         # Copy attributes from the function to emulate the function interface
@@ -112,7 +125,8 @@ class _SyncRoute(Route):
             method_type=self._method_type,
             path=self.path,
             method=self._method,
-            finalizer=self._finalizer
+            finalizer=self._finalizer,
+            case_converters=self._case_converters
         ) as response:
             return response
 
@@ -127,6 +141,7 @@ class _AsyncRoute(Route):
             method_type=self._method_type,
             path=self.path,
             method=self._method,
-            finalizer=self._finalizer
+            finalizer=self._finalizer,
+            case_converters=self._case_converters
         ) as response:
             return response
