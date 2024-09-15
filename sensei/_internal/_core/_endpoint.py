@@ -6,7 +6,7 @@ from sensei.params import Body, Query, Header, Cookie
 from sensei.cases import header_case as to_header_case
 from sensei._internal.tools import ChainedMap, fill_path_params, split_params, make_model, is_safe_method, HTTPMethod, validate_method
 
-_CaseConverter = Callable[[str], str]
+CaseConverter = Callable[[str], str]
 ResponseTypes = type(BaseModel), str, dict, bytes
 ResponseModel = TypeVar('ResponseModel', type[BaseModel], str, dict[str, Any], bytes)
 
@@ -31,10 +31,10 @@ class Endpoint(Generic[ResponseModel]):
             params: dict[str, Any] | None = None,
             response: ResponseModel | None = None,
             error_msg: str | None = None,
-            query_case: _CaseConverter = _identical,
-            body_case: _CaseConverter = _identical,
-            cookie_case: _CaseConverter = _identical,
-            header_case: _CaseConverter = to_header_case
+            query_case: CaseConverter | None = None,
+            body_case: CaseConverter | None = None,
+            cookie_case: CaseConverter | None = None,
+            header_case: CaseConverter | None = to_header_case
     ):
         validate_method(method)
 
@@ -44,12 +44,18 @@ class Endpoint(Generic[ResponseModel]):
 
         params_model = self._make_model('Params', params)
 
-        self._case_converters = {
+        converters = {
             'params': query_case,
             'json': body_case,
             'cookies': cookie_case,
             'headers': header_case
         }
+
+        for k in converters.keys():
+            if converters[k] is None:
+                converters[k] = _identical
+
+        self._case_converters = converters
 
         self._params_model = params_model
         self._response_model = response
@@ -145,7 +151,7 @@ class Endpoint(Generic[ResponseModel]):
             Header: 'headers',
         }
 
-        type_to_converter = ChainedMap[type[FieldInfo], _CaseConverter](annotation_map, self._case_converters)
+        type_to_converter = ChainedMap[type[FieldInfo], CaseConverter](annotation_map, self._case_converters)
         type_to_params = ChainedMap[type[FieldInfo], dict[str, Any]](annotation_map, new_params)
         temp_type = type(Annotated[int, int])
 
