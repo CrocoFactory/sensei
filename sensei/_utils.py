@@ -15,7 +15,8 @@ def is_classmethod(obj: Any) -> bool:
     if inspect.ismethod(obj):
         cond2 = isinstance(obj.__self__, type)
     else:
-        cond3 = hasattr(obj, '__func__') and hasattr(obj, '__doc__') and hasattr(obj, '__name__')
+        cond3 = (hasattr(obj, '__func__') and hasattr(obj, '__doc__') and hasattr(obj, '__name__')
+                 and hasattr(obj, '__isabstractmethod__') and not hasattr(obj, '__call__'))
 
     return cond1 or cond2 or cond3
 

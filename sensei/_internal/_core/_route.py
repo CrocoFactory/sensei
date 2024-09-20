@@ -6,7 +6,7 @@ from ._endpoint import CaseConverter
 from ..tools import HTTPMethod, MethodType
 from sensei._base_client import BaseClient
 from ._callable_handler import CallableHandler
-from ._requester import Finalizer, Initializer
+from ._requester import Finalizer, Initializer, JsonDecorator
 
 _Client = TypeVar('_Client', bound=BaseClient)
 
@@ -22,7 +22,8 @@ class Route(ABC):
         '_method_type',
         '_is_async',
         '_case_converters',
-        '_initializer'
+        '_initializer',
+        '_json_decorator'
     )
 
     def __new__(
@@ -33,7 +34,8 @@ class Route(ABC):
             func: Callable,
             manager: Manager[_Client],
             default_host: str,
-            case_converters: dict[str, CaseConverter]
+            case_converters: dict[str, CaseConverter],
+            json_decorator: JsonDecorator | None = None
     ):
         if inspect.iscoroutinefunction(func):
             instance = super().__new__(_AsyncRoute)
@@ -62,7 +64,8 @@ class Route(ABC):
             func: Callable,
             manager: Manager[_Client],
             default_host: str,
-            case_converters: dict[str, CaseConverter]
+            case_converters: dict[str, CaseConverter],
+            json_decorator: JsonDecorator | None = None
     ):
         self._path = path
         self._method = method
@@ -76,6 +79,7 @@ class Route(ABC):
         self._is_async = None
 
         self._case_converters = case_converters
+        self._json_decorator = json_decorator
 
     @property
     def path(self) -> str:
@@ -137,7 +141,8 @@ class _SyncRoute(Route):
             method=self._method,
             initializer=self._initializer,
             finalizer=self._finalizer,
-            case_converters=self._case_converters
+            case_converters=self._case_converters,
+            json_decorator=self._json_decorator
         ) as response:
             return response
 
@@ -154,6 +159,7 @@ class _AsyncRoute(Route):
             method=self._method,
             initializer=self._initializer,
             finalizer=self._finalizer,
-            case_converters=self._case_converters
+            case_converters=self._case_converters,
+            json_decorator=self._json_decorator
         ) as response:
             return response

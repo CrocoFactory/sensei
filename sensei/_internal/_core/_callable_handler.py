@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sensei.client import Manager, AsyncClient, Client
 from sensei._base_client import BaseClient
 from ._endpoint import Endpoint, ResponseModel, ResponseTypes, CaseConverter
-from ._requester import Requester, Finalizer, Initializer
+from ._requester import Requester, Finalizer, Initializer, JsonDecorator
 from ..tools import HTTPMethod, args_to_kwargs, MethodType
 
 _Client = TypeVar('_Client', bound=BaseClient)
@@ -23,7 +23,8 @@ class _CallableHandler(Generic[_Client]):
         '_temp_client',
         '_finalizer',
         '_initializer',
-        '_converters'
+        '_converters',
+        '_json_decorator'
     )
 
     def __init__(
@@ -38,7 +39,8 @@ class _CallableHandler(Generic[_Client]):
             manager: Manager[_Client] | None,
             finalizer: Finalizer | None,
             initializer: Initializer | None,
-            case_converters: dict[str, CaseConverter]
+            case_converters: dict[str, CaseConverter],
+            json_decorator: JsonDecorator | None = None
     ):
         self._func = func
         self._manager = manager
@@ -52,6 +54,7 @@ class _CallableHandler(Generic[_Client]):
 
         self._initializer = initializer
         self._finalizer = finalizer
+        self._json_decorator = json_decorator
 
     def __make_endpoint(self) -> Endpoint:
         params = {}
@@ -92,10 +95,19 @@ class _CallableHandler(Generic[_Client]):
 
     def _make_requester(self, client: BaseClient) -> Requester:
         endpoint = self.__make_endpoint()
-        requester = Requester(client, endpoint, initializer=self._initializer, finalizer=self._finalizer)
+        requester = Requester(
+            client,
+            endpoint,
+            initializer=self._initializer,
+            finalizer=self._finalizer,
+            json_decorator=self._json_decorator
+        )
         return requester
 
     def _get_request_args(self, client: BaseClient) -> tuple[Requester, dict]:
+        if client.host != self._default_host:
+            raise ValueError('Client host must be equal to default host')
+
         requester = self._make_requester(client)
         kwargs = args_to_kwargs(self._func, *self._request_args[0], **self._request_args[1])
         method_type = self._method_type
@@ -119,7 +131,8 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
             manager: Manager[AsyncClient] | None = None,
             finalizer: Finalizer | None = None,
             initializer: Initializer | None,
-            case_converters: dict[str, CaseConverter]
+            case_converters: dict[str, CaseConverter],
+            json_decorator: JsonDecorator | None = None
     ):
         super().__init__(
             func=func,
@@ -131,7 +144,8 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
             path=path,
             initializer=initializer,
             finalizer=finalizer,
-            case_converters=case_converters
+            case_converters=case_converters,
+            json_decorator=json_decorator
         )
 
     async def __aenter__(self) -> ResponseModel:
@@ -166,7 +180,8 @@ class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
             manager: Manager[Client] | None = None,
             finalizer: Finalizer | None = None,
             initializer: Initializer | None,
-            case_converters: dict[str, CaseConverter]
+            case_converters: dict[str, CaseConverter],
+            json_decorator: JsonDecorator | None = None
     ):
         super().__init__(
             func=func,
@@ -178,7 +193,8 @@ class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
             path=path,
             finalizer=finalizer,
             initializer=initializer,
-            case_converters=case_converters
+            case_converters=case_converters,
+            json_decorator=json_decorator
         )
 
     def __enter__(self) -> ResponseModel:

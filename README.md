@@ -23,15 +23,25 @@ Source code is made available under the [MIT License](LICENSE).
 Here is example of OOP style.
 
 ```python
-from typing import Annotated
+from typing import Annotated, Any
 from httpx import Response
 from sensei import Router, Query, Path, APIModel, Header, Args
 from sensei.cases import pascal_case
 
-router = Router('https://reqres.in/api', header_case=pascal_case)
+router = Router(
+    'https://reqres.in/api',
+    header_case=pascal_case
+)
 
 
-class User(APIModel):
+@router.model()
+class BaseModel(APIModel):
+    @staticmethod
+    def __process_json__(json: dict[str, Any]) -> dict[str, Any]:
+        return json['data']
+
+
+class User(BaseModel):
     email: str
     id: int
     first_name: str
@@ -49,18 +59,18 @@ class User(APIModel):
         ...
 
     @staticmethod
-    @query.initializer()
+    @query.initializer
     def _query_in(args: Args) -> Args:
         args.headers['Hello-World'] = 'hello world'
         return args
 
     @staticmethod
-    @query.finalizer()
+    @query.finalizer
     def _query_out(
             response: Response,
     ) -> list["User"]:
         json = response.json()
-        users = [User(**user) for user in json['data']]
+        users = [User(**user) for user in json]
         return users
 
     @classmethod
@@ -72,7 +82,7 @@ class User(APIModel):
     @get.finalizer
     def _get_out(response: Response) -> "User":
         json = response.json()
-        return User(**json['data'])
+        return User(**json)
 
 
 users = User.query(per_page=7)

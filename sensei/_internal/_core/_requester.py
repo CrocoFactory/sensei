@@ -1,16 +1,15 @@
 from abc import ABC, abstractmethod
 from functools import wraps
-from typing import Callable, Generic, TypeVar, Any
+from typing import Callable, Generic, Any
 from ._endpoint import Endpoint, Args, ResponseModel
 from sensei._base_client import BaseClient
 from sensei.client import Client, AsyncClient
 from sensei.types import IResponse, IRequest
 
-_Any = TypeVar("_Any")
 
 Initializer = Callable[[Args], Args]
 Finalizer = Callable[[IResponse], ResponseModel]
-JsonDecorator = Callable[[dict[str, _Any]], dict[str, _Any]]
+JsonDecorator = Callable[[dict[str, Any]], dict[str, Any]]
 
 
 class _DecoratedResponse(IResponse):

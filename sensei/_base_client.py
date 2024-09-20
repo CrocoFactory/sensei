@@ -1,14 +1,19 @@
 from abc import abstractmethod, ABCMeta, ABC
-from typing import Mapping
+from typing import Mapping, Any
 from .types import IRateLimit, IResponse
 
 
 class _ClientPropsMeta(ABCMeta):
-    def __new__(cls, name, bases, dct):
-        dct['_rate_limit'] = None
-        dct['_port'] = None
-        dct['_default_headers'] = None
-        return super().__new__(cls, name, bases, dct)
+    def __new__(
+            cls,
+            cls_name: str,
+            bases: tuple[type[Any], ...],
+            namespace: dict[str, Any],
+    ):
+        namespace['_rate_limit'] = None
+        namespace['_port'] = None
+        namespace['_default_headers'] = None
+        return super().__new__(cls, cls_name, bases, namespace)
 
     @property
     def rate_limit(cls) -> IRateLimit:
@@ -31,17 +36,6 @@ class _ClientPropsMeta(ABCMeta):
             cls._port = value
         else:
             raise ValueError('Port must be between 1 and 65535')
-
-    @property
-    def host(cls) -> str:
-        return cls._host
-
-    @host.setter
-    def host(cls, value: str) -> None:
-        if isinstance(value, str):
-            cls._host = value
-        else:
-            raise ValueError('Host must be string')
 
     @property
     def default_headers(cls) -> Mapping[str, str]:
@@ -72,7 +66,12 @@ class BaseClient(ABC, metaclass=_ClientPropsMeta):
         if host.endswith('/'):
             host = host[:-1]
 
+        self._host = host
         self._api_url = f'{host}:{port}' if port is not None else host
+
+    @property
+    def host(self) -> str:
+        return self._host
 
     @property
     def context(self) -> IRateLimit:
@@ -93,14 +92,6 @@ class BaseClient(ABC, metaclass=_ClientPropsMeta):
     @classmethod
     def set_port(cls, port: int) -> None:
         cls.port = port
-
-    @classmethod
-    def get_host(cls) -> str | None:
-        return cls._host
-
-    @classmethod
-    def set_host(cls, host: int) -> None:
-        cls.host = host
 
     @classmethod
     def get_default_headers(cls) -> Mapping[str, str] | None:

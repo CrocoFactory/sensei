@@ -1,38 +1,30 @@
 from functools import wraps
-from typing import Callable, Protocol
+from typing import Callable, Any
 from sensei.client import Manager
 from ._endpoint import CaseConverter
-from ._requester import Finalizer
+from ._requester import JsonDecorator
 from ._route import Route
-from ..tools import HTTPMethod, set_method_type, MethodType
+from ..tools import HTTPMethod, set_method_type
 from ..tools.utils import bind_attributes
+from ._types import RoutedFunction, IRouter, SameModel
 
 
-class RoutedFunction(Protocol):
-    def __call__(self, *args, **kwargs):
-        ...
-
-    def finalizer(self, finalizer: Finalizer) -> Finalizer:
-        ...
-
-    __method_type__: MethodType
-
-
-class Router:
-    __slots__ = "_manager", "_default_host", "_converters"
+class Router(IRouter):
+    __slots__ = "_manager", "_host", "_converters", "_json_wrapper"
 
     def __init__(
             self,
-            default_host: str,
+            host: str,
             manager: Manager | None = None,
             *,
             query_case: CaseConverter | None = None,
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
-            header_case: CaseConverter | None = None
+            header_case: CaseConverter | None = None,
+            json_decorator: JsonDecorator | None = None
     ):
         self._manager = manager
-        self._default_host = default_host
+        self._host = host
 
         self._converters = {
             'query_case': query_case,
@@ -40,10 +32,14 @@ class Router:
             'cookie_case': cookie_case,
             'header_case': header_case
         }
+        self._json_wrapper = json_decorator
 
     @property
     def manager(self) -> Manager | None:
         return self._manager
+
+    def _json_decorator(self, json: dict[str, Any]) -> dict[str, Any]:
+        return self._json_wrapper(json)
 
     def _replace_default_converters(
             self,
@@ -78,8 +74,9 @@ class Router:
                 method,
                 func=func,
                 manager=self._manager,
-                default_host=self._default_host,
-                case_converters=case_converters
+                default_host=self._host,
+                case_converters=case_converters,
+                json_decorator=self._json_decorator
             )
 
             if not route.is_async:
@@ -99,6 +96,17 @@ class Router:
             return wrapper
 
         return decorator
+
+    def model(self, model_obj: SameModel | None = None) -> SameModel:
+        def decorator(model_obj: SameModel) -> SameModel:
+            model_obj.__router__ = self
+            self._json_wrapper = model_obj.__process_json__
+            return model_obj
+
+        if model_obj is None:
+            return decorator  # type: ignore
+        else:
+            return decorator(model_obj)
 
     def get(
             self,
