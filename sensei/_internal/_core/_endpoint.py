@@ -23,6 +23,15 @@ def _identical(s: str) -> str: return s
 
 
 class Endpoint(Generic[ResponseModel]):
+    __slots__ = (
+        "_path",
+        "_method",
+        "_error_msg",
+        "_case_converters",
+        "_params_model",
+        "_response_model"
+    )
+
     def __init__(
             self,
             path: str,

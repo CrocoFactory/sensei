@@ -1,7 +1,9 @@
 # sensei
+<a href="https://pypi.org/project/sensei/">
 <h1 align="center">
-<img src="https://raw.githubusercontent.com/CrocoFactory/sensei/main/branding/logo/transparent_red.png" width="300">
+<img alt="Logo Banner" src="https://raw.githubusercontent.com/CrocoFactory/sensei/main/branding/logo/transparent_red.png" width="300">
 </h1><br>
+</a>
 
 [![PyPi Version](https://img.shields.io/pypi/v/sensei)](https://pypi.org/project/sensei/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/sensei?label=downloads)](https://pypi.org/project/sensei/)
@@ -10,7 +12,8 @@
 [![Development Status](https://img.shields.io/pypi/status/sensei)](https://pypi.org/project/sensei/)
 
 The python framework, providing fast and robust way to build client-side API wrappers.
-                       
+                           
+- **[Maintain](https://www.patreon.com/user/membership?u=142083211)**
 - **[Bug reports](https://github.com/CrocoFactory/sensei/issues)**
 
 Source code is made available under the [MIT License](LICENSE).  
@@ -22,9 +25,10 @@ Here is example of OOP style.
 ```python
 from typing import Annotated
 from httpx import Response
-from sensei import Router, Query, Path, APIModel
+from sensei import Router, Query, Path, APIModel, Header, Args
+from sensei.cases import pascal_case
 
-router = Router('https://reqres.in/api')
+router = Router('https://reqres.in/api', header_case=pascal_case)
 
 
 class User(APIModel):
@@ -40,8 +44,15 @@ class User(APIModel):
             cls,
             page: Annotated[int, Query(1)],
             per_page: Annotated[int, Query(3, le=7)],
+            bearer_token: Annotated[str, Header('secret', le=10)],
     ) -> list["User"]:
         ...
+
+    @staticmethod
+    @query.initializer()
+    def _query_in(args: Args) -> Args:
+        args.headers['Hello-World'] = 'hello world'
+        return args
 
     @staticmethod
     @query.finalizer()
@@ -68,7 +79,6 @@ users = User.query(per_page=7)
 user_id = users[0].id
 user = User.get(user_id)
 print(user == users[0])
-
 ```
 
 Example of functional style.

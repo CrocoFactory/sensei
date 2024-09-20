@@ -5,6 +5,7 @@ from ._endpoint import CaseConverter
 from ._requester import Finalizer
 from ._route import Route
 from ..tools import HTTPMethod, set_method_type, MethodType
+from ..tools.utils import bind_attributes
 
 
 class RoutedFunction(Protocol):
@@ -15,10 +16,11 @@ class RoutedFunction(Protocol):
         ...
 
     __method_type__: MethodType
-    __route__: Route
 
 
 class Router:
+    __slots__ = "_manager", "_default_host", "_converters"
+
     def __init__(
             self,
             default_host: str,
@@ -93,8 +95,7 @@ class Router:
                     route.method_type = wrapper.__method_type__
                     return await route(*args, **kwargs)
 
-            setattr(wrapper, 'finalizer', route.finalizer)
-            setattr(wrapper, '__route__', route)
+            bind_attributes(wrapper, route.finalizer, route.initializer)  # type: ignore
             return wrapper
 
         return decorator

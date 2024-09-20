@@ -7,6 +7,8 @@ _ClientToInstantiate = type[_Client] | _Client
 
 
 class Manager(Generic[_Client]):
+    __slots__ = ('_client', '_client_type')
+
     def __init__(self, client: _Client):
         if isinstance(client, BaseClient):
             self._client = client

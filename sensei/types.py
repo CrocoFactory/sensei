@@ -3,6 +3,8 @@ from typing import Protocol, Mapping, Self, Any
 
 
 class IRateLimit(ABC):
+    __slots__ = "_calls", "_period"
+
     def __init__(self, calls: int, period: int) -> None:
         """
         Initialize the shared state for rate limiting.
@@ -80,24 +82,30 @@ class IResponse(Protocol):
     def __await__(self):
         pass
 
+    @abstractmethod
     def json(self) -> dict[str, Any]:
         pass
 
+    @abstractmethod
     def raise_for_status(self) -> Self:
         pass
 
     @property
+    @abstractmethod
     def request(self) -> IRequest:
         pass
 
     @property
+    @abstractmethod
     def text(self) -> str:
         pass
 
     @property
+    @abstractmethod
     def status_code(self) -> int:
         pass
 
     @property
+    @abstractmethod
     def content(self) -> bytes:
         pass

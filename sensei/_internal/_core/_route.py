@@ -6,12 +6,25 @@ from ._endpoint import CaseConverter
 from ..tools import HTTPMethod, MethodType
 from sensei._base_client import BaseClient
 from ._callable_handler import CallableHandler
-from ._requester import Finalizer
+from ._requester import Finalizer, Initializer
 
 _Client = TypeVar('_Client', bound=BaseClient)
 
 
 class Route(ABC):
+    __slots__ = (
+        '_path',
+        '_method',
+        '_func',
+        '_manager',
+        '_default_host',
+        '_finalizer',
+        '_method_type',
+        '_is_async',
+        '_case_converters',
+        '_initializer'
+    )
+
     def __new__(
             cls,
             path: str,
@@ -57,25 +70,12 @@ class Route(ABC):
         self._manager = manager
         self._default_host = default_host
 
-        self._wraps(func)
-
         self._finalizer: Finalizer | None = None
+        self._initializer: Initializer | None = None
         self._method_type: MethodType = MethodType.STATIC
         self._is_async = None
 
         self._case_converters = case_converters
-
-    def _wraps(self, func: Callable) -> None:
-        # Copy attributes from the function to emulate the function interface
-        self.__name__ = func.__name__
-        self.__doc__ = func.__doc__
-        self.__annotations__ = func.__annotations__  # type: ignore
-        self.__defaults__ = func.__defaults__   # type: ignore
-        self.__kwdefaults__ = func.__kwdefaults__   # type: ignore
-        self.__code__ = func.__code__   # type: ignore
-        self.__globals__ = func.__globals__     # type: ignore
-        self.__dict__ = func.__dict__    # type: ignore
-        self.__module__ = func.__module__  # type: ignore
 
     @property
     def path(self) -> str:
@@ -114,6 +114,16 @@ class Route(ABC):
         else:
             return decorator(func)
 
+    def initializer(self, func: Initializer | None = None) -> Callable:
+        def decorator(func: Initializer) -> Initializer:
+            self._initializer = func
+            return func
+
+        if func is None:
+            return decorator
+        else:
+            return decorator(func)
+
 
 class _SyncRoute(Route):
     def __call__(self, *args, **kwargs):
@@ -125,6 +135,7 @@ class _SyncRoute(Route):
             method_type=self._method_type,
             path=self.path,
             method=self._method,
+            initializer=self._initializer,
             finalizer=self._finalizer,
             case_converters=self._case_converters
         ) as response:
@@ -141,6 +152,7 @@ class _AsyncRoute(Route):
             method_type=self._method_type,
             path=self.path,
             method=self._method,
+            initializer=self._initializer,
             finalizer=self._finalizer,
             case_converters=self._case_converters
         ) as response:

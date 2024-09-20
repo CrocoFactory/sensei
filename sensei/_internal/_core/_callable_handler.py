@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sensei.client import Manager, AsyncClient, Client
 from sensei._base_client import BaseClient
 from ._endpoint import Endpoint, ResponseModel, ResponseTypes, CaseConverter
-from ._requester import Requester, Finalizer
+from ._requester import Requester, Finalizer, Initializer
 from ..tools import HTTPMethod, args_to_kwargs, MethodType
 
 _Client = TypeVar('_Client', bound=BaseClient)
@@ -12,6 +12,20 @@ _RequestArgs = tuple[tuple[Any, ...], dict[str, Any]]
 
 
 class _CallableHandler(Generic[_Client]):
+    __slots__ = (
+        '_func',
+        '_manager',
+        '_method',
+        '_path',
+        '_default_host',
+        '_request_args',
+        '_method_type',
+        '_temp_client',
+        '_finalizer',
+        '_initializer',
+        '_converters'
+    )
+
     def __init__(
             self,
             *,
@@ -23,6 +37,7 @@ class _CallableHandler(Generic[_Client]):
             method_type: MethodType,
             manager: Manager[_Client] | None,
             finalizer: Finalizer | None,
+            initializer: Initializer | None,
             case_converters: dict[str, CaseConverter]
     ):
         self._func = func
@@ -33,8 +48,10 @@ class _CallableHandler(Generic[_Client]):
         self._request_args = request_args
         self._method_type = method_type
         self._temp_client: _Client | None = None
-        self._finalizer = finalizer
         self._converters = case_converters
+
+        self._initializer = initializer
+        self._finalizer = finalizer
 
     def __make_endpoint(self) -> Endpoint:
         params = {}
@@ -75,7 +92,7 @@ class _CallableHandler(Generic[_Client]):
 
     def _make_requester(self, client: BaseClient) -> Requester:
         endpoint = self.__make_endpoint()
-        requester = Requester(client, endpoint, finalizer=self._finalizer)
+        requester = Requester(client, endpoint, initializer=self._initializer, finalizer=self._finalizer)
         return requester
 
     def _get_request_args(self, client: BaseClient) -> tuple[Requester, dict]:
@@ -101,6 +118,7 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
             method_type: MethodType,
             manager: Manager[AsyncClient] | None = None,
             finalizer: Finalizer | None = None,
+            initializer: Initializer | None,
             case_converters: dict[str, CaseConverter]
     ):
         super().__init__(
@@ -111,6 +129,7 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
             method=method,
             method_type=method_type,
             path=path,
+            initializer=initializer,
             finalizer=finalizer,
             case_converters=case_converters
         )
@@ -146,6 +165,7 @@ class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
             method_type: MethodType,
             manager: Manager[Client] | None = None,
             finalizer: Finalizer | None = None,
+            initializer: Initializer | None,
             case_converters: dict[str, CaseConverter]
     ):
         super().__init__(
@@ -157,6 +177,7 @@ class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
             method=method,
             path=path,
             finalizer=finalizer,
+            initializer=initializer,
             case_converters=case_converters
         )
 
