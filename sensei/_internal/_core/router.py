@@ -1,45 +1,56 @@
 from functools import wraps
-from typing import Callable, Any
+from typing import Callable
 from sensei.client import Manager
 from ._endpoint import CaseConverter
-from ._requester import JsonFinalizer
+from ._requester import JsonFinalizer, Preparer
 from ._route import Route
-from ..tools import HTTPMethod, set_method_type
-from ..tools.utils import bind_attributes
+from ..tools import HTTPMethod, set_method_type, identical
+from sensei._utils import bind_attributes
 from ._types import RoutedFunction, IRouter, SameModel
+from ._hook import Hook
 
 
 class Router(IRouter):
-    __slots__ = "_manager", "_host", "_converters", "_json_finalizer"
+    __slots__ = (
+        "_manager",
+        "_host",
+        "_converters",
+        "_finalize_json",
+        "_prepare_args",
+        "_linked_to_model",
+        "_query_case",
+        "_body_case",
+        "_cookie_case",
+        "_header_case"
+    )
 
     def __init__(
             self,
             host: str,
             manager: Manager | None = None,
             *,
-            query_case: CaseConverter | None = None,
-            body_case: CaseConverter | None = None,
-            cookie_case: CaseConverter | None = None,
-            header_case: CaseConverter | None = None,
-            json_finalizer: JsonFinalizer | None = None
+            query_case: CaseConverter = identical,
+            body_case: CaseConverter = identical,
+            cookie_case: CaseConverter = identical,
+            header_case: CaseConverter = identical,
+            json_finalizer: JsonFinalizer = identical,
+            args_preparer: Preparer = identical
     ):
         self._manager = manager
         self._host = host
 
-        self._converters = {
-            'query_case': query_case,
-            'body_case': body_case,
-            'cookie_case': cookie_case,
-            'header_case': header_case
-        }
-        self._json_finalizer = json_finalizer if json_finalizer else lambda x: x
+        self._query_case = query_case
+        self._body_case = body_case
+        self._cookie_case = cookie_case
+        self._header_case = header_case
+
+        self._finalize_json = json_finalizer
+        self._prepare_args = args_preparer
+        self._linked_to_model: bool = False
 
     @property
     def manager(self) -> Manager | None:
         return self._manager
-
-    def _finalize_json(self, json: dict[str, Any]) -> dict[str, Any]:
-        return self._json_finalizer(json)
 
     def _replace_default_converters(
             self,
@@ -57,7 +68,7 @@ class Router(IRouter):
 
         for key, converter in converters.items():
             if converter is None:
-                converters[key] = self._converters[key]
+                converters[key] = getattr(self, f'_{key}')
 
         return converters
 
@@ -76,7 +87,8 @@ class Router(IRouter):
                 manager=self._manager,
                 default_host=self._host,
                 case_converters=case_converters,
-                json_finalizer=self._finalize_json
+                json_finalizer=self._finalize_json,
+                pre_preparer=self._prepare_args
             )
 
             if not route.is_async:
@@ -99,9 +111,18 @@ class Router(IRouter):
 
     def model(self, model_obj: SameModel | None = None) -> SameModel:
         def decorator(model_obj: SameModel) -> SameModel:
+            if self._linked_to_model:
+                raise ValueError('Only one model can be associated with a router')
+
             model_obj.__router__ = self
-            if hasattr(model_obj, '__finalize_json__'):
-                self._json_finalizer = model_obj.__finalize_json__
+            self._linked_to_model = True
+
+            hooks = Hook.values()
+
+            for hook in hooks:
+                if hook_fun := getattr(model_obj, hook, None):
+                    setattr(self, hook[1:-2], hook_fun)
+
             return model_obj
 
         if model_obj is None:

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Protocol, TypeVar, Any
+from typing import Protocol, TypeVar
 from ._endpoint import CaseConverter
-from ._requester import Finalizer, Preparer
+from ._requester import ResponseFinalizer, Preparer, JsonFinalizer
 from ..tools import MethodType
 
 
@@ -12,7 +12,7 @@ class RoutedFunction(Protocol):
     def prepare(self, preparer: Preparer) -> Preparer:
         ...
 
-    def finalize(self, finalizer: Finalizer) -> Finalizer:
+    def finalize(self, finalizer: ResponseFinalizer) -> ResponseFinalizer:
         ...
 
     __method_type__: MethodType
@@ -28,15 +28,20 @@ class RoutedMethod(Protocol):
 
 class RoutedModel(Protocol):
     __router__ = ...
-
-    def __finalize_json__(self, value: dict[str, Any]) -> dict[str, Any]:
-        pass
+    __finalize_json__: JsonFinalizer
+    __prepare_args__: Preparer
+    __query_case__: CaseConverter
+    __body_case__: CaseConverter
+    __cookie_case__: CaseConverter
+    __header_case__: CaseConverter
 
 
 SameModel = TypeVar("SameModel", bound=RoutedModel)
 
 
 class IRouter(ABC):
+    __slots__ = ()
+
     @abstractmethod
     def model(self, model_obj: SameModel) -> SameModel:
         pass

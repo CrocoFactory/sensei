@@ -3,10 +3,10 @@ from abc import ABC, abstractmethod
 from typing import Callable, TypeVar
 from sensei.client import Manager
 from ._endpoint import CaseConverter
-from ..tools import HTTPMethod, MethodType
+from ..tools import HTTPMethod, MethodType, identical
 from sensei._base_client import BaseClient
 from ._callable_handler import CallableHandler
-from ._requester import Finalizer, Preparer, JsonFinalizer
+from ._requester import ResponseFinalizer, Preparer, JsonFinalizer
 
 _Client = TypeVar('_Client', bound=BaseClient)
 
@@ -18,12 +18,13 @@ class Route(ABC):
         '_func',
         '_manager',
         '_default_host',
-        '_finalizer',
+        '_response_finalizer',
         '_method_type',
         '_is_async',
         '_case_converters',
         '_preparer',
-        '_json_finalizer'
+        '_json_finalizer',
+        '_pre_preparer'
     )
 
     def __new__(
@@ -35,7 +36,8 @@ class Route(ABC):
             manager: Manager[_Client],
             default_host: str,
             case_converters: dict[str, CaseConverter],
-            json_finalizer: JsonFinalizer | None = None
+            json_finalizer: JsonFinalizer = identical,
+            pre_preparer: Preparer = identical,
     ):
         if inspect.iscoroutinefunction(func):
             instance = super().__new__(_AsyncRoute)
@@ -50,7 +52,9 @@ class Route(ABC):
             func=func,
             manager=manager,
             default_host=default_host,
-            case_converters=case_converters
+            case_converters=case_converters,
+            json_finalizer=json_finalizer,
+            pre_preparer=pre_preparer
         )
         instance._is_async = is_async
 
@@ -65,7 +69,8 @@ class Route(ABC):
             manager: Manager[_Client],
             default_host: str,
             case_converters: dict[str, CaseConverter],
-            json_finalizer: JsonFinalizer | None = None
+            json_finalizer: JsonFinalizer | None = None,
+            pre_preparer: Preparer = identical,
     ):
         self._path = path
         self._method = method
@@ -73,13 +78,14 @@ class Route(ABC):
         self._manager = manager
         self._default_host = default_host
 
-        self._finalizer: Finalizer | None = None
-        self._preparer: Preparer | None = None
+        self._response_finalizer: ResponseFinalizer | None = None
+        self._preparer: Preparer = identical
         self._method_type: MethodType = MethodType.STATIC
         self._is_async = None
 
         self._case_converters = case_converters
         self._json_finalizer = json_finalizer
+        self._pre_preparer = pre_preparer
 
     @property
     def path(self) -> str:
@@ -108,9 +114,9 @@ class Route(ABC):
         else:
             raise TypeError(f'Method type must be an instance of {MethodType.__class__}')
 
-    def finalize(self, func: Finalizer | None = None) -> Callable:
-        def decorator(func: Finalizer) -> Finalizer:
-            self._finalizer = func
+    def finalize(self, func: ResponseFinalizer | None = None) -> Callable:
+        def decorator(func: ResponseFinalizer) -> ResponseFinalizer:
+            self._response_finalizer = func
             return func
 
         if func is None:
@@ -139,10 +145,11 @@ class _SyncRoute(Route):
             method_type=self._method_type,
             path=self.path,
             method=self._method,
-            preparer=self._preparer,
-            finalizer=self._finalizer,
+            post_preparer=self._preparer,
+            response_finalizer=self._response_finalizer,
             case_converters=self._case_converters,
-            json_finalizer=self._json_finalizer
+            json_finalizer=self._json_finalizer,
+            pre_preparer=self._pre_preparer
         ) as response:
             return response
 
@@ -157,9 +164,10 @@ class _AsyncRoute(Route):
             method_type=self._method_type,
             path=self.path,
             method=self._method,
-            preparer=self._preparer,
-            finalizer=self._finalizer,
+            post_preparer=self._preparer,
+            response_finalizer=self._response_finalizer,
             case_converters=self._case_converters,
-            json_finalizer=self._json_finalizer
+            json_finalizer=self._json_finalizer,
+            pre_preparer=self._pre_preparer
         ) as response:
             return response

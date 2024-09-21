@@ -1,5 +1,11 @@
 import inspect
-from typing import Any
+from typing import Any, TypeVar, Protocol
+
+_T = TypeVar("_T")
+
+
+class _NamedObj(Protocol):
+    __name__ = ...
 
 
 def is_classmethod(obj: Any) -> bool:
@@ -20,3 +26,10 @@ def is_selfmethod(obj: Any) -> bool:
 
 def is_method(obj: Any) -> bool:
     return is_selfmethod(obj) or is_staticmethod(obj)
+
+
+def bind_attributes(obj: _T, *named_objects: tuple[_NamedObj]) -> _T:
+    for named_obj in named_objects:
+        setattr(obj, named_obj.__name__, named_obj)
+
+    return obj

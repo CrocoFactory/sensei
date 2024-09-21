@@ -4,15 +4,11 @@ import inspect
 from functools import wraps
 from pydantic import BaseModel
 from collections import OrderedDict
-from typing import Any, get_args, Callable, TypeVar, Protocol
+from typing import Any, get_args, Callable, TypeVar
 from .types import HTTPMethod, MethodType
 from pydantic._internal._model_construction import ModelMetaclass
 
-_Object = TypeVar("_Object")
-
-
-class _NamedObj(Protocol):
-    __name__ = ...
+_T = TypeVar("_T")
 
 
 def make_model(model_name: str, model_args: dict[str, Any]) -> type[BaseModel]:
@@ -122,8 +118,5 @@ def set_method_type(func: Callable):
     return wrapper
 
 
-def bind_attributes(obj: _Object, *named_objects: tuple[_NamedObj]) -> _Object:
-    for named_obj in named_objects:
-        setattr(obj, named_obj.__name__, named_obj)
-
-    return obj
+def identical(value: _T) -> _T:
+    return value

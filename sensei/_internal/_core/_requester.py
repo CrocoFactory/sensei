@@ -5,21 +5,26 @@ from ._endpoint import Endpoint, Args, ResponseModel
 from sensei._base_client import BaseClient
 from sensei.client import Client, AsyncClient
 from sensei.types import IResponse, IRequest
-
+from ..tools import identical
 
 Preparer = Callable[[Args], Args]
-Finalizer = Callable[[IResponse], ResponseModel]
+ResponseFinalizer = Callable[[IResponse], ResponseModel]
 JsonFinalizer = Callable[[dict[str, Any]], dict[str, Any]]
 
 
 class _DecoratedResponse(IResponse):
+    __slots__ = (
+        "_response",
+        "_json_finalizer"
+    )
+
     def __init__(
             self,
             response: IResponse,
-            json_finalizer: JsonFinalizer | None = None
+            json_finalizer: JsonFinalizer = identical
     ):
         self._response = response
-        self._json_finalizer = json_finalizer if json_finalizer is not None else lambda x: x
+        self._json_finalizer = json_finalizer
 
     def json(self) -> dict[str, Any]:
         return self._json_finalizer(self._response.json())
@@ -46,18 +51,21 @@ class _DecoratedResponse(IResponse):
 class Requester(ABC, Generic[ResponseModel]):
     __slots__ = (
         "_client",
-        "_preparer",
-        "_finalizer",
-        "_endpoint"
+        "_post_preparer",
+        "_response_finalizer",
+        "_endpoint",
+        "_json_finalizer",
+        "_preparer"
     )
 
     def __new__(
             cls,
             client: BaseClient,
             endpoint: Endpoint,
-            preparer: Preparer | None = None,
-            finalizer: Finalizer | None = None,
-            json_finalizer: JsonFinalizer | None = None
+            *,
+            response_finalizer: ResponseFinalizer | None = None,
+            json_finalizer: JsonFinalizer = identical,
+            preparer: Preparer = identical,
     ):
         if isinstance(client, AsyncClient):
             return super().__new__(_AsyncRequester)
@@ -70,15 +78,16 @@ class Requester(ABC, Generic[ResponseModel]):
             self,
             client: BaseClient,
             endpoint: Endpoint,
-            preparer: Preparer | None = None,
-            finalizer: Finalizer | None = None,
-            json_finalizer: JsonFinalizer | None = None
+            *,
+            response_finalizer: ResponseFinalizer | None = None,
+            json_finalizer: JsonFinalizer = identical,
+            preparer: Preparer = identical,
     ):
         self._client = client
-        self._preparer = preparer or self._prepare
-        self._finalizer = finalizer or self._finalize
+        self._response_finalizer = response_finalizer or self._finalize
         self._endpoint = endpoint
         self._json_finalizer = json_finalizer
+        self._preparer = preparer
 
     @property
     def client(self) -> BaseClient:
@@ -113,11 +122,18 @@ class _AsyncRequester(Requester):
             self,
             client: BaseClient,
             endpoint: Endpoint,
-            preparer: Preparer | None = None,
-            finalizer: Finalizer | None = None,
-            json_finalizer: JsonFinalizer | None = None
+            *,
+            response_finalizer: ResponseFinalizer | None = None,
+            json_finalizer: JsonFinalizer = identical,
+            preparer: Preparer = identical,
     ):
-        super().__init__(client, endpoint, preparer, finalizer, json_finalizer)
+        super().__init__(
+            client,
+            endpoint,
+            response_finalizer=response_finalizer,
+            json_finalizer=json_finalizer,
+            preparer=preparer
+        )
 
     async def request(self, **kwargs) -> ResponseModel:
         client = self._client
@@ -125,7 +141,7 @@ class _AsyncRequester(Requester):
 
         response = await client.request(**args)
         response = _DecoratedResponse(response, json_finalizer=self._json_finalizer)
-        return self._finalizer(response)
+        return self._response_finalizer(response)
 
     async def decorate(self, func: Callable):
         @wraps(func)
@@ -140,11 +156,18 @@ class _Requester(Requester):
             self,
             client: BaseClient,
             endpoint: Endpoint,
-            preparer: Preparer | None = None,
-            finalizer: Finalizer | None = None,
-            json_finalizer: JsonFinalizer | None = None
+            *,
+            response_finalizer: ResponseFinalizer | None = None,
+            json_finalizer: JsonFinalizer = identical,
+            preparer: Preparer = identical,
     ):
-        super().__init__(client, endpoint, preparer, finalizer, json_finalizer)
+        super().__init__(
+            client,
+            endpoint,
+            response_finalizer=response_finalizer,
+            json_finalizer=json_finalizer,
+            preparer=preparer
+        )
 
     def request(self, **kwargs) -> ResponseModel:
         client = self._client
@@ -152,4 +175,4 @@ class _Requester(Requester):
 
         response = client.request(**args)
         response = _DecoratedResponse(response, json_finalizer=self._json_finalizer)
-        return self._finalizer(response)
+        return self._response_finalizer(response)

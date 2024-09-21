@@ -25,19 +25,22 @@ Here is example of OOP style.
 ```python
 from typing import Annotated, Any
 from httpx import Response
-from sensei import Router, Query, Path, APIModel, Header, Args
-from sensei.cases import pascal_case
+from sensei import Router, Query, Path, APIModel, Header, Args, pascal_case
 
-router = Router(
-    'https://reqres.in/api',
-    header_case=pascal_case
-)
+router = Router('https://reqres.in/api')
 
 
 @router.model()
 class BaseModel(APIModel):
     def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
         return json['data']
+
+    def __prepare_args__(self, args: Args) -> Args:
+        args.headers['X-Token'] = 'Hello token!'
+        return args
+
+    def __header_case__(self, s: str) -> str:
+        return pascal_case(s)
 
 
 class User(BaseModel):
@@ -87,7 +90,6 @@ users = User.query(per_page=7)
 user_id = users[0].id
 user = User.get(user_id)
 print(user == users[0])
-
 ```
 
 Example of functional style.

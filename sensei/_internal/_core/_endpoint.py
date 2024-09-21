@@ -4,7 +4,8 @@ from pydantic.fields import FieldInfo
 from sensei.types import IResponse
 from sensei.params import Body, Query, Header, Cookie
 from sensei.cases import header_case as to_header_case
-from sensei._internal.tools import ChainedMap, fill_path_params, split_params, make_model, is_safe_method, HTTPMethod, validate_method
+from ..tools import (ChainedMap, fill_path_params, split_params, make_model, is_safe_method, HTTPMethod,
+                     validate_method, identical)
 
 CaseConverter = Callable[[str], str]
 ResponseTypes = type(BaseModel), str, dict, bytes
@@ -13,13 +14,10 @@ ResponseModel = TypeVar('ResponseModel', type[BaseModel], str, dict[str, Any], b
 
 class Args(BaseModel):
     url: str
-    params: dict[str, Any] | None = None
-    json_: dict[str, Any] | None = Field(None, alias="json")
-    headers: dict[str, Any] | None = None
-    cookies: dict[str, Any] | None = None
-
-
-def _identical(s: str) -> str: return s
+    params: dict[str, Any] = {}
+    json_: dict[str, Any] = Field({}, alias="json")
+    headers: dict[str, Any] = {}
+    cookies: dict[str, Any] = {}
 
 
 class Endpoint(Generic[ResponseModel]):
@@ -62,7 +60,7 @@ class Endpoint(Generic[ResponseModel]):
 
         for k in converters.keys():
             if converters[k] is None:
-                converters[k] = _identical
+                converters[k] = identical
 
         self._case_converters = converters
 

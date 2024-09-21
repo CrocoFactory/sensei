@@ -4,8 +4,8 @@ from pydantic import BaseModel
 from sensei.client import Manager, AsyncClient, Client
 from sensei._base_client import BaseClient
 from ._endpoint import Endpoint, ResponseModel, ResponseTypes, CaseConverter
-from ._requester import Requester, Finalizer, Preparer, JsonFinalizer
-from ..tools import HTTPMethod, args_to_kwargs, MethodType
+from ._requester import Requester, ResponseFinalizer, Preparer, JsonFinalizer
+from ..tools import HTTPMethod, args_to_kwargs, MethodType, identical
 
 _Client = TypeVar('_Client', bound=BaseClient)
 _RequestArgs = tuple[tuple[Any, ...], dict[str, Any]]
@@ -21,10 +21,10 @@ class _CallableHandler(Generic[_Client]):
         '_request_args',
         '_method_type',
         '_temp_client',
-        '_finalizer',
+        '_response_finalizer',
         '_preparer',
         '_converters',
-        '_json_finalizer'
+        '_json_finalizer',
     )
 
     def __init__(
@@ -37,10 +37,11 @@ class _CallableHandler(Generic[_Client]):
             request_args: _RequestArgs,
             method_type: MethodType,
             manager: Manager[_Client] | None,
-            finalizer: Finalizer | None,
-            preparer: Preparer | None,
             case_converters: dict[str, CaseConverter],
-            json_finalizer: JsonFinalizer | None = None
+            response_finalizer: ResponseFinalizer = identical,
+            json_finalizer: JsonFinalizer = identical,
+            pre_preparer: Preparer = identical,
+            post_preparer: Preparer = identical,
     ):
         self._func = func
         self._manager = manager
@@ -52,8 +53,9 @@ class _CallableHandler(Generic[_Client]):
         self._temp_client: _Client | None = None
         self._converters = case_converters
 
-        self._preparer = preparer
-        self._finalizer = finalizer
+        self._preparer = lambda value: post_preparer(pre_preparer(value))
+        self._response_finalizer = response_finalizer
+
         self._json_finalizer = json_finalizer
 
     def __make_endpoint(self) -> Endpoint:
@@ -85,8 +87,8 @@ class _CallableHandler(Generic[_Client]):
                     return_type = func.__self__  # type: ignore
                 else:
                     raise ValueError(f'Response is "Self" is only set for instance and class methods')
-            elif self._finalizer is None:
-                raise ValueError(f'Finalizer must be configured, if response is not from: {ResponseTypes}')
+            elif self._response_finalizer is None:
+                raise ValueError(f'Response finalizer must be set, if response is not from: {ResponseTypes}')
             else:
                 return_type = dict
 
@@ -98,9 +100,9 @@ class _CallableHandler(Generic[_Client]):
         requester = Requester(
             client,
             endpoint,
-            preparer=self._preparer,
-            finalizer=self._finalizer,
-            json_finalizer=self._json_finalizer
+            response_finalizer=self._response_finalizer,
+            json_finalizer=self._json_finalizer,
+            preparer=self._preparer
         )
         return requester
 
@@ -122,30 +124,32 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
     def __init__(
             self,
             *,
-            method: HTTPMethod,
             path: str,
+            method: HTTPMethod,
             func: Callable,
             default_host: str,
             request_args: _RequestArgs,
             method_type: MethodType,
-            manager: Manager[AsyncClient] | None = None,
-            finalizer: Finalizer | None = None,
-            preparer: Preparer | None,
+            manager: Manager[AsyncClient] | None,
             case_converters: dict[str, CaseConverter],
-            json_finalizer: JsonFinalizer | None = None
+            response_finalizer: ResponseFinalizer = identical,
+            json_finalizer: JsonFinalizer = identical,
+            pre_preparer: Preparer = identical,
+            post_preparer: Preparer = identical,
     ):
         super().__init__(
             func=func,
             default_host=default_host,
             request_args=request_args,
             manager=manager,
-            method=method,
             method_type=method_type,
+            method=method,
             path=path,
-            preparer=preparer,
-            finalizer=finalizer,
+            response_finalizer=response_finalizer,
             case_converters=case_converters,
-            json_finalizer=json_finalizer
+            json_finalizer=json_finalizer,
+            pre_preparer=pre_preparer,
+            post_preparer=post_preparer
         )
 
     async def __aenter__(self) -> ResponseModel:
@@ -171,17 +175,18 @@ class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
     def __init__(
             self,
             *,
-            method: HTTPMethod,
             path: str,
+            method: HTTPMethod,
             func: Callable,
             default_host: str,
             request_args: _RequestArgs,
             method_type: MethodType,
-            manager: Manager[Client] | None = None,
-            finalizer: Finalizer | None = None,
-            preparer: Preparer | None,
+            manager: Manager[Client] | None,
             case_converters: dict[str, CaseConverter],
-            json_finalizer: JsonFinalizer | None = None
+            response_finalizer: ResponseFinalizer = identical,
+            json_finalizer: JsonFinalizer = identical,
+            pre_preparer: Preparer = identical,
+            post_preparer: Preparer = identical,
     ):
         super().__init__(
             func=func,
@@ -191,10 +196,11 @@ class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
             method_type=method_type,
             method=method,
             path=path,
-            finalizer=finalizer,
-            preparer=preparer,
+            response_finalizer=response_finalizer,
             case_converters=case_converters,
-            json_finalizer=json_finalizer
+            json_finalizer=json_finalizer,
+            pre_preparer=pre_preparer,
+            post_preparer=post_preparer
         )
 
     def __enter__(self) -> ResponseModel:

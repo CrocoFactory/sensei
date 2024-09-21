@@ -79,6 +79,8 @@ class IRequest(Protocol):
 
 
 class IResponse(Protocol):
+    __slots__ = ()
+
     def __await__(self):
         pass
 
