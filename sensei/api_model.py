@@ -1,26 +1,29 @@
+import functools
 from typing import Any
 from pydantic import BaseModel
 from pydantic._internal._model_construction import ModelMetaclass
-from ._internal import IRouter, RoutedMethod
+from ._internal import RoutedMethod
 from ._internal.tools.utils import bind_attributes
-from ._utils import is_self_method
+from ._utils import is_staticmethod, is_classmethod, is_selfmethod
 
 
 class _Namespace(dict):
     @staticmethod
-    def _decorate_self_method(method: RoutedMethod) -> None:
+    def _decorate_method(method: RoutedMethod) -> None:
         try:
-            finalizer = method.__func__.finalizer
-            initializer = method.__func__.initializer
+            preparer = method.__func__.prepare
+            finalizer = method.__func__.finalize
 
-            bind_attributes(method, finalizer, initializer)  # type: ignore
-            method.__func__.__self__ = 'Hello'
+            bind_attributes(method, finalizer, preparer)  # type: ignore
         except AttributeError:
             pass
 
-    def __setitem__(self, key, value):
-        if is_self_method(value):
-            self._decorate_self_method(value)
+    def __setitem__(self, key: Any, value: Any):
+        if is_staticmethod(value) or is_classmethod(value):
+            self._decorate_method(value)
+        elif key == '__finalize_json__' and is_selfmethod(value):
+            value = functools.partial(value, None)
+
         super().__setitem__(key, value)
 
 
@@ -29,8 +32,13 @@ class _ModelMeta(ModelMetaclass):
     def __prepare__(metacls, name, bases):
         return _Namespace()
 
-    def __new__(cls, name, bases, dct):
-        obj = super().__new__(cls, name, bases, dct)
+    def __new__(
+            cls,
+            cls_name: str,
+            bases: tuple[type[Any], ...],
+            namespace: dict[str, Any],
+    ):
+        obj = super().__new__(cls, cls_name, bases, namespace)
         obj.__router__ = None
 
         return obj
@@ -38,7 +46,7 @@ class _ModelMeta(ModelMetaclass):
 
 class APIModel(BaseModel, metaclass=_ModelMeta):
     @staticmethod
-    def __process_json__(json: dict[str, Any]) -> dict[str, Any]:
+    def __finalize_json__(json: dict[str, Any]) -> dict[str, Any]:
         return json
 
     def __str__(self):

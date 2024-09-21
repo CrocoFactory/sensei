@@ -36,8 +36,7 @@ router = Router(
 
 @router.model()
 class BaseModel(APIModel):
-    @staticmethod
-    def __process_json__(json: dict[str, Any]) -> dict[str, Any]:
+    def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
         return json['data']
 
 
@@ -59,13 +58,13 @@ class User(BaseModel):
         ...
 
     @staticmethod
-    @query.initializer
+    @query.prepare
     def _query_in(args: Args) -> Args:
         args.headers['Hello-World'] = 'hello world'
         return args
 
     @staticmethod
-    @query.finalizer
+    @query.finalize
     def _query_out(
             response: Response,
     ) -> list["User"]:
@@ -79,16 +78,16 @@ class User(BaseModel):
         ...
 
     @staticmethod
-    @get.finalizer
+    @get.finalize
     def _get_out(response: Response) -> "User":
         json = response.json()
         return User(**json)
-
 
 users = User.query(per_page=7)
 user_id = users[0].id
 user = User.get(user_id)
 print(user == users[0])
+
 ```
 
 Example of functional style.

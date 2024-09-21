@@ -4,7 +4,7 @@ import inspect
 from functools import wraps
 from pydantic import BaseModel
 from collections import OrderedDict
-from typing import Any, get_args, Callable, TypeVar, Protocol, Iterable
+from typing import Any, get_args, Callable, TypeVar, Protocol
 from .types import HTTPMethod, MethodType
 from pydantic._internal._model_construction import ModelMetaclass
 

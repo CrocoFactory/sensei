@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Protocol, TypeVar, Any
 from ._endpoint import CaseConverter
-from ._requester import Finalizer, Initializer
+from ._requester import Finalizer, Preparer
 from ..tools import MethodType
 
 
@@ -9,10 +9,10 @@ class RoutedFunction(Protocol):
     def __call__(self, *args, **kwargs):
         ...
 
-    def initializer(self, initializer: Initializer) -> Initializer:
+    def prepare(self, preparer: Preparer) -> Preparer:
         ...
 
-    def finalizer(self, finalizer: Finalizer) -> Finalizer:
+    def finalize(self, finalizer: Finalizer) -> Finalizer:
         ...
 
     __method_type__: MethodType
@@ -29,7 +29,7 @@ class RoutedMethod(Protocol):
 class RoutedModel(Protocol):
     __router__ = ...
 
-    def __process_json__(self, value: dict[str, Any]) -> dict[str, Any]:
+    def __finalize_json__(self, value: dict[str, Any]) -> dict[str, Any]:
         pass
 
 

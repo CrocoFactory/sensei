@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sensei.client import Manager, AsyncClient, Client
 from sensei._base_client import BaseClient
 from ._endpoint import Endpoint, ResponseModel, ResponseTypes, CaseConverter
-from ._requester import Requester, Finalizer, Initializer, JsonDecorator
+from ._requester import Requester, Finalizer, Preparer, JsonFinalizer
 from ..tools import HTTPMethod, args_to_kwargs, MethodType
 
 _Client = TypeVar('_Client', bound=BaseClient)
@@ -22,9 +22,9 @@ class _CallableHandler(Generic[_Client]):
         '_method_type',
         '_temp_client',
         '_finalizer',
-        '_initializer',
+        '_preparer',
         '_converters',
-        '_json_decorator'
+        '_json_finalizer'
     )
 
     def __init__(
@@ -38,9 +38,9 @@ class _CallableHandler(Generic[_Client]):
             method_type: MethodType,
             manager: Manager[_Client] | None,
             finalizer: Finalizer | None,
-            initializer: Initializer | None,
+            preparer: Preparer | None,
             case_converters: dict[str, CaseConverter],
-            json_decorator: JsonDecorator | None = None
+            json_finalizer: JsonFinalizer | None = None
     ):
         self._func = func
         self._manager = manager
@@ -52,9 +52,9 @@ class _CallableHandler(Generic[_Client]):
         self._temp_client: _Client | None = None
         self._converters = case_converters
 
-        self._initializer = initializer
+        self._preparer = preparer
         self._finalizer = finalizer
-        self._json_decorator = json_decorator
+        self._json_finalizer = json_finalizer
 
     def __make_endpoint(self) -> Endpoint:
         params = {}
@@ -98,9 +98,9 @@ class _CallableHandler(Generic[_Client]):
         requester = Requester(
             client,
             endpoint,
-            initializer=self._initializer,
+            preparer=self._preparer,
             finalizer=self._finalizer,
-            json_decorator=self._json_decorator
+            json_finalizer=self._json_finalizer
         )
         return requester
 
@@ -130,9 +130,9 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
             method_type: MethodType,
             manager: Manager[AsyncClient] | None = None,
             finalizer: Finalizer | None = None,
-            initializer: Initializer | None,
+            preparer: Preparer | None,
             case_converters: dict[str, CaseConverter],
-            json_decorator: JsonDecorator | None = None
+            json_finalizer: JsonFinalizer | None = None
     ):
         super().__init__(
             func=func,
@@ -142,10 +142,10 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
             method=method,
             method_type=method_type,
             path=path,
-            initializer=initializer,
+            preparer=preparer,
             finalizer=finalizer,
             case_converters=case_converters,
-            json_decorator=json_decorator
+            json_finalizer=json_finalizer
         )
 
     async def __aenter__(self) -> ResponseModel:
@@ -179,9 +179,9 @@ class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
             method_type: MethodType,
             manager: Manager[Client] | None = None,
             finalizer: Finalizer | None = None,
-            initializer: Initializer | None,
+            preparer: Preparer | None,
             case_converters: dict[str, CaseConverter],
-            json_decorator: JsonDecorator | None = None
+            json_finalizer: JsonFinalizer | None = None
     ):
         super().__init__(
             func=func,
@@ -192,9 +192,9 @@ class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
             method=method,
             path=path,
             finalizer=finalizer,
-            initializer=initializer,
+            preparer=preparer,
             case_converters=case_converters,
-            json_decorator=json_decorator
+            json_finalizer=json_finalizer
         )
 
     def __enter__(self) -> ResponseModel:

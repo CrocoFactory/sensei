@@ -6,7 +6,7 @@ from ._endpoint import CaseConverter
 from ..tools import HTTPMethod, MethodType
 from sensei._base_client import BaseClient
 from ._callable_handler import CallableHandler
-from ._requester import Finalizer, Initializer, JsonDecorator
+from ._requester import Finalizer, Preparer, JsonFinalizer
 
 _Client = TypeVar('_Client', bound=BaseClient)
 
@@ -22,8 +22,8 @@ class Route(ABC):
         '_method_type',
         '_is_async',
         '_case_converters',
-        '_initializer',
-        '_json_decorator'
+        '_preparer',
+        '_json_finalizer'
     )
 
     def __new__(
@@ -35,7 +35,7 @@ class Route(ABC):
             manager: Manager[_Client],
             default_host: str,
             case_converters: dict[str, CaseConverter],
-            json_decorator: JsonDecorator | None = None
+            json_finalizer: JsonFinalizer | None = None
     ):
         if inspect.iscoroutinefunction(func):
             instance = super().__new__(_AsyncRoute)
@@ -65,7 +65,7 @@ class Route(ABC):
             manager: Manager[_Client],
             default_host: str,
             case_converters: dict[str, CaseConverter],
-            json_decorator: JsonDecorator | None = None
+            json_finalizer: JsonFinalizer | None = None
     ):
         self._path = path
         self._method = method
@@ -74,12 +74,12 @@ class Route(ABC):
         self._default_host = default_host
 
         self._finalizer: Finalizer | None = None
-        self._initializer: Initializer | None = None
+        self._preparer: Preparer | None = None
         self._method_type: MethodType = MethodType.STATIC
         self._is_async = None
 
         self._case_converters = case_converters
-        self._json_decorator = json_decorator
+        self._json_finalizer = json_finalizer
 
     @property
     def path(self) -> str:
@@ -108,7 +108,7 @@ class Route(ABC):
         else:
             raise TypeError(f'Method type must be an instance of {MethodType.__class__}')
 
-    def finalizer(self, func: Finalizer | None = None) -> Callable:
+    def finalize(self, func: Finalizer | None = None) -> Callable:
         def decorator(func: Finalizer) -> Finalizer:
             self._finalizer = func
             return func
@@ -118,9 +118,9 @@ class Route(ABC):
         else:
             return decorator(func)
 
-    def initializer(self, func: Initializer | None = None) -> Callable:
-        def decorator(func: Initializer) -> Initializer:
-            self._initializer = func
+    def prepare(self, func: Preparer | None = None) -> Callable:
+        def decorator(func: Preparer) -> Preparer:
+            self._preparer = func
             return func
 
         if func is None:
@@ -139,10 +139,10 @@ class _SyncRoute(Route):
             method_type=self._method_type,
             path=self.path,
             method=self._method,
-            initializer=self._initializer,
+            preparer=self._preparer,
             finalizer=self._finalizer,
             case_converters=self._case_converters,
-            json_decorator=self._json_decorator
+            json_finalizer=self._json_finalizer
         ) as response:
             return response
 
@@ -157,9 +157,9 @@ class _AsyncRoute(Route):
             method_type=self._method_type,
             path=self.path,
             method=self._method,
-            initializer=self._initializer,
+            preparer=self._preparer,
             finalizer=self._finalizer,
             case_converters=self._case_converters,
-            json_decorator=self._json_decorator
+            json_finalizer=self._json_finalizer
         ) as response:
             return response

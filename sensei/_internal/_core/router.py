@@ -2,7 +2,7 @@ from functools import wraps
 from typing import Callable, Any
 from sensei.client import Manager
 from ._endpoint import CaseConverter
-from ._requester import JsonDecorator
+from ._requester import JsonFinalizer
 from ._route import Route
 from ..tools import HTTPMethod, set_method_type
 from ..tools.utils import bind_attributes
@@ -10,7 +10,7 @@ from ._types import RoutedFunction, IRouter, SameModel
 
 
 class Router(IRouter):
-    __slots__ = "_manager", "_host", "_converters", "_json_wrapper"
+    __slots__ = "_manager", "_host", "_converters", "_json_finalizer"
 
     def __init__(
             self,
@@ -21,7 +21,7 @@ class Router(IRouter):
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
             header_case: CaseConverter | None = None,
-            json_decorator: JsonDecorator | None = None
+            json_finalizer: JsonFinalizer | None = None
     ):
         self._manager = manager
         self._host = host
@@ -32,14 +32,14 @@ class Router(IRouter):
             'cookie_case': cookie_case,
             'header_case': header_case
         }
-        self._json_wrapper = json_decorator
+        self._json_finalizer = json_finalizer if json_finalizer else lambda x: x
 
     @property
     def manager(self) -> Manager | None:
         return self._manager
 
-    def _json_decorator(self, json: dict[str, Any]) -> dict[str, Any]:
-        return self._json_wrapper(json)
+    def _finalize_json(self, json: dict[str, Any]) -> dict[str, Any]:
+        return self._json_finalizer(json)
 
     def _replace_default_converters(
             self,
@@ -76,7 +76,7 @@ class Router(IRouter):
                 manager=self._manager,
                 default_host=self._host,
                 case_converters=case_converters,
-                json_decorator=self._json_decorator
+                json_finalizer=self._finalize_json
             )
 
             if not route.is_async:
@@ -92,7 +92,7 @@ class Router(IRouter):
                     route.method_type = wrapper.__method_type__
                     return await route(*args, **kwargs)
 
-            bind_attributes(wrapper, route.finalizer, route.initializer)  # type: ignore
+            bind_attributes(wrapper, route.finalize, route.prepare)  # type: ignore
             return wrapper
 
         return decorator
@@ -100,7 +100,8 @@ class Router(IRouter):
     def model(self, model_obj: SameModel | None = None) -> SameModel:
         def decorator(model_obj: SameModel) -> SameModel:
             model_obj.__router__ = self
-            self._json_wrapper = model_obj.__process_json__
+            if hasattr(model_obj, '__finalize_json__'):
+                self._json_finalizer = model_obj.__finalize_json__
             return model_obj
 
         if model_obj is None:
