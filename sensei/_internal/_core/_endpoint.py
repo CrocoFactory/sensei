@@ -1,35 +1,70 @@
-from typing import Any, get_args, Callable, Annotated, TypeVar, Generic
+from functools import partial
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
 from sensei.types import IResponse
+from sensei._utils import fill_path_params
 from sensei.params import Body, Query, Header, Cookie
 from sensei.cases import header_case as to_header_case
-from sensei._internal.tools import ChainedMap, fill_path_params, split_params, make_model, is_safe_method, HTTPMethod, validate_method
+from typing import Any, get_args, Callable, Annotated, TypeVar, Generic, get_origin
+from ..tools import ChainedMap, split_params, make_model, is_safe_method, HTTPMethod, validate_method, identical
 
 CaseConverter = Callable[[str], str]
-ResponseTypes = type(BaseModel), str, dict, bytes
-ResponseModel = TypeVar('ResponseModel', type[BaseModel], str, dict[str, Any], bytes)
+
+ResponseModel = TypeVar(
+    'ResponseModel',
+    type[BaseModel],
+    str,
+    dict[str, Any],
+    bytes,
+    list[dict[str, Any]],
+    BaseModel,
+    list[BaseModel],
+)
+
+RESPONSE_TYPES = ResponseModel.__constraints__
+_ConditionChecker = Callable[[type[ResponseModel]], bool]
+_ResponseHandler = Callable[[type[ResponseModel], IResponse], ResponseModel]
+_PartialHandler = Callable[[IResponse], ResponseModel]
 
 
 class Args(BaseModel):
     url: str
-    params: dict[str, Any] | None = None
-    json_: dict[str, Any] | None = Field(None, alias="json")
-    headers: dict[str, Any] | None = None
-    cookies: dict[str, Any] | None = None
-
-
-def _identical(s: str) -> str: return s
+    params: dict[str, Any] = {}
+    json_: dict[str, Any] = Field({}, alias="json")
+    headers: dict[str, Any] = {}
+    cookies: dict[str, Any] = {}
 
 
 class Endpoint(Generic[ResponseModel]):
+    __slots__ = (
+        "_path",
+        "_method",
+        "_error_msg",
+        "_case_converters",
+        "_params_model",
+        "_response_model",
+    )
+
+    _response_handle_map: dict[_ConditionChecker, _ResponseHandler] = {
+        lambda model: isinstance(model, type(BaseModel)): lambda model, response: model(**response.json()),
+        lambda model: model is str: lambda model, response: response.text,
+        lambda model: model in (dict[str, Any], dict): lambda model, response: response.json(),
+        lambda model: model is bytes: lambda model, response: response.content,
+        lambda model: isinstance(model, BaseModel): lambda model, response: model,
+        lambda model: model is None: lambda model, response: None,
+        lambda model: get_origin(model) is list and isinstance(get_args(model)[0], type(BaseModel)):
+            lambda model, response: [get_args(model)[0](**value) for value in response.json()],
+        lambda model: (get_origin(model) is list and ((arg := get_args(model)[0]) is dict or get_origin(arg) is dict)):
+            lambda model, response: response.json(),
+    }
+
     def __init__(
             self,
             path: str,
             method: HTTPMethod,
             /, *,
             params: dict[str, Any] | None = None,
-            response: ResponseModel | None = None,
+            response: type[ResponseModel] | None = None,
             error_msg: str | None = None,
             query_case: CaseConverter | None = None,
             body_case: CaseConverter | None = None,
@@ -53,7 +88,7 @@ class Endpoint(Generic[ResponseModel]):
 
         for k in converters.keys():
             if converters[k] is None:
-                converters[k] = _identical
+                converters[k] = identical
 
         self._case_converters = converters
 
@@ -77,7 +112,7 @@ class Endpoint(Generic[ResponseModel]):
         return self._params_model
 
     @property
-    def response_model(self) -> ResponseModel | None:
+    def response_model(self) -> type[ResponseModel] | None:
         return self._response_model
 
     @staticmethod
@@ -86,6 +121,25 @@ class Endpoint(Generic[ResponseModel]):
             return make_model(model_name, model_args)
         else:
             return None
+
+    @classmethod
+    def _handle_if_condition(cls, model: type[ResponseModel]) -> _PartialHandler:
+        for checker, handler in cls._response_handle_map.items():
+            if checker(model):
+                result = partial(handler, model)
+                break
+        else:
+            raise ValueError('Unsupported response type')
+
+        return result
+
+    @classmethod
+    def is_response_type(cls, value: Any) -> bool:
+        try:
+            cls._handle_if_condition(value)
+            return True
+        except ValueError:
+            return False
 
     def get_args(self, **kwargs) -> Args:
         params_model = self.params_model
@@ -104,16 +158,14 @@ class Endpoint(Generic[ResponseModel]):
     def get_response(self, *, response_obj: IResponse) -> ResponseModel | None:
         response_model = self.response_model
 
-        if isinstance(response_model, type(BaseModel)):
-            return response_model(**response_obj.json())
-        elif response_model == str:
-            return response_obj.text
-        elif response_model in (dict[str, Any], dict):
-            return response_obj.json()
-        elif response_model == bytes:
-            return response_obj.content
-        else:
-            return None
+        result = self._handle_if_condition(response_model)(response_obj)
+
+        class ValidationModel(BaseModel):
+            result: response_model
+
+        ValidationModel(result=result)
+
+        return result
 
     def _get_init_args(
             self,

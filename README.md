@@ -1,7 +1,9 @@
 # sensei
+<a href="https://pypi.org/project/sensei/">
 <h1 align="center">
-<img src="https://raw.githubusercontent.com/CrocoFactory/sensei/main/branding/logo/transparent_red.png" width="300">
+<img alt="Logo Banner" src="https://raw.githubusercontent.com/CrocoFactory/sensei/main/branding/logo/transparent_red.png" width="300">
 </h1><br>
+</a>
 
 [![PyPi Version](https://img.shields.io/pypi/v/sensei)](https://pypi.org/project/sensei/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/sensei?label=downloads)](https://pypi.org/project/sensei/)
@@ -10,7 +12,8 @@
 [![Development Status](https://img.shields.io/pypi/status/sensei)](https://pypi.org/project/sensei/)
 
 The python framework, providing fast and robust way to build client-side API wrappers.
-                       
+                           
+- **[Maintain](https://www.patreon.com/user/membership?u=142083211)**
 - **[Bug reports](https://github.com/CrocoFactory/sensei/issues)**
 
 Source code is made available under the [MIT License](LICENSE).  
@@ -20,14 +23,26 @@ Source code is made available under the [MIT License](LICENSE).
 Here is example of OOP style.
 
 ```python
-from typing import Annotated
-from httpx import Response
-from sensei import Router, Query, Path, APIModel
+from typing import Annotated, Any, Self
+from sensei import Router, Query, Path, APIModel, Header, Args, pascal_case, fill_path_params, RateLimit
 
-router = Router('https://reqres.in/api')
+router = Router('https://reqres.in/api', rate_limit=RateLimit(5, 1))
 
 
-class User(APIModel):
+@router.model()
+class BaseModel(APIModel):
+    def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
+        return json['data']
+
+    def __prepare_args__(self, args: Args) -> Args:
+        args.headers['X-Token'] = 'secret_token'
+        return args
+
+    def __header_case__(self, s: str) -> str:
+        return pascal_case(s)
+
+
+class User(BaseModel):
     email: str
     id: int
     first_name: str
@@ -40,35 +55,31 @@ class User(APIModel):
             cls,
             page: Annotated[int, Query(1)],
             per_page: Annotated[int, Query(3, le=7)],
-    ) -> list["User"]:
+            bearer_token: Annotated[str, Header('secret', le=10)],
+    ) -> list[Self]:
         ...
-
-    @staticmethod
-    @query.finalizer()
-    def _query_out(
-            response: Response,
-    ) -> list["User"]:
-        json = response.json()
-        users = [User(**user) for user in json['data']]
-        return users
 
     @classmethod
     @router.get('/users/{id_}')
-    def get(cls, id_: Annotated[int, Path(alias='id')]) -> "User":
+    def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self:
         ...
 
-    @staticmethod
-    @get.finalizer
-    def _get_out(response: Response) -> "User":
-        json = response.json()
-        return User(**json['data'])
+    @router.delete('/users/{id_}')
+    def delete(self) -> Self:
+        ...
+
+    @delete.prepare
+    def _delete_in(self, args: Args) -> Args:
+        url = args.url
+        url = fill_path_params(url, {'id_': self.id})
+        args.url = url
+        return args
 
 
 users = User.query(per_page=7)
 user_id = users[0].id
 user = User.get(user_id)
 print(user == users[0])
-
 ```
 
 Example of functional style.

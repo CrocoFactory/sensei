@@ -1,43 +1,49 @@
 from functools import wraps
-from typing import Callable, Protocol
+from typing import Callable
 from sensei.client import Manager
 from ._endpoint import CaseConverter
-from ._requester import Finalizer
+from ._requester import JsonFinalizer, Preparer
 from ._route import Route
-from ..tools import HTTPMethod, set_method_type, MethodType
+from ..tools import HTTPMethod, set_method_type, identical, MethodType
+from sensei._utils import bind_attributes
+from ._types import RoutedFunction, IRouter, SameModel
+from ._hook import Hook
+from sensei.types import IRateLimit
+from sensei._descriptors import RateLimitAttr, PortAttr
 
 
-class RoutedFunction(Protocol):
-    def __call__(self, *args, **kwargs):
-        ...
+class Router(IRouter):
+    rate_limit = RateLimitAttr()
+    port = PortAttr()
 
-    def finalizer(self, finalizer: Finalizer) -> Finalizer:
-        ...
-
-    __method_type__: MethodType
-    __route__: Route
-
-
-class Router:
     def __init__(
             self,
-            default_host: str,
-            manager: Manager | None = None,
+            host: str,
             *,
-            query_case: CaseConverter | None = None,
-            body_case: CaseConverter | None = None,
-            cookie_case: CaseConverter | None = None,
-            header_case: CaseConverter | None = None
+            port: int | None = None,
+            rate_limit: IRateLimit | None = None,
+            manager: Manager | None = None,
+            query_case: CaseConverter = identical,
+            body_case: CaseConverter = identical,
+            cookie_case: CaseConverter = identical,
+            header_case: CaseConverter = identical,
+            json_finalizer: JsonFinalizer = identical,
+            args_preparer: Preparer = identical
     ):
         self._manager = manager
-        self._default_host = default_host
+        self._host = host
 
-        self._converters = {
-            'query_case': query_case,
-            'body_case': body_case,
-            'cookie_case': cookie_case,
-            'header_case': header_case
-        }
+        self.port = port
+        self.rate_limit = rate_limit
+
+        self._query_case = query_case
+        self._body_case = body_case
+        self._cookie_case = cookie_case
+        self._header_case = header_case
+
+        self._finalize_json = json_finalizer
+        self._prepare_args = args_preparer
+        self._linked_to_model: bool = False
 
     @property
     def manager(self) -> Manager | None:
@@ -59,7 +65,7 @@ class Router:
 
         for key, converter in converters.items():
             if converter is None:
-                converters[key] = self._converters[key]
+                converters[key] = getattr(self, f'_{key}')
 
         return converters
 
@@ -76,28 +82,63 @@ class Router:
                 method,
                 func=func,
                 manager=self._manager,
-                default_host=self._default_host,
-                case_converters=case_converters
+                host=self._host,
+                port=self.port,
+                rate_limit=self.rate_limit,
+                case_converters=case_converters,
+                json_finalizer=self._finalize_json,
+                pre_preparer=self._prepare_args
             )
+
+            def _setattrs(
+                    instance,
+                    func: Callable,
+                    wrapper: Callable,
+                    route: Route
+            ) -> None:
+                method_type = route.method_type = wrapper.__method_type__  # type: ignore
+                if MethodType.self_method(method_type):
+                    route.__self__ = instance
+                    func.__self__ = instance
 
             if not route.is_async:
                 @set_method_type
                 @wraps(func)
                 def wrapper(*args, **kwargs):
-                    route.method_type = wrapper.__method_type__
+                    _setattrs(args[0], func, wrapper, route)
                     return route(*args, **kwargs)
             else:
                 @set_method_type
                 @wraps(func)
                 async def wrapper(*args, **kwargs):
-                    route.method_type = wrapper.__method_type__
+                    _setattrs(args[0], func, wrapper, route)
                     return await route(*args, **kwargs)
 
-            setattr(wrapper, 'finalizer', route.finalizer)
-            setattr(wrapper, '__route__', route)
+            bind_attributes(wrapper, route.finalize, route.prepare)  # type: ignore
             return wrapper
 
         return decorator
+
+    def model(self, model_obj: SameModel | None = None) -> SameModel:
+        def decorator(model_obj: SameModel) -> SameModel:
+            if self._linked_to_model:
+                raise ValueError('Only one model can be associated with a router')
+
+            model_obj.__router__ = self
+            self._linked_to_model = True
+
+            hooks = Hook.values()
+
+            for hook in hooks:
+                if hook_fun := getattr(model_obj, hook, None):
+                    setattr(self, hook[1:-2], hook_fun)
+
+            return model_obj
+
+        if model_obj is None:
+            return decorator  # type: ignore
+        else:
+            return decorator(model_obj)
 
     def get(
             self,

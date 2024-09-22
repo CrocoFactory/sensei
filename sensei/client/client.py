@@ -14,7 +14,7 @@ class Client(_Client, BaseClient):
             *,
             host: str,
             port: int | None = None,
-            context: IRateLimit | None = None,
+            rate_limit: IRateLimit | None = None,
             auth: AuthTypes | None = None,
             params: QueryParamTypes | None = None,
             headers: HeaderTypes | None = None,
@@ -36,7 +36,7 @@ class Client(_Client, BaseClient):
             trust_env: bool = True,
             default_encoding: str | typing.Callable[[bytes], str] = "utf-8",
     ) -> None:
-        BaseClient.__init__(self, host=host, port=port, context=context, headers=headers)
+        BaseClient.__init__(self, host=host, port=port, rate_limit=rate_limit)
         _Client.__init__(
             self,
             auth=auth,
@@ -79,10 +79,8 @@ class Client(_Client, BaseClient):
             timeout: TimeoutTypes | UseClientDefault = USE_CLIENT_DEFAULT,
             extensions: RequestExtensions | None = None,
     ) -> Response:
-        headers = headers or self._client_headers
-
-        if self.context:
-            RateLimiter(self.context).wait_for_slot()
+        if self.rate_limit:
+            RateLimiter(self.rate_limit).wait_for_slot()
 
         return super().request(
             method,
@@ -107,7 +105,7 @@ class AsyncClient(_AsyncClient, BaseClient):
             *,
             host: str,
             port: int | None = None,
-            context: IRateLimit | None = None,
+            rate_limit: IRateLimit | None = None,
             auth: AuthTypes | None = None,
             params: QueryParamTypes | None = None,
             headers: HeaderTypes | None = None,
@@ -129,7 +127,7 @@ class AsyncClient(_AsyncClient, BaseClient):
             trust_env: bool = True,
             default_encoding: str | typing.Callable[[bytes], str] = "utf-8",
     ) -> None:
-        BaseClient.__init__(self, host=host, port=port, context=context, headers=headers)
+        BaseClient.__init__(self, host=host, port=port, rate_limit=rate_limit)
         _AsyncClient.__init__(
             self,
             auth=auth,
@@ -172,10 +170,8 @@ class AsyncClient(_AsyncClient, BaseClient):
             timeout: TimeoutTypes | UseClientDefault = USE_CLIENT_DEFAULT,
             extensions: RequestExtensions | None = None,
     ) -> Response:
-        headers = headers or self._client_headers
-
-        if self.context:
-            await AsyncRateLimiter(self.context).wait_for_slot()
+        if self.rate_limit:
+            await AsyncRateLimiter(self.rate_limit).wait_for_slot()
 
         return await super().request(
             method,

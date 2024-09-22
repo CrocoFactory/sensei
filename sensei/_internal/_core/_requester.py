@@ -1,22 +1,70 @@
 from abc import ABC, abstractmethod
-from functools import wraps
-from typing import Callable, Any, Generic
+from typing import Callable, Generic, Any
 from ._endpoint import Endpoint, Args, ResponseModel
 from sensei._base_client import BaseClient
 from sensei.client import Client, AsyncClient
-from sensei.types import IResponse
+from sensei.types import IResponse, IRequest
+from ..tools import identical
 
-Initializer = Callable[..., Args]
-Finalizer = Callable[[IResponse], ResponseModel]
+Preparer = Callable[[Args], Args]
+ResponseFinalizer = Callable[[IResponse], ResponseModel]
+JsonFinalizer = Callable[[dict[str, Any]], dict[str, Any]]
+
+
+class _DecoratedResponse(IResponse):
+    __slots__ = (
+        "_response",
+        "_json_finalizer"
+    )
+
+    def __init__(
+            self,
+            response: IResponse,
+            json_finalizer: JsonFinalizer = identical
+    ):
+        self._response = response
+        self._json_finalizer = json_finalizer
+
+    def json(self) -> dict[str, Any] | list:
+        return self._json_finalizer(self._response.json())
+
+    def raise_for_status(self) -> IResponse:
+        return self._response.raise_for_status()
+
+    def request(self) -> IRequest:
+        return self._response.request
+
+    @property
+    def text(self) -> str:
+        return self._response.text
+
+    @property
+    def status_code(self) -> int:
+        return self._response.status_code
+
+    @property
+    def content(self) -> bytes:
+        return self._response.content
 
 
 class Requester(ABC, Generic[ResponseModel]):
+    __slots__ = (
+        "_client",
+        "_post_preparer",
+        "_response_finalizer",
+        "_endpoint",
+        "_json_finalizer",
+        "_preparer"
+    )
+
     def __new__(
             cls,
             client: BaseClient,
             endpoint: Endpoint,
-            initializer: Initializer | None = None,
-            finalizer: Finalizer | None = None
+            *,
+            response_finalizer: ResponseFinalizer | None = None,
+            json_finalizer: JsonFinalizer = identical,
+            preparer: Preparer = identical,
     ):
         if isinstance(client, AsyncClient):
             return super().__new__(_AsyncRequester)
@@ -29,13 +77,16 @@ class Requester(ABC, Generic[ResponseModel]):
             self,
             client: BaseClient,
             endpoint: Endpoint,
-            initializer: Initializer | None = None,
-            finalizer: Finalizer | None = None
+            *,
+            response_finalizer: ResponseFinalizer | None = None,
+            json_finalizer: JsonFinalizer = identical,
+            preparer: Preparer = identical,
     ):
         self._client = client
-        self._initializer = initializer or self._initialize
-        self._finalizer = finalizer or self._finalize
+        self._response_finalizer = response_finalizer or self._finalize
         self._endpoint = endpoint
+        self._json_finalizer = json_finalizer
+        self._preparer = preparer
 
     @property
     def client(self) -> BaseClient:
@@ -45,9 +96,16 @@ class Requester(ABC, Generic[ResponseModel]):
     def endpoint(self) -> Endpoint:
         return self._endpoint
 
-    def _initialize(self, **kwargs) -> dict[str, Any]:
+    @staticmethod
+    def _prepare(args: Args) -> Args:
+        return args
+
+    def _get_args(self, **kwargs) -> dict[str, Any]:
         endpoint = self._endpoint
-        return endpoint.get_args(**kwargs).model_dump(mode="json", exclude_none=True, by_alias=True)
+        args = endpoint.get_args(**kwargs)
+        args = self._preparer(args).model_dump(mode="json", exclude_none=True, by_alias=True)
+
+        return {'method': endpoint.method, **args}
 
     def _finalize(self, response: IResponse) -> ResponseModel:
         endpoint = self._endpoint
@@ -63,25 +121,27 @@ class _AsyncRequester(Requester):
             self,
             client: BaseClient,
             endpoint: Endpoint,
-            initializer: Initializer | None = None,
-            finalizer: Finalizer | None = None
+            *,
+            response_finalizer: ResponseFinalizer | None = None,
+            json_finalizer: JsonFinalizer = identical,
+            preparer: Preparer = identical,
     ):
-        super().__init__(client, endpoint, initializer, finalizer)
+        super().__init__(
+            client,
+            endpoint,
+            response_finalizer=response_finalizer,
+            json_finalizer=json_finalizer,
+            preparer=preparer
+        )
 
     async def request(self, **kwargs) -> ResponseModel:
         client = self._client
-        endpoint = self._endpoint
+        args = self._get_args(**kwargs)
 
-        args = self._initializer(**kwargs)
-        response = await client.request(endpoint.method, **args)
-        return self._finalizer(response)
-
-    async def decorate(self, func: Callable):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            await self.request(**kwargs)
-
-        return wrapper
+        response = await client.request(**args)
+        response.raise_for_status()
+        response = _DecoratedResponse(response, json_finalizer=self._json_finalizer)
+        return self._response_finalizer(response)
 
 
 class _Requester(Requester):
@@ -89,15 +149,24 @@ class _Requester(Requester):
             self,
             client: BaseClient,
             endpoint: Endpoint,
-            initializer: Initializer | None = None,
-            finalizer: Finalizer | None = None
+            *,
+            response_finalizer: ResponseFinalizer | None = None,
+            json_finalizer: JsonFinalizer = identical,
+            preparer: Preparer = identical,
     ):
-        super().__init__(client, endpoint, initializer, finalizer)
+        super().__init__(
+            client,
+            endpoint,
+            response_finalizer=response_finalizer,
+            json_finalizer=json_finalizer,
+            preparer=preparer
+        )
 
     def request(self, **kwargs) -> ResponseModel:
         client = self._client
-        endpoint = self._endpoint
+        args = self._get_args(**kwargs)
 
-        args = self._initializer(**kwargs)
-        response = client.request(endpoint.method, **args)
-        return self._finalizer(response)
+        response = client.request(**args)
+        response.raise_for_status()
+        response = _DecoratedResponse(response, json_finalizer=self._json_finalizer)
+        return self._response_finalizer(response)

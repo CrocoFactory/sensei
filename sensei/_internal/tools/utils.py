@@ -1,12 +1,14 @@
-import re
 import sys
 import inspect
 from functools import wraps
 from pydantic import BaseModel
 from collections import OrderedDict
-from typing import Any, get_args, Callable
+from sensei._utils import get_path_params
+from typing import Any, get_args, Callable, TypeVar
 from .types import HTTPMethod, MethodType
 from pydantic._internal._model_construction import ModelMetaclass
+
+_T = TypeVar("_T")
 
 
 def make_model(model_name: str, model_args: dict[str, Any]) -> type[BaseModel]:
@@ -34,16 +36,8 @@ def make_model(model_name: str, model_args: dict[str, Any]) -> type[BaseModel]:
         return model
 
 
-def _path_params(url: str) -> list[str]:
-    pattern = r'\{(\w+)\}'
-
-    parameters = re.findall(pattern, url)
-
-    return parameters
-
-
 def split_params(url: str, params: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    path_params_names = _path_params(url)
+    path_params_names = get_path_params(url)
 
     path_params = {}
     for path_param_name in path_params_names:
@@ -51,18 +45,6 @@ def split_params(url: str, params: dict[str, Any]) -> tuple[dict[str, Any], dict
         del params[path_param_name]
 
     return params, path_params
-
-
-def fill_path_params(url: str, values: dict[str, Any]) -> str:
-    pattern = r'\{(\w+)\}'
-
-    def replace_match(match: re.Match) -> str:
-        param_name = match.group(1)
-        return str(values.get(param_name, match.group(0)))
-
-    new_url = re.sub(pattern, replace_match, url)
-
-    return new_url
 
 
 def is_safe_method(method: HTTPMethod) -> bool:
@@ -114,3 +96,7 @@ def set_method_type(func: Callable):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+def identical(value: _T) -> _T:
+    return value

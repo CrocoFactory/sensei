@@ -6,6 +6,8 @@ from sensei.types import IRateLimit
 
 
 class RateLimit(IRateLimit):
+    __slots__ = "_tokens", "_last_checked", "_async_lock", "_thread_lock"
+
     def __init__(self, calls: int, period: int) -> None:
         """
         Initialize the shared state for rate limiting.
