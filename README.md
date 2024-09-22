@@ -23,11 +23,10 @@ Source code is made available under the [MIT License](LICENSE).
 Here is example of OOP style.
 
 ```python
-from typing import Annotated, Any
-from httpx import Response
-from sensei import Router, Query, Path, APIModel, Header, Args, pascal_case
+from typing import Annotated, Any, Self
+from sensei import Router, Query, Path, APIModel, Header, Args, pascal_case, fill_path_params, RateLimit
 
-router = Router('https://reqres.in/api')
+router = Router('https://reqres.in/api', rate_limit=RateLimit(5, 1))
 
 
 @router.model()
@@ -36,7 +35,7 @@ class BaseModel(APIModel):
         return json['data']
 
     def __prepare_args__(self, args: Args) -> Args:
-        args.headers['X-Token'] = 'Hello token!'
+        args.headers['X-Token'] = 'secret_token'
         return args
 
     def __header_case__(self, s: str) -> str:
@@ -57,34 +56,25 @@ class User(BaseModel):
             page: Annotated[int, Query(1)],
             per_page: Annotated[int, Query(3, le=7)],
             bearer_token: Annotated[str, Header('secret', le=10)],
-    ) -> list["User"]:
+    ) -> list[Self]:
         ...
-
-    @staticmethod
-    @query.prepare
-    def _query_in(args: Args) -> Args:
-        args.headers['Hello-World'] = 'hello world'
-        return args
-
-    @staticmethod
-    @query.finalize
-    def _query_out(
-            response: Response,
-    ) -> list["User"]:
-        json = response.json()
-        users = [User(**user) for user in json]
-        return users
 
     @classmethod
     @router.get('/users/{id_}')
-    def get(cls, id_: Annotated[int, Path(alias='id')]) -> "User":
+    def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self:
         ...
 
-    @staticmethod
-    @get.finalize
-    def _get_out(response: Response) -> "User":
-        json = response.json()
-        return User(**json)
+    @router.delete('/users/{id_}')
+    def delete(self) -> Self:
+        ...
+
+    @delete.prepare
+    def _delete_in(self, args: Args) -> Args:
+        url = args.url
+        url = fill_path_params(url, {'id_': self.id})
+        args.url = url
+        return args
+
 
 users = User.query(per_page=7)
 user_id = users[0].id

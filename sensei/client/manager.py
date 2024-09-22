@@ -22,7 +22,7 @@ class Manager(Generic[_Client]):
             if self._client is None:
                 self._client = client
             else:
-                raise CollectionLimitError(self.__class__.__name__, 1, "Client")
+                raise CollectionLimitError(self.__class__, 1, "Client")
         else:
             raise TypeError(f"Client must be an instance of {self._client_type.__name__}")
 

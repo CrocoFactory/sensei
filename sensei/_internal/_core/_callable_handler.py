@@ -1,11 +1,11 @@
 import inspect
-from typing import Callable, TypeVar, Generic, Any, Self
-from pydantic import BaseModel
+from typing import Callable, TypeVar, Generic, Any, Self, get_origin, get_args
 from sensei.client import Manager, AsyncClient, Client
 from sensei._base_client import BaseClient
-from ._endpoint import Endpoint, ResponseModel, ResponseTypes, CaseConverter
+from ._endpoint import Endpoint, ResponseModel, RESPONSE_TYPES, CaseConverter
 from ._requester import Requester, ResponseFinalizer, Preparer, JsonFinalizer
 from ..tools import HTTPMethod, args_to_kwargs, MethodType, identical
+from sensei.types import IRateLimit
 
 _Client = TypeVar('_Client', bound=BaseClient)
 _RequestArgs = tuple[tuple[Any, ...], dict[str, Any]]
@@ -17,7 +17,9 @@ class _CallableHandler(Generic[_Client]):
         '_manager',
         '_method',
         '_path',
-        '_default_host',
+        '_rate_limit',
+        '_host',
+        '_port',
         '_request_args',
         '_method_type',
         '_temp_client',
@@ -33,7 +35,9 @@ class _CallableHandler(Generic[_Client]):
             path: str,
             method: HTTPMethod,
             func: Callable,
-            default_host: str,
+            host: str,
+            port: int | None = None,
+            rate_limit: IRateLimit | None = None,
             request_args: _RequestArgs,
             method_type: MethodType,
             manager: Manager[_Client] | None,
@@ -47,7 +51,10 @@ class _CallableHandler(Generic[_Client]):
         self._manager = manager
         self._method = method
         self._path = path
-        self._default_host = default_host
+        self._host = host
+        self._port = port
+        self._rate_limit = rate_limit
+
         self._request_args = request_args
         self._method_type = method_type
         self._temp_client: _Client | None = None
@@ -80,15 +87,19 @@ class _CallableHandler(Generic[_Client]):
 
         return_type = sig.return_annotation if sig.return_annotation is not inspect.Signature.empty else None
 
-        if return_type is not None and return_type not in ResponseTypes and not isinstance(return_type,
-                                                                                           type(BaseModel)):
-            if return_type == Self:
+        if not Endpoint.is_response_type(return_type):
+            if return_type is Self:
                 if MethodType.self_method(method_type):
                     return_type = func.__self__  # type: ignore
                 else:
-                    raise ValueError(f'Response is "Self" is only set for instance and class methods')
+                    raise ValueError(f'Response "Self" is only for instance and class methods')
+            elif get_origin(return_type) is list and get_args(return_type)[0] is Self:
+                if method_type is MethodType.CLASS:
+                    return_type = list[func.__self__]  # type: ignore
+                else:
+                    raise ValueError(f'Response "list[Self]" is only for class methods')
             elif self._response_finalizer is None:
-                raise ValueError(f'Response finalizer must be set, if response is not from: {ResponseTypes}')
+                raise ValueError(f'Response finalizer must be set, if response is not from: {RESPONSE_TYPES}')
             else:
                 return_type = dict
 
@@ -107,7 +118,7 @@ class _CallableHandler(Generic[_Client]):
         return requester
 
     def _get_request_args(self, client: BaseClient) -> tuple[Requester, dict]:
-        if client.host != self._default_host:
+        if client.host != self._host:
             raise ValueError('Client host must be equal to default host')
 
         requester = self._make_requester(client)
@@ -127,7 +138,9 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
             path: str,
             method: HTTPMethod,
             func: Callable,
-            default_host: str,
+            host: str,
+            port: int | None = None,
+            rate_limit: IRateLimit | None = None,
             request_args: _RequestArgs,
             method_type: MethodType,
             manager: Manager[AsyncClient] | None,
@@ -139,8 +152,10 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
     ):
         super().__init__(
             func=func,
-            default_host=default_host,
+            host=host,
+            port=port,
             request_args=request_args,
+            rate_limit=rate_limit,
             manager=manager,
             method_type=method_type,
             method=method,
@@ -155,11 +170,13 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
     async def __aenter__(self) -> ResponseModel:
         manager = self._manager
         if manager is None or manager.empty():
-            client = AsyncClient(host=self._default_host)
+            client = AsyncClient(host=self._host, port=self._port, rate_limit=self._rate_limit)
             await client.__aenter__()
             self._temp_client = client
         else:
             client = manager.get()
+            if not isinstance(client, AsyncClient):
+                raise TypeError(f'Manager`s client must be type of {AsyncClient}')
 
         requester, kwargs = self._get_request_args(client)
 
@@ -178,7 +195,9 @@ class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
             path: str,
             method: HTTPMethod,
             func: Callable,
-            default_host: str,
+            host: str,
+            port: int | None = None,
+            rate_limit: IRateLimit | None = None,
             request_args: _RequestArgs,
             method_type: MethodType,
             manager: Manager[Client] | None,
@@ -190,8 +209,10 @@ class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
     ):
         super().__init__(
             func=func,
-            default_host=default_host,
+            host=host,
+            port=port,
             request_args=request_args,
+            rate_limit=rate_limit,
             manager=manager,
             method_type=method_type,
             method=method,
@@ -206,11 +227,13 @@ class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
     def __enter__(self) -> ResponseModel:
         manager = self._manager
         if manager is None or manager.empty():
-            client = Client(host=self._default_host)
+            client = Client(host=self._host, port=self._port, rate_limit=self._rate_limit)
             client.__enter__()
             self._temp_client = client
         else:
             client = manager.get()
+            if not isinstance(client, Client):
+                raise TypeError(f'Manager`s client must be type of {Client}')
 
         requester, kwargs = self._get_request_args(client)
 

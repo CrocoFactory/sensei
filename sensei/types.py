@@ -16,7 +16,7 @@ class IRateLimit(ABC):
         self._period: int = period
 
     @property
-    def period(self):
+    def period(self) -> int:
         return self._period
 
     @period.setter
@@ -85,7 +85,7 @@ class IResponse(Protocol):
         pass
 
     @abstractmethod
-    def json(self) -> dict[str, Any]:
+    def json(self) -> dict[str, Any] | list:
         pass
 
     @abstractmethod

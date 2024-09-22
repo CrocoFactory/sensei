@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from functools import wraps
 from typing import Callable, Generic, Any
 from ._endpoint import Endpoint, Args, ResponseModel
 from sensei._base_client import BaseClient
@@ -26,7 +25,7 @@ class _DecoratedResponse(IResponse):
         self._response = response
         self._json_finalizer = json_finalizer
 
-    def json(self) -> dict[str, Any]:
+    def json(self) -> dict[str, Any] | list:
         return self._json_finalizer(self._response.json())
 
     def raise_for_status(self) -> IResponse:
@@ -140,15 +139,9 @@ class _AsyncRequester(Requester):
         args = self._get_args(**kwargs)
 
         response = await client.request(**args)
+        response.raise_for_status()
         response = _DecoratedResponse(response, json_finalizer=self._json_finalizer)
         return self._response_finalizer(response)
-
-    async def decorate(self, func: Callable):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            await self.request(**kwargs)
-
-        return wrapper
 
 
 class _Requester(Requester):
@@ -174,5 +167,6 @@ class _Requester(Requester):
         args = self._get_args(**kwargs)
 
         response = client.request(**args)
+        response.raise_for_status()
         response = _DecoratedResponse(response, json_finalizer=self._json_finalizer)
         return self._response_finalizer(response)

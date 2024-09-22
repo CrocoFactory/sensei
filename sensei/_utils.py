@@ -1,4 +1,5 @@
 import inspect
+import re
 from typing import Any, TypeVar, Protocol
 
 _T = TypeVar("_T")
@@ -33,3 +34,23 @@ def bind_attributes(obj: _T, *named_objects: tuple[_NamedObj]) -> _T:
         setattr(obj, named_obj.__name__, named_obj)
 
     return obj
+
+
+def get_path_params(url: str) -> list[str]:
+    pattern = r'\{(\w+)\}'
+
+    parameters = re.findall(pattern, url)
+
+    return parameters
+
+
+def fill_path_params(url: str, values: dict[str, Any]) -> str:
+    pattern = r'\{(\w+)\}'
+
+    def replace_match(match: re.Match) -> str:
+        param_name = match.group(1)
+        return str(values.get(param_name, match.group(0)))
+
+    new_url = re.sub(pattern, replace_match, url)
+
+    return new_url

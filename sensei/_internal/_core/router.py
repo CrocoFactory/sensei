@@ -4,31 +4,25 @@ from sensei.client import Manager
 from ._endpoint import CaseConverter
 from ._requester import JsonFinalizer, Preparer
 from ._route import Route
-from ..tools import HTTPMethod, set_method_type, identical
+from ..tools import HTTPMethod, set_method_type, identical, MethodType
 from sensei._utils import bind_attributes
 from ._types import RoutedFunction, IRouter, SameModel
 from ._hook import Hook
+from sensei.types import IRateLimit
+from sensei._descriptors import RateLimitAttr, PortAttr
 
 
 class Router(IRouter):
-    __slots__ = (
-        "_manager",
-        "_host",
-        "_converters",
-        "_finalize_json",
-        "_prepare_args",
-        "_linked_to_model",
-        "_query_case",
-        "_body_case",
-        "_cookie_case",
-        "_header_case"
-    )
+    rate_limit = RateLimitAttr()
+    port = PortAttr()
 
     def __init__(
             self,
             host: str,
-            manager: Manager | None = None,
             *,
+            port: int | None = None,
+            rate_limit: IRateLimit | None = None,
+            manager: Manager | None = None,
             query_case: CaseConverter = identical,
             body_case: CaseConverter = identical,
             cookie_case: CaseConverter = identical,
@@ -38,6 +32,9 @@ class Router(IRouter):
     ):
         self._manager = manager
         self._host = host
+
+        self.port = port
+        self.rate_limit = rate_limit
 
         self._query_case = query_case
         self._body_case = body_case
@@ -85,23 +82,36 @@ class Router(IRouter):
                 method,
                 func=func,
                 manager=self._manager,
-                default_host=self._host,
+                host=self._host,
+                port=self.port,
+                rate_limit=self.rate_limit,
                 case_converters=case_converters,
                 json_finalizer=self._finalize_json,
                 pre_preparer=self._prepare_args
             )
 
+            def _setattrs(
+                    instance,
+                    func: Callable,
+                    wrapper: Callable,
+                    route: Route
+            ) -> None:
+                method_type = route.method_type = wrapper.__method_type__  # type: ignore
+                if MethodType.self_method(method_type):
+                    route.__self__ = instance
+                    func.__self__ = instance
+
             if not route.is_async:
                 @set_method_type
                 @wraps(func)
                 def wrapper(*args, **kwargs):
-                    route.method_type = wrapper.__method_type__
+                    _setattrs(args[0], func, wrapper, route)
                     return route(*args, **kwargs)
             else:
                 @set_method_type
                 @wraps(func)
                 async def wrapper(*args, **kwargs):
-                    route.method_type = wrapper.__method_type__
+                    _setattrs(args[0], func, wrapper, route)
                     return await route(*args, **kwargs)
 
             bind_attributes(wrapper, route.finalize, route.prepare)  # type: ignore
