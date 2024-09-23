@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'sensei'
-version = '0.1.0.beta3'
+version = '0.1.0.beta3.post1'
 description = 'The python framework, providing fast and robust way to build client-side API wrappers.'
 authors = ['Alexey  <axbelenkov@gmail.com>']
 license = 'MIT'
@@ -31,6 +31,7 @@ python-dotenv = "^1.0.1"
 build = "^1.2.1"
 twine = "^5.1.1"
 croco-cli = "^0.3.1"
+flake8 = "^7.1.1"
 
 [build-system]
 requires = ['poetry-core']
