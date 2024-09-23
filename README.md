@@ -1,7 +1,7 @@
 # sensei
 <a href="https://pypi.org/project/sensei/">
 <h1 align="center">
-Cha<img alt="Logo Banner" src="https://raw.githubusercontent.com/CrocoFactory/.github/main/branding/sensei/logo/bookmark_transparent.png" width="300">
+<img alt="Logo Banner" src="https://raw.githubusercontent.com/CrocoFactory/.github/main/branding/sensei/logo/bookmark_transparent.png" width="300">
 </h1><br>
 </a>
 
