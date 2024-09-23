@@ -2,10 +2,11 @@ import inspect
 from typing import Callable, TypeVar, Generic, Any, Self, get_origin, get_args
 from sensei.client import Manager, AsyncClient, Client
 from sensei._base_client import BaseClient
-from ._endpoint import Endpoint, ResponseModel, RESPONSE_TYPES, CaseConverter
+from ._endpoint import Endpoint, ResponseModel, RESPONSE_TYPES, CaseConverter, Args
 from ._requester import Requester, ResponseFinalizer, Preparer, JsonFinalizer
 from ..tools import HTTPMethod, args_to_kwargs, MethodType, identical
-from sensei.types import IRateLimit
+from sensei.types import IRateLimit, IResponse
+from ..tools.utils import is_coroutine_function
 
 _Client = TypeVar('_Client', bound=BaseClient)
 _RequestArgs = tuple[tuple[Any, ...], dict[str, Any]]
@@ -42,7 +43,7 @@ class _CallableHandler(Generic[_Client]):
             method_type: MethodType,
             manager: Manager[_Client] | None,
             case_converters: dict[str, CaseConverter],
-            response_finalizer: ResponseFinalizer = identical,
+            response_finalizer: ResponseFinalizer | None = None,
             json_finalizer: JsonFinalizer = identical,
             pre_preparer: Preparer = identical,
             post_preparer: Preparer = identical,
@@ -60,8 +61,25 @@ class _CallableHandler(Generic[_Client]):
         self._temp_client: _Client | None = None
         self._converters = case_converters
 
-        self._preparer = lambda value: post_preparer(pre_preparer(value))
-        self._response_finalizer = response_finalizer
+        if is_coroutine_function(post_preparer):
+            async def preparer(value: Args) -> Args:
+                return await post_preparer(pre_preparer(value))
+        else:
+            def preparer(value: Args) -> Args:
+                return post_preparer(pre_preparer(value))
+
+        if response_finalizer:
+            if is_coroutine_function(response_finalizer):
+                async def finalizer(value: IResponse) -> ResponseModel:
+                    return await response_finalizer(value)
+            else:
+                def finalizer(value: IResponse) -> ResponseModel:
+                    return response_finalizer(value)
+        else:
+            finalizer = response_finalizer
+
+        self._preparer = preparer
+        self._response_finalizer = finalizer
 
         self._json_finalizer = json_finalizer
 
@@ -92,7 +110,7 @@ class _CallableHandler(Generic[_Client]):
                 if MethodType.self_method(method_type):
                     return_type = func.__self__  # type: ignore
                 else:
-                    raise ValueError(f'Response "Self" is only for instance and class methods')
+                    raise ValueError('Response "Self" is only for instance and class methods')
             elif get_origin(return_type) is list and get_args(return_type)[0] is Self:
                 if method_type is MethodType.CLASS:
                     return_type = list[func.__self__]  # type: ignore
@@ -132,41 +150,6 @@ class _CallableHandler(Generic[_Client]):
 
 
 class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]):
-    def __init__(
-            self,
-            *,
-            path: str,
-            method: HTTPMethod,
-            func: Callable,
-            host: str,
-            port: int | None = None,
-            rate_limit: IRateLimit | None = None,
-            request_args: _RequestArgs,
-            method_type: MethodType,
-            manager: Manager[AsyncClient] | None,
-            case_converters: dict[str, CaseConverter],
-            response_finalizer: ResponseFinalizer = identical,
-            json_finalizer: JsonFinalizer = identical,
-            pre_preparer: Preparer = identical,
-            post_preparer: Preparer = identical,
-    ):
-        super().__init__(
-            func=func,
-            host=host,
-            port=port,
-            request_args=request_args,
-            rate_limit=rate_limit,
-            manager=manager,
-            method_type=method_type,
-            method=method,
-            path=path,
-            response_finalizer=response_finalizer,
-            case_converters=case_converters,
-            json_finalizer=json_finalizer,
-            pre_preparer=pre_preparer,
-            post_preparer=post_preparer
-        )
-
     async def __aenter__(self) -> ResponseModel:
         manager = self._manager
         if manager is None or manager.empty():
@@ -189,41 +172,6 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
 
 
 class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
-    def __init__(
-            self,
-            *,
-            path: str,
-            method: HTTPMethod,
-            func: Callable,
-            host: str,
-            port: int | None = None,
-            rate_limit: IRateLimit | None = None,
-            request_args: _RequestArgs,
-            method_type: MethodType,
-            manager: Manager[Client] | None,
-            case_converters: dict[str, CaseConverter],
-            response_finalizer: ResponseFinalizer = identical,
-            json_finalizer: JsonFinalizer = identical,
-            pre_preparer: Preparer = identical,
-            post_preparer: Preparer = identical,
-    ):
-        super().__init__(
-            func=func,
-            host=host,
-            port=port,
-            request_args=request_args,
-            rate_limit=rate_limit,
-            manager=manager,
-            method_type=method_type,
-            method=method,
-            path=path,
-            response_finalizer=response_finalizer,
-            case_converters=case_converters,
-            json_finalizer=json_finalizer,
-            pre_preparer=pre_preparer,
-            post_preparer=post_preparer
-        )
-
     def __enter__(self) -> ResponseModel:
         manager = self._manager
         if manager is None or manager.empty():

@@ -6,7 +6,7 @@ from sensei.client import Manager
 from ._endpoint import CaseConverter
 from ..tools import HTTPMethod, MethodType, identical
 from sensei._base_client import BaseClient
-from ._callable_handler import CallableHandler
+from ._callable_handler import CallableHandler, AsyncCallableHandler
 from ._requester import ResponseFinalizer, Preparer, JsonFinalizer
 from sensei.types import IRateLimit
 
@@ -173,7 +173,7 @@ class _SyncRoute(Route):
 
 class _AsyncRoute(Route):
     async def __call__(self, *args, **kwargs):
-        async with CallableHandler(
+        async with AsyncCallableHandler(
             func=self._func,
             host=self._host,
             port=self._port,

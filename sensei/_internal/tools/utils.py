@@ -100,3 +100,8 @@ def set_method_type(func: Callable):
 
 def identical(value: _T) -> _T:
     return value
+
+
+def is_coroutine_function(func: Callable) -> bool:
+    return (inspect.iscoroutinefunction(func) or
+            (hasattr(func, '__wrapped__') and inspect.iscoroutinefunction(func.__wrapped__)))
