@@ -5,6 +5,7 @@
 </h1><br>
 </a>
 
+[![Python versions](https://img.shields.io/pypi/pyversions/sensei)](https://pypi.org/project/sensei/)
 [![PyPi Version](https://img.shields.io/pypi/v/sensei)](https://pypi.org/project/sensei/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/sensei?label=downloads)](https://pypi.org/project/sensei/)
 [![License](https://img.shields.io/github/license/CrocoFactory/sensei.svg)](https://pypi.org/project/sensei/)

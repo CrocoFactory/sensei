@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import inspect
-from typing import Callable, TypeVar, Generic, Any, Self, get_origin, get_args
+from typing import Callable, TypeVar, Generic, Any, get_origin, get_args
+from typing_extensions import Self
 from sensei.client import Manager, AsyncClient, Client
 from sensei._base_client import BaseClient
 from ._endpoint import Endpoint, ResponseModel, RESPONSE_TYPES, CaseConverter, Args

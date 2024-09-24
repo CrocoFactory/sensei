@@ -16,7 +16,7 @@ def make_model(model_name: str, model_args: dict[str, Any]) -> type[BaseModel]:
         annotations = {}
         defaults = {}
         for key, arg in model_args.items():
-            if isinstance(arg, tuple | list):
+            if isinstance(arg, (tuple, list)):
                 annotations[key] = arg[0]
                 if len(arg) == 2:
                     defaults[key] = arg[1]

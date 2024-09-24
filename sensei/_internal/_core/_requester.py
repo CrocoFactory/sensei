@@ -1,14 +1,16 @@
+from __future__ import annotations
+
 import inspect
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, Any, Awaitable
+from typing import Callable, Generic, Any, Awaitable, Union
 from ._endpoint import Endpoint, Args, ResponseModel
 from sensei._base_client import BaseClient
 from sensei.client import Client, AsyncClient
 from sensei.types import IResponse, IRequest
 from ..tools import identical
 
-Preparer = Callable[[Args], Args | Awaitable[Args]]
-ResponseFinalizer = Callable[[IResponse], ResponseModel | Awaitable[ResponseModel]]
+Preparer = Callable[[Args], Union[Args, Awaitable[Args]]]
+ResponseFinalizer = Callable[[IResponse], Union[ResponseModel, Awaitable[ResponseModel]]]
 JsonFinalizer = Callable[[dict[str, Any]], dict[str, Any]]
 
 

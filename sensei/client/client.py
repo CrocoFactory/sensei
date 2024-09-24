@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing
 from httpx import Client as _Client, AsyncClient as _AsyncClient, USE_CLIENT_DEFAULT, Response, BaseTransport
 from httpx._client import UseClientDefault, EventHook

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import wraps
 from typing import Callable
 from sensei.client import Manager
@@ -119,26 +121,26 @@ class Router(IRouter):
 
         return decorator
 
-    def model(self, model_obj: SameModel | None = None) -> SameModel:
-        def decorator(model_obj: SameModel) -> SameModel:
+    def model(self, model_cls: SameModel | None = None) -> SameModel:
+        def decorator(model_cls: SameModel) -> SameModel:
             if self._linked_to_model:
                 raise ValueError('Only one model can be associated with a router')
 
-            model_obj.__router__ = self
+            model_cls.__router__ = self
             self._linked_to_model = True
 
             hooks = Hook.values()
 
             for hook in hooks:
-                if hook_fun := getattr(model_obj, hook, None):
+                if hook_fun := getattr(model_cls, hook, None):
                     setattr(self, hook[1:-2], hook_fun)
 
-            return model_obj
+            return model_cls
 
-        if model_obj is None:
+        if model_cls is None:
             return decorator  # type: ignore
         else:
-            return decorator(model_obj)
+            return decorator(model_cls)
 
     def get(
             self,

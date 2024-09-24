@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from functools import partial
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo

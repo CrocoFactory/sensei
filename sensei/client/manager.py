@@ -1,9 +1,9 @@
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, Union
 from sensei._base_client import BaseClient
 from .exceptions import CollectionLimitError
 
 _Client = TypeVar('_Client', bound=BaseClient)
-_ClientToInstantiate = type[_Client] | _Client
+_ClientToInstantiate = Union[type[_Client], _Client]
 
 
 class Manager(Generic[_Client]):

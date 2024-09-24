@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import abstractmethod, ABC
 from ._utils import get_path_params, fill_path_params
 from .types import IRateLimit, IResponse
@@ -36,5 +38,5 @@ class BaseClient(ABC):
         return self._host
 
     @abstractmethod
-    def request(self, method: str, *args, **kwargs) -> IResponse:
+    def request(self, method: str, url: str, *args, **kwargs) -> IResponse:
         pass

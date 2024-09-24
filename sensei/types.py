@@ -1,5 +1,7 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Protocol, Mapping, Self, Any
+from typing import Protocol, Mapping, Any
+from typing_extensions import Self
 
 
 class IRateLimit(ABC):
