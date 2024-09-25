@@ -132,6 +132,15 @@ class Route(ABC):
         return wrapper
 
     def finalize(self, func: ResponseFinalizer | None = None) -> Callable:
+        """
+        Args:
+            func (ResponseFinalizer | None):
+                Response finalizer, used to modify final response, primarily when response type of "routed"
+                function is not from declared. Executed after router`s __finalize_json__
+
+        Returns:
+            ResponseFinalizer: Wrapped function, used to finalize response
+        """
         def decorator(func: ResponseFinalizer) -> ResponseFinalizer:
             self._response_finalizer = self._get_wrapper(func)
             return func
@@ -142,6 +151,15 @@ class Route(ABC):
             return decorator(func)
 
     def prepare(self, func: Preparer | None = None) -> Callable:
+        """
+        Args:
+            func (Preparer | None):
+                Args preparer, used to prepare the args for request before it. Final value also must be `Args` instance.
+                Executed after router`s __prepare_args__
+
+        Returns:
+            Preparer: Wrapped function, used to prepare the args for request before it
+        """
         def decorator(func: Preparer) -> Preparer:
             self._preparer = self._get_wrapper(func)
             return func

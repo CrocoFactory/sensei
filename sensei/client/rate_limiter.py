@@ -6,15 +6,17 @@ from sensei.types import IRateLimit
 
 
 class RateLimit(IRateLimit):
+    """
+    A class that manages rate limiting by maintaining tokens and enforcing rate limits.
+
+    Args:
+        calls (int): The maximum number of requests allowed per period.
+        period (int): The time period in seconds for the rate limit.
+    """
+
     __slots__ = "_tokens", "_last_checked", "_async_lock", "_thread_lock"
 
     def __init__(self, calls: int, period: int) -> None:
-        """
-        Initialize the shared state for rate limiting.
-
-        :param calls: Maximum number of requests allowed per period.
-        :param period: Time period (in seconds) for the rate limit.
-        """
         super().__init__(calls, period)
         self._tokens: int = calls  # Initial number of tokens equals rate_limit
         self._last_checked: float = time()  # Timestamp of the last check
@@ -38,37 +40,34 @@ class RateLimit(IRateLimit):
 
     async def async_acquire(self) -> bool:
         """
-        Attempt to acquire a token.
+        Asynchronously attempt to acquire a token.
 
-        :return: True if a token was acquired, False otherwise.
+        Returns:
+            bool: True if a token was acquired, False otherwise.
         """
         async with self._async_lock:
             return self._acquire()
 
     async def async_wait_for_slot(self) -> None:
-        """
-        Wait until a slot becomes available by periodically acquiring a token.
-        """
+        """Asynchronously wait until a slot becomes available by periodically attempting to acquire a token."""
         while not await self.async_acquire():
-            # Wait for the rate limit period before trying again
-            await asyncio.sleep(self.period / self.calls)
+            await asyncio.sleep(self._period / self._calls)
 
     def acquire(self) -> bool:
         """
         Synchronously attempt to acquire a token.
 
-        :return: True if a token was acquired, False otherwise.
+        Returns:
+            bool: True if a token was acquired, False otherwise.
         """
         with self._thread_lock:
             return self._acquire()
 
     def wait_for_slot(self) -> None:
-        """
-        Wait until a slot becomes available by periodically acquiring a token.
-        """
+        """Synchronously wait until a slot becomes available by periodically attempting to acquire a token."""
         while not self.acquire():
             # Wait for the rate limit period before trying again
-            sleep(self.period / self.calls)
+            sleep(self._period / self._calls)
 
 
 class _BaseLimiter(ABC):
@@ -85,48 +84,50 @@ class _BaseLimiter(ABC):
 
 
 class AsyncRateLimiter(_BaseLimiter):
-    def __init__(self, rate_limit: IRateLimit) -> None:
-        """
-        Initialize the asynchronous rate RateLimit with shared state.
+    """
+    Asynchronous rate limiter that manages request rate limiting using async methods.
 
-        :param rate_limit: An instance of RateLimiterState to share between limiters.
-        """
+    Args:
+        rate_limit (IRateLimit): An instance of RateLimit to share between limiters.
+    """
+
+    def __init__(self, rate_limit: IRateLimit) -> None:
         super().__init__(rate_limit)
 
     async def acquire(self) -> bool:
         """
         Asynchronously attempt to acquire a token.
 
-        :return: True if a token was acquired, False otherwise.
+        Returns:
+            bool: True if a token was acquired, False otherwise.
         """
         return await self._rate_limit.async_acquire()
 
     async def wait_for_slot(self) -> None:
-        """
-        Wait until a slot becomes available by periodically acquiring a token.
-        """
+        """Asynchronously wait until a slot becomes available by periodically acquiring a token."""
         await self._rate_limit.async_wait_for_slot()
 
 
 class RateLimiter(_BaseLimiter):
-    def __init__(self, rate_limit: IRateLimit) -> None:
-        """
-        Initialize the synchronous rate limiter with shared state.
+    """
+    Synchronous rate limiter that manages request rate limiting using synchronous methods.
 
-        :param rate_limit: An instance of RateLimit to share between limiters.
-        """
+    Args:
+        rate_limit (IRateLimit): An instance of RateLimit to share between limiters.
+    """
+
+    def __init__(self, rate_limit: IRateLimit) -> None:
         super().__init__(rate_limit)
 
     def acquire(self) -> bool:
         """
         Synchronously attempt to acquire a token.
 
-        :return: True if a token was acquired, False otherwise.
+        Returns:
+            bool: True if a token was acquired, False otherwise.
         """
         return self._rate_limit.acquire()
 
     def wait_for_slot(self) -> None:
-        """
-        Wait until a slot becomes available by periodically acquiring a token.
-        """
+        """Synchronously wait until a slot becomes available by periodically acquiring a token."""
         self._rate_limit.wait_for_slot()

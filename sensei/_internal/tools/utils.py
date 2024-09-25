@@ -3,7 +3,7 @@ import inspect
 from functools import wraps
 from pydantic import BaseModel
 from collections import OrderedDict
-from sensei._utils import get_path_params
+from sensei._utils import placeholders
 from typing import Any, get_args, Callable, TypeVar
 from .types import HTTPMethod, MethodType
 from pydantic._internal._model_construction import ModelMetaclass
@@ -37,7 +37,7 @@ def make_model(model_name: str, model_args: dict[str, Any]) -> type[BaseModel]:
 
 
 def split_params(url: str, params: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    path_params_names = get_path_params(url)
+    path_params_names = placeholders(url)
 
     path_params = {}
     for path_param_name in path_params_names:

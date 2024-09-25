@@ -142,6 +142,9 @@ class _CallableHandler(Generic[_Client]):
         if client.host != self._host:
             raise ValueError('Client host must be equal to default host')
 
+        if client.port != self._port:
+            raise ValueError('Client port must be equal to default port')
+
         requester = self._make_requester(client)
         kwargs = args_to_kwargs(self._func, *self._request_args[0], **self._request_args[1])
         method_type = self._method_type

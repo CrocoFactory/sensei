@@ -28,7 +28,7 @@ class RoutedMethod(Protocol):
     __doc__: str
 
 
-class RoutedModel(Protocol):
+class _RoutedModel(Protocol):
     __router__ = ...
     __finalize_json__: JsonFinalizer
     __prepare_args__: Preparer
@@ -38,14 +38,14 @@ class RoutedModel(Protocol):
     __header_case__: CaseConverter
 
 
-SameModel = TypeVar("SameModel", bound=RoutedModel)
+RoutedModel = TypeVar("RoutedModel", bound=_RoutedModel)
 
 
 class IRouter(ABC):
     __slots__ = ()
 
     @abstractmethod
-    def model(self, model_obj: SameModel) -> SameModel:
+    def model(self, model_obj: RoutedModel) -> RoutedFunction:
         pass
 
     @abstractmethod

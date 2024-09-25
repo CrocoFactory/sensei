@@ -4,7 +4,7 @@ from functools import partial
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
 from sensei.types import IResponse
-from sensei._utils import fill_path_params
+from sensei._utils import format_str
 from sensei.params import Body, Query, Header, Cookie
 from sensei.cases import header_case as to_header_case
 from typing import Any, get_args, Callable, Annotated, TypeVar, Generic, get_origin
@@ -30,6 +30,20 @@ _PartialHandler = Callable[[IResponse], ResponseModel]
 
 
 class Args(BaseModel):
+    """
+    Model used in preparers as input and output argument. Stores request arguments
+
+    Attributes:
+        url (str): URL to which the request will be made.
+        params (dict[str, Any]): Dictionary of query parameters to be included in the URL.
+                                 Default is an empty dictionary.
+        json_ (dict[str, Any]): Dictionary representing the JSON payload for the request body.
+                                The field is aliased as 'json' and defaults to an empty dictionary.
+        headers (dict[str, Any]): Dictionary of HTTP headers to be sent with the request.
+                                  Default is an empty dictionary.
+        cookies (dict[str, Any]): Dictionary of cookies to be included in the request.
+                                  Default is an empty dictionary.
+    """
     url: str
     params: dict[str, Any] = {}
     json_: dict[str, Any] = Field({}, alias="json")
@@ -183,7 +197,7 @@ class Endpoint(Generic[ResponseModel]):
         annotations, _ = split_params(path, annotations_all)
 
         request_params = self._map_params(annotations, params)
-        url = fill_path_params(path, path_params)
+        url = format_str(path, path_params)
         return url, request_params
 
     def _map_params(

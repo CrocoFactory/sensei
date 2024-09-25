@@ -11,6 +11,8 @@ from .rate_limiter import IRateLimit, RateLimiter, AsyncRateLimiter
 
 
 class Client(_Client, BaseClient):
+    """An HTTP client, with connection pooling, HTTP/2, redirects, cookie persistence, etc."""
+
     def __init__(
             self,
             *,
@@ -81,6 +83,7 @@ class Client(_Client, BaseClient):
             timeout: TimeoutTypes | UseClientDefault = USE_CLIENT_DEFAULT,
             extensions: RequestExtensions | None = None,
     ) -> Response:
+        """Build and send an HTTP request."""
         if self.rate_limit:
             RateLimiter(self.rate_limit).wait_for_slot()
 
@@ -102,6 +105,8 @@ class Client(_Client, BaseClient):
 
 
 class AsyncClient(_AsyncClient, BaseClient):
+    """An HTTP client, with connection pooling, HTTP/2, redirects, cookie persistence, etc."""
+
     def __init__(
             self,
             *,
@@ -172,6 +177,7 @@ class AsyncClient(_AsyncClient, BaseClient):
             timeout: TimeoutTypes | UseClientDefault = USE_CLIENT_DEFAULT,
             extensions: RequestExtensions | None = None,
     ) -> Response:
+        """Build and send an HTTP request."""
         if self.rate_limit:
             await AsyncRateLimiter(self.rate_limit).wait_for_slot()
 
