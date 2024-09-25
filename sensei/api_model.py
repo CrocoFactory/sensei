@@ -5,6 +5,7 @@ from pydantic._internal._model_construction import ModelMetaclass
 from ._internal import RoutedMethod, Hook, Args
 from ._utils import bind_attributes
 from ._utils import is_staticmethod, is_classmethod, is_selfmethod
+from .types import Json
 
 
 class _Namespace(dict):
@@ -57,32 +58,32 @@ class APIModel(BaseModel, metaclass=_ModelMeta):
     Examples:
         >>> from typing import Annotated, Any, Self
         >>> from sensei import Router, Query, Path, APIModel
-        >>>
+        ...
         >>> router = Router('https://reqres.in/api')
-        >>>
+        ...
         >>> @router.model()
-        >>> class User(APIModel):
-        >>>     email: str
-        >>>     id: int
-        >>>     first_name: str
-        >>>     last_name: str
-        >>>     avatar: str
-        >>>
-        >>>     @classmethod
-        >>>     @router.get('/users/{id_}')
-        >>>     def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self:
-        >>>         ...
+        ... class User(APIModel):
+        ...     email: str
+        ...     id: int
+        ...     first_name: str
+        ...     last_name: str
+        ...     avatar: str
+        ...
+        ...     @classmethod
+        ...     @router.get('/users/{id_}')
+        ...     def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self:
+        ...         ...
     """
 
     @staticmethod
-    def __finalize_json__(json: dict[str, Any]) -> dict[str, Any]:
+    def __finalize_json__(json: Json) -> Json:
         """
         Finalize the JSON response.
 
         This hook is used to finalize the JSON response. The final value must be JSON serializable.
 
         Args:
-            json (dict[str, Any]): The original JSON response.
+            json (Json): The original JSON response.
 
         Returns:
             dict[str, Any]: The finalized JSON response.

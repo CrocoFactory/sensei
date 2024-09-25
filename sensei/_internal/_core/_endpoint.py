@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import partial
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
-from sensei.types import IResponse
+from sensei.types import IResponse, Json
 from sensei._utils import format_str
 from sensei.params import Body, Query, Header, Cookie
 from sensei.cases import header_case as to_header_case
@@ -16,9 +16,9 @@ ResponseModel = TypeVar(
     'ResponseModel',
     type[BaseModel],
     str,
-    dict[str, Any],
+    dict,
     bytes,
-    list[dict[str, Any]],
+    list[dict],
     BaseModel,
     list[BaseModel],
 )
@@ -37,7 +37,7 @@ class Args(BaseModel):
         url (str): URL to which the request will be made.
         params (dict[str, Any]): Dictionary of query parameters to be included in the URL.
                                  Default is an empty dictionary.
-        json_ (dict[str, Any]): Dictionary representing the JSON payload for the request body.
+        json_ (Json): JSON payload for the request body.
                                 The field is aliased as 'json' and defaults to an empty dictionary.
         headers (dict[str, Any]): Dictionary of HTTP headers to be sent with the request.
                                   Default is an empty dictionary.
@@ -46,7 +46,7 @@ class Args(BaseModel):
     """
     url: str
     params: dict[str, Any] = {}
-    json_: dict[str, Any] = Field({}, alias="json")
+    json_: Json = Field({}, alias="json")
     headers: dict[str, Any] = {}
     cookies: dict[str, Any] = {}
 
@@ -64,7 +64,7 @@ class Endpoint(Generic[ResponseModel]):
     _response_handle_map: dict[_ConditionChecker, _ResponseHandler] = {
         lambda model: isinstance(model, type(BaseModel)): lambda model, response: model(**response.json()),
         lambda model: model is str: lambda model, response: response.text,
-        lambda model: model in (dict[str, Any], dict): lambda model, response: response.json(),
+        lambda model: dict in (model, get_origin(model)): lambda model, response: response.json(),
         lambda model: model is bytes: lambda model, response: response.content,
         lambda model: isinstance(model, BaseModel): lambda model, response: model,
         lambda model: model is None: lambda model, response: None,

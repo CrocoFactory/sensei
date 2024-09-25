@@ -6,12 +6,12 @@ from typing import Callable, Generic, Any, Awaitable, Union
 from ._endpoint import Endpoint, Args, ResponseModel
 from sensei._base_client import BaseClient
 from sensei.client import Client, AsyncClient
-from sensei.types import IResponse, IRequest
+from sensei.types import IResponse, IRequest, Json
 from ..tools import identical
 
 Preparer = Callable[[Args], Union[Args, Awaitable[Args]]]
 ResponseFinalizer = Callable[[IResponse], Union[ResponseModel, Awaitable[ResponseModel]]]
-JsonFinalizer = Callable[[dict[str, Any]], dict[str, Any]]
+JsonFinalizer = Callable[[Json], Json]
 
 
 class _DecoratedResponse(IResponse):
@@ -28,7 +28,7 @@ class _DecoratedResponse(IResponse):
         self._response = response
         self._json_finalizer = json_finalizer
 
-    def json(self) -> dict[str, Any] | list:
+    def json(self) -> Json:
         return self._json_finalizer(self._response.json())
 
     def raise_for_status(self) -> IResponse:
