@@ -176,10 +176,16 @@ class Endpoint(Generic[ResponseModel]):
 
         result = self._handle_if_condition(response_model)(response_obj)
 
+        to_validate = result
+
+        if isinstance(response_model, BaseModel):
+            response_model = type(response_model)
+            to_validate = response_model(**result.model_dump(mode='json', by_alias=True))
+
         class ValidationModel(BaseModel):
             result: response_model
 
-        ValidationModel(result=result)
+        ValidationModel(result=to_validate)
 
         return result
 

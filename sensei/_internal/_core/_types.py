@@ -45,7 +45,7 @@ class IRouter(ABC):
     __slots__ = ()
 
     @abstractmethod
-    def model(self, model_obj: RoutedModel) -> RoutedFunction:
+    def model(self, model_obj: RoutedModel | None) -> RoutedModel:
         pass
 
     @abstractmethod

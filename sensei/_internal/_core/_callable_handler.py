@@ -124,17 +124,21 @@ class _CallableHandler(Generic[_Client]):
             else:
                 return_type = dict
 
-        endpoint = Endpoint(self._path, self._method, params=params, response=return_type, **self._converters)
+        converters = self._converters.copy()
+        converters.pop('response_case')
+        endpoint = Endpoint(self._path, self._method, params=params, response=return_type, **converters)
         return endpoint
 
     def _make_requester(self, client: BaseClient) -> Requester:
+        case_converter = self._converters.get('response_case', identical)
         endpoint = self.__make_endpoint()
         requester = Requester(
             client,
             endpoint,
             response_finalizer=self._response_finalizer,
             json_finalizer=self._json_finalizer,
-            preparer=self._preparer
+            preparer=self._preparer,
+            response_case=case_converter,
         )
         return requester
 

@@ -166,5 +166,20 @@ class APIModel(BaseModel, metaclass=_ModelMeta):
         """
         return s
 
+    @staticmethod
+    def __response_case__(s: str) -> str:
+        """
+        Convert the case of the JSON response keys.
+
+        This hook is used to convert the case of the JSON response keys to the desired format.
+
+        Args:
+            s (str): The original JSON key string.
+
+        Returns:
+            str: The converted JSON key string.
+        """
+        return s
+
     def __str__(self):
         return f'{self.__class__.__name__}({super().__str__()})'

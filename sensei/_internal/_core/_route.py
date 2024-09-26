@@ -47,6 +47,7 @@ class Route(ABC):
             case_converters: dict[str, CaseConverter],
             json_finalizer: JsonFinalizer = identical,
             pre_preparer: Preparer = identical,
+            response_case: CaseConverter = identical,
     ):
         if inspect.iscoroutinefunction(func):
             instance = super().__new__(_AsyncRoute)

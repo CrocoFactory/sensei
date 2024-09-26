@@ -3,7 +3,7 @@ from __future__ import annotations
 import inspect
 from abc import ABC, abstractmethod
 from typing import Callable, Generic, Any, Awaitable, Union
-from ._endpoint import Endpoint, Args, ResponseModel
+from ._endpoint import Endpoint, Args, ResponseModel, CaseConverter
 from sensei._base_client import BaseClient
 from sensei.client import Client, AsyncClient
 from sensei.types import IResponse, IRequest, Json
@@ -17,19 +17,25 @@ JsonFinalizer = Callable[[Json], Json]
 class _DecoratedResponse(IResponse):
     __slots__ = (
         "_response",
-        "_json_finalizer"
+        "_json_finalizer",
+        "_response_case"
     )
 
     def __init__(
             self,
             response: IResponse,
-            json_finalizer: JsonFinalizer = identical
+            json_finalizer: JsonFinalizer = identical,
+            response_case: CaseConverter = identical,
     ):
         self._response = response
         self._json_finalizer = json_finalizer
+        self._response_case = response_case
 
     def json(self) -> Json:
-        return self._json_finalizer(self._response.json())
+        case = self._response_case
+        json = self._response.json()
+        json = {case(k): v for k, v in json.items()}
+        return self._json_finalizer(json)
 
     def raise_for_status(self) -> IResponse:
         return self._response.raise_for_status()
@@ -60,6 +66,7 @@ class Requester(ABC, Generic[ResponseModel]):
         "_preparer",
         "_is_async_preparer",
         "_is_async_response_finalizer",
+        "_response_case"
     )
 
     def __new__(
@@ -70,6 +77,7 @@ class Requester(ABC, Generic[ResponseModel]):
             response_finalizer: ResponseFinalizer | None = None,
             json_finalizer: JsonFinalizer = identical,
             preparer: Preparer = identical,
+            response_case: CaseConverter = identical,
     ):
         if isinstance(client, AsyncClient):
             return super().__new__(_AsyncRequester)
@@ -86,6 +94,7 @@ class Requester(ABC, Generic[ResponseModel]):
             response_finalizer: ResponseFinalizer | None = None,
             json_finalizer: JsonFinalizer = identical,
             preparer: Preparer = identical,
+            response_case: CaseConverter = identical,
     ):
         self._client = client
         self._response_finalizer = response_finalizer or self._finalize
@@ -94,6 +103,7 @@ class Requester(ABC, Generic[ResponseModel]):
         self._preparer = preparer
         self._is_async_preparer = inspect.iscoroutinefunction(self._preparer)
         self._is_async_response_finalizer = inspect.iscoroutinefunction(self._response_finalizer)
+        self._response_case = response_case
 
     @property
     def client(self) -> BaseClient:
@@ -146,7 +156,7 @@ class _AsyncRequester(Requester):
 
         response = await client.request(**args)
         response.raise_for_status()
-        response = _DecoratedResponse(response, json_finalizer=self._json_finalizer)
+        response = _DecoratedResponse(response, json_finalizer=self._json_finalizer, response_case=self._response_case)
         return await self._call_response_finalizer(response)
 
 
@@ -175,5 +185,5 @@ class _Requester(Requester):
 
         response = client.request(**args)
         response.raise_for_status()
-        response = _DecoratedResponse(response, json_finalizer=self._json_finalizer)
+        response = _DecoratedResponse(response, json_finalizer=self._json_finalizer, response_case=self._response_case)
         return self._call_response_finalizer(response)
