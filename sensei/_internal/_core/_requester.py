@@ -8,6 +8,7 @@ from sensei._base_client import BaseClient
 from sensei.client import Client, AsyncClient
 from sensei.types import IResponse, IRequest, Json
 from ..tools import identical
+from sensei._utils import placeholders
 
 Preparer = Callable[[Args], Union[Args, Awaitable[Args]]]
 ResponseFinalizer = Callable[[IResponse], Union[ResponseModel, Awaitable[ResponseModel]]]
@@ -128,6 +129,8 @@ class Requester(ABC, Generic[ResponseModel]):
     def _dump_args(self, args: Args) -> dict[str, Any]:
         endpoint = self._endpoint
         args = args.model_dump(mode="json", exclude_none=True, by_alias=True)
+        if placeholders(url := args['url']):
+            raise ValueError(f'Path params of {url} params must be passed')
         return {'method': endpoint.method, **args}
 
 

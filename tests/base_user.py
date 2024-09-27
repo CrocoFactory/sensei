@@ -2,26 +2,7 @@ import datetime
 from abc import ABC, abstractmethod
 from typing import Annotated, Literal, Any, Union
 from typing_extensions import Self
-from sensei import Query, Path, APIModel
-
-
-class _NameJobMixin(APIModel):
-    name: str
-    job: str
-
-
-class CreateResponse(_NameJobMixin):
-    id: int
-    created_at: datetime.datetime
-
-
-class UpdateResponse(_NameJobMixin):
-    updated_at: datetime.datetime
-
-
-class RegisterResponse:
-    token: str
-    id: int
+from sensei import Query, Path
 
 
 class BaseUser(ABC):
@@ -51,6 +32,14 @@ class BaseUser(ABC):
     def login(self) -> str: ...
 
     @abstractmethod
+    def update(
+            self,
+            name: Annotated[str, Query()],
+            job: Annotated[str, Query()]
+    ) -> datetime.datetime:
+        ...
+
+    @abstractmethod
     def model_dump(
             self,
             *,
@@ -63,7 +52,7 @@ class BaseUser(ABC):
         pass
 
     @classmethod
-    def validate(cls, obj: Self) -> bool:
+    def test_validate(cls, obj: Self) -> bool:
         result = obj.model_dump(mode='json').keys()
         desired = cls.__annotations__.keys()
         return isinstance(obj, cls) and result == desired

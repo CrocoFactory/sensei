@@ -41,8 +41,9 @@ def split_params(url: str, params: dict[str, Any]) -> tuple[dict[str, Any], dict
 
     path_params = {}
     for path_param_name in path_params_names:
-        path_params[path_param_name] = params[path_param_name]
-        del params[path_param_name]
+        if value := params.get(path_param_name):
+            path_params[path_param_name] = value
+            del params[path_param_name]
 
     return params, path_params
 

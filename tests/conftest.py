@@ -1,6 +1,12 @@
+import asyncio
+import datetime
 import pytest
-from typing import Any
-from sensei import Router, APIModel, Args, snake_case
+from typing import Any, Callable, Annotated
+from httpx import Response
+from pydantic import EmailStr, PositiveInt, AnyHttpUrl
+from typing_extensions import Self
+from .base_user import BaseUser
+from sensei import Router, APIModel, Args, snake_case, Query, Path, format_str, Body
 
 
 @pytest.fixture(scope="session")
@@ -29,3 +35,144 @@ def model_base(router) -> type[APIModel]:
             return snake_case(s)
 
     return BaseModel
+
+
+@pytest.fixture
+def sync_maker(router: Router) -> Callable[[type[APIModel]], type[BaseUser]]:
+    def make_model(base: type[APIModel]) -> type[BaseUser]:
+        class User(base, BaseUser):
+            email: EmailStr
+            id: PositiveInt
+            first_name: str
+            last_name: str
+            avatar: AnyHttpUrl
+
+            @classmethod
+            @router.get('/users')
+            def list(
+                    cls,
+                    page: Annotated[int, Query()] = 1,
+                    per_page: Annotated[int, Query(le=7)] = 3
+            ) -> list[Self]:
+                ...
+
+            @classmethod
+            @router.get('/users/{id_}')
+            def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: ...
+
+            @router.delete('/users/{id_}')
+            def delete(self) -> Self: ...
+
+            @delete.prepare
+            def _delete_in(self, args: Args) -> Args:
+                url = args.url
+                url = format_str(url, {'id_': self.id})
+                args.url = url
+                return args
+
+            @router.post('/token')
+            def login(self) -> str: ...
+
+            @login.prepare
+            def _login_in(self, args: Args) -> Args:
+                args.json_['email'] = self.email
+                return args
+
+            @login.finalize
+            def _login_out(self, response: Response) -> str:
+                return response.json()['token']
+
+            @router.patch('/users/{id_}', skip_finalizer=True)
+            def update(
+                    self,
+                    name: str,
+                    job: str
+            ) -> datetime.datetime:
+                ...
+
+            @update.prepare
+            def _update_in(self, args: Args) -> Args:
+                args.url = format_str(args.url, {'id_': self.id})
+                return args
+
+            @update.finalize
+            def _update_out(self, response: Response) -> datetime.datetime:
+                json_ = response.json()
+                result = datetime.datetime.strptime(json_['updated_at'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                self.first_name = json_['name']
+                return result
+
+        return User
+    return make_model
+
+
+@pytest.fixture
+def async_maker(router: Router) -> Callable[[type[APIModel]], type[BaseUser]]:
+    def make_model(base: type[APIModel]) -> type[BaseUser]:
+        class User(base, BaseUser):
+            email: EmailStr
+            id: PositiveInt
+            first_name: str
+            last_name: str
+            avatar: AnyHttpUrl
+
+            @classmethod
+            @router.get('/users')
+            async def list(
+                    cls,
+                    page: Annotated[int, Query()] = 1,
+                    per_page: Annotated[int, Query(le=7)] = 3
+            ) -> list[Self]:
+                ...
+
+            @classmethod
+            @router.get('/users/{id_}')
+            async def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: ...
+
+            @router.delete('/users/{id_}')
+            async def delete(self) -> Self: ...
+
+            @delete.prepare
+            async def _delete_in(self, args: Args) -> Args:
+                url = args.url
+                url = format_str(url, {'id_': self.id})
+                args.url = url
+                return args
+
+            @router.post('/token')
+            async def login(self) -> str: ...
+
+            @login.prepare
+            async def _login_in(self, args: Args) -> Args:
+                args.json_['email'] = self.email
+                return args
+
+            @login.finalize
+            async def _login_out(self, response: Response) -> str:
+                return response.json()['token']
+
+            @router.patch('/users/{id_}', skip_finalizer=True)
+            async def update(
+                    self,
+                    name: str,
+                    job: str
+            ) -> datetime.datetime:
+                ...
+
+            @update.prepare
+            async def _update_in(self, args: Args) -> Args:
+                args.url = format_str(args.url, {'id_': self.id})
+                await asyncio.sleep(1.5)
+                return args
+
+            @update.finalize
+            async def _update_out(self, response: Response) -> datetime.datetime:
+                json_ = response.json()
+                result = datetime.datetime.strptime(json_['updated_at'], "%Y-%m-%dT%H:%M:%S.%fZ")
+                await asyncio.sleep(1.5)
+                self.first_name = json_['name']
+                return result
+
+        return User
+    return make_model
+

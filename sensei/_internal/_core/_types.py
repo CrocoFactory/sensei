@@ -56,7 +56,8 @@ class IRouter(ABC):
             query_case: CaseConverter | None = None,
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
-            header_case: CaseConverter | None = None
+            header_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> RoutedFunction:
         pass
 
@@ -68,7 +69,8 @@ class IRouter(ABC):
             query_case: CaseConverter | None = None,
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
-            header_case: CaseConverter | None = None
+            header_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> RoutedFunction:
         pass
 
@@ -81,6 +83,7 @@ class IRouter(ABC):
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
             header_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> RoutedFunction:
         pass
 
@@ -92,7 +95,8 @@ class IRouter(ABC):
             query_case: CaseConverter | None = None,
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
-            header_case: CaseConverter | None = None
+            header_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> RoutedFunction:
         pass
 
@@ -104,6 +108,7 @@ class IRouter(ABC):
             query_case: CaseConverter | None = None,
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
-            header_case: CaseConverter | None = None
+            header_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> RoutedFunction:
         pass

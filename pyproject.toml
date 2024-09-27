@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'sensei'
-version = '0.1.0.beta3.post1'
+version = '0.1.0.rc1'
 description = 'The python framework, providing fast and robust way to build client-side API wrappers.'
 authors = ['Alexey  <axbelenkov@gmail.com>']
 license = 'MIT'
@@ -38,6 +38,8 @@ flake8 = "^7.1.1"
 respx = "^0.21.1"
 pyjwt = "^2.9.0"
 email-validator = "^2.2.0"
+coverage = "^7.6.1"
+pytest-asyncio = "^0.24.0"
 
 [build-system]
 requires = ['poetry-core']

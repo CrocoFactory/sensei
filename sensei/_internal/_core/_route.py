@@ -86,7 +86,6 @@ class Route(ABC):
         self._response_finalizer: ResponseFinalizer | None = None
         self._preparer: Preparer = identical
         self._method_type: MethodType = MethodType.STATIC
-        self._is_async = None
 
         self._case_converters = case_converters
         self._json_finalizer = json_finalizer

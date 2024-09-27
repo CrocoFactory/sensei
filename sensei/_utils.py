@@ -62,7 +62,7 @@ def placeholders(url: str) -> list[str]:
     return parameters
 
 
-def format_str(s: str, values: dict[str, Any]) -> str:
+def format_str(s: str, values: dict[str, Any], ignore_missed: bool = False) -> str:
     """
     Replaces placeholders in the string with corresponding values from the provided dictionary.
 
@@ -74,6 +74,7 @@ def format_str(s: str, values: dict[str, Any]) -> str:
         s (str): String containing placeholders in the format `{param_name}`.
         values (dict[str, Any]): Dictionary where keys are parameter names and values are
                                  used to replace the placeholders in the URL.
+        ignore_missed: Whether to ignore missed values
 
     Returns:
         str: String with placeholders replaced by corresponding values from the `values` dictionary.
@@ -87,7 +88,15 @@ def format_str(s: str, values: dict[str, Any]) -> str:
         >>> format_str(url, values)
         https://example.com/users/42/posts/1001
     """
-    return s.format(**values)
+    try:
+        return s.format(**values)
+    except KeyError:
+        if not ignore_missed:
+            raise
+        else:
+            keys = placeholders(s)
+            values = values | {k: f'{"{"+ k +"}"}' for k in keys}
+            return s.format(**values)
 
 
 def get_base_url(host: str, port: int) -> str:

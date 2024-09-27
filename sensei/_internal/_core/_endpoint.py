@@ -120,10 +120,6 @@ class Endpoint(Generic[ResponseModel]):
         return self._method
 
     @property
-    def error_msg(self) -> str | None:
-        return self._error_msg
-
-    @property
     def params_model(self) -> type[BaseModel] | None:
         return self._params_model
 
@@ -203,7 +199,8 @@ class Endpoint(Generic[ResponseModel]):
         annotations, _ = split_params(path, annotations_all)
 
         request_params = self._map_params(annotations, params)
-        url = format_str(path, path_params)
+
+        url = format_str(path, path_params, True)
         return url, request_params
 
     def _map_params(

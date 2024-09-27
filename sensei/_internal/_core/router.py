@@ -155,7 +155,8 @@ class Router(IRouter):
             path: str,
             method: HTTPMethod,
             *,
-            case_converters: dict[str, CaseConverter]
+            case_converters: dict[str, CaseConverter],
+            skip_finalizer: bool = False,
     ) -> Callable:
         """
         Create a decorator for a specific HTTP method and path.
@@ -167,12 +168,15 @@ class Router(IRouter):
                 The HTTP method for the route (e.g., GET, POST).
             case_converters (dict[str, CaseConverter]):
                 A dictionary of case converters for query, body, cookie, and header parameters.
+            skip_finalizer:
+                Skip JSON finalizer, when finalizing response. Defaults to `False`.
 
         Returns:
             Callable: A decorator that transforms a function into a routed function.
         """
 
         def decorator(func: Callable) -> Callable:
+            json_finalizer = identical if skip_finalizer else self._finalize_json
             route = Route(
                 path=path,
                 method=method,
@@ -182,7 +186,7 @@ class Router(IRouter):
                 port=self.port,
                 rate_limit=self.rate_limit,
                 case_converters=case_converters,
-                json_finalizer=self._finalize_json,
+                json_finalizer=json_finalizer,
                 pre_preparer=self._prepare_args
             )
 
@@ -201,6 +205,8 @@ class Router(IRouter):
                 @set_method_type
                 @wraps(func)
                 def wrapper(*args, **kwargs):
+                    if not len(args):
+                        args = None,
                     _setattrs(args[0], func, wrapper, route)
                     res = route(*args, **kwargs)
                     _setattrs(None, func, wrapper, route)
@@ -209,6 +215,8 @@ class Router(IRouter):
                 @set_method_type
                 @wraps(func)
                 async def wrapper(*args, **kwargs):
+                    if not len(args):
+                        args = None,
                     _setattrs(args[0], func, wrapper, route)
                     res = await route(*args, **kwargs)
                     _setattrs(None, func, wrapper, route)
@@ -265,6 +273,7 @@ class Router(IRouter):
             cookie_case: CaseConverter | None = None,
             header_case: CaseConverter | None = None,
             response_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> _RouteDecorator:
         """
         Create a route using the HTTP GET method.
@@ -273,7 +282,6 @@ class Router(IRouter):
         to the specified path, handling parameter case conversion and argument validation.
 
         Args:
-            response_case: 
             path (str):
                 The relative path of the route.
             query_case (CaseConverter | None, optional):
@@ -284,8 +292,10 @@ class Router(IRouter):
                 Case converter for cookie parameters. Defaults to using the router's default.
             header_case (CaseConverter | None, optional):
                 Case converter for header parameters. Defaults to using the router's default.
-            response_case:
+            response_case (CaseConverter | None, optional):
                 Case converter for JSON response. Defaults to using the router's default.
+            skip_finalizer:
+                Skip JSON finalizer, when finalizing response. Defaults to `False`.
 
         Returns:
             RoutedFunction: A routed function that sends a GET request according to the specified path and validates
@@ -299,7 +309,8 @@ class Router(IRouter):
         decorator = self._get_decorator(
             path=path,
             method="GET",
-            case_converters=converters
+            case_converters=converters,
+            skip_finalizer=skip_finalizer
         )
         return decorator
 
@@ -312,6 +323,7 @@ class Router(IRouter):
             cookie_case: CaseConverter | None = None,
             header_case: CaseConverter | None = None,
             response_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> _RouteDecorator:
         """
         Create a route using the HTTP POST method.
@@ -332,6 +344,8 @@ class Router(IRouter):
                 Case converter for header parameters. Defaults to using the router's default.
             response_case:
                 Case converter for JSON response. Defaults to using the router's default.
+            skip_finalizer:
+                Skip JSON finalizer, when finalizing response. Defaults to `False`.
 
         Returns:
             RoutedFunction: A routed function that sends a POST request according to the specified path and validates
@@ -345,7 +359,8 @@ class Router(IRouter):
         decorator = self._get_decorator(
             path=path,
             method="POST",
-            case_converters=converters
+            case_converters=converters,
+            skip_finalizer=skip_finalizer
         )
         return decorator
 
@@ -358,6 +373,7 @@ class Router(IRouter):
             cookie_case: CaseConverter | None = None,
             header_case: CaseConverter | None = None,
             response_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> _RouteDecorator:
         """
         Create a route using the HTTP PATCH method.
@@ -378,6 +394,8 @@ class Router(IRouter):
                 Case converter for header parameters. Defaults to using the router's default.
             response_case:
                 Case converter for JSON response. Defaults to using the router's default.
+            skip_finalizer:
+                Skip JSON finalizer, when finalizing response. Defaults to `False`.
 
         Returns:
             RoutedFunction: A routed function that sends a PATCH request according to the specified path and validates
@@ -391,7 +409,8 @@ class Router(IRouter):
         decorator = self._get_decorator(
             path=path,
             method="PATCH",
-            case_converters=converters
+            case_converters=converters,
+            skip_finalizer=skip_finalizer
         )
         return decorator
 
@@ -404,6 +423,7 @@ class Router(IRouter):
             cookie_case: CaseConverter | None = None,
             header_case: CaseConverter | None = None,
             response_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> _RouteDecorator:
         """
         Create a route using the HTTP PUT method.
@@ -424,6 +444,8 @@ class Router(IRouter):
                 Case converter for header parameters. Defaults to using the router's default.
             response_case:
                 Case converter for JSON response. Defaults to using the router's default.
+            skip_finalizer:
+                Skip JSON finalizer, when finalizing response. Defaults to `False`.
 
         Returns:
             RoutedFunction: A routed function that sends a PUT request according to the specified path and validates
@@ -437,7 +459,8 @@ class Router(IRouter):
         decorator = self._get_decorator(
             path=path,
             method="PUT",
-            case_converters=converters
+            case_converters=converters,
+            skip_finalizer=skip_finalizer
         )
         return decorator
 
@@ -450,6 +473,7 @@ class Router(IRouter):
             cookie_case: CaseConverter | None = None,
             header_case: CaseConverter | None = None,
             response_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> _RouteDecorator:
         """
         Create a route using the HTTP DELETE method.
@@ -470,6 +494,8 @@ class Router(IRouter):
                 Case converter for header parameters. Defaults to using the router's default.
             response_case:
                 Case converter for JSON response. Defaults to using the router's default.
+            skip_finalizer:
+                Skip JSON finalizer, when finalizing response. Defaults to `False`.
 
         Returns:
             RoutedFunction: A routed function that sends a DELETE request according to the specified path and validates
@@ -483,6 +509,7 @@ class Router(IRouter):
         decorator = self._get_decorator(
             path=path,
             method="DELETE",
-            case_converters=converters
+            case_converters=converters,
+            skip_finalizer=skip_finalizer
         )
         return decorator

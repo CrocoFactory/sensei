@@ -12,6 +12,7 @@ from http import HTTPStatus as Status
 
 Responser = Callable[[Request], Response]
 SECRET_TOKEN = os.urandom(32).hex()
+JWT_ALGORITHM = 'HS256'
 
 
 class _HTTPMethod(str, Enum):
@@ -71,7 +72,7 @@ class Token(_Endpoint):
             'sub': email,
             'exp': time.time() + 10 * 60
         }
-        token = jwt.encode(payload, SECRET_TOKEN, algorithm='HS256')
+        token = jwt.encode(payload, SECRET_TOKEN, algorithm=JWT_ALGORITHM)
         return Response(status_code=Status.CREATED.value, json={'data': {'token': token}})
 
     @staticmethod
