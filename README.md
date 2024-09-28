@@ -7,7 +7,7 @@
 
 [![Python versions](https://img.shields.io/pypi/pyversions/sensei?color=%23F94526)](https://pypi.org/project/sensei/)
 [![PyPi Version](https://img.shields.io/pypi/v/sensei?color=%23F94526)](https://pypi.org/project/sensei/)
-[![PyPI Downloads](https://img.shields.io/pypi/dm/sensei?label=downloads&color=%23F94526)](https://pypi.org/project/sensei/)
+[![Coverage](/badges/coverage.svg)](https://pypi.org/project/sensei/)
 
 The python framework, providing fast and robust way to build client-side API wrappers.
                            
