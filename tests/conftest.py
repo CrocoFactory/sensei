@@ -21,25 +21,27 @@ def router(base_url) -> Router:
 
 
 @pytest.fixture()
-def model_base(router) -> type[APIModel]:
-    @router.model()
-    class BaseModel(APIModel):
-        def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
-            return json['data']
+def base_maker() -> Callable[[Router], type[APIModel]]:
+    def model_base(router) -> type[APIModel]:
+        @router.model()
+        class BaseModel(APIModel):
+            def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
+                return json['data']
 
-        def __prepare_args__(self, args: Args) -> Args:
-            args.headers['X-Token'] = 'secret_token'
-            return args
+            def __prepare_args__(self, args: Args) -> Args:
+                args.headers['X-Token'] = 'secret_token'
+                return args
 
-        def __response_case__(self, s: str) -> str:
-            return snake_case(s)
+            def __response_case__(self, s: str) -> str:
+                return snake_case(s)
 
-    return BaseModel
+        return BaseModel
+    return model_base
 
 
 @pytest.fixture
-def sync_maker(router: Router) -> Callable[[type[APIModel]], type[BaseUser]]:
-    def make_model(base: type[APIModel]) -> type[BaseUser]:
+def sync_maker() -> Callable[[Router, type[APIModel]], type[BaseUser]]:
+    def make_model(router: Router, base: type[APIModel]) -> type[BaseUser]:
         class User(base, BaseUser):
             email: EmailStr
             id: PositiveInt
@@ -95,20 +97,33 @@ def sync_maker(router: Router) -> Callable[[type[APIModel]], type[BaseUser]]:
                 args.url = format_str(args.url, {'id_': self.id})
                 return args
 
-            @update.finalize
+            @update.finalize()
             def _update_out(self, response: Response) -> datetime.datetime:
                 json_ = response.json()
                 result = datetime.datetime.strptime(json_['updated_at'], "%Y-%m-%dT%H:%M:%S.%fZ")
                 self.first_name = json_['name']
                 return result
 
+            @router.put('/users/{id_}', skip_finalizer=True)
+            def change(
+                    self,
+                    name: Annotated[str, Query()],
+                    job: Annotated[str, Query()]
+            ) -> bytes:
+                ...
+
+            @change.prepare
+            def _change_in(self, args: Args) -> Args:
+                args.url = format_str(args.url, {'id_': self.id})
+                return args
+
         return User
     return make_model
 
 
 @pytest.fixture
-def async_maker(router: Router) -> Callable[[type[APIModel]], type[BaseUser]]:
-    def make_model(base: type[APIModel]) -> type[BaseUser]:
+def async_maker() -> Callable[[Router, type[APIModel]], type[BaseUser]]:
+    def make_model(router: Router, base: type[APIModel]) -> type[BaseUser]:
         class User(base, BaseUser):
             email: EmailStr
             id: PositiveInt
@@ -172,6 +187,19 @@ def async_maker(router: Router) -> Callable[[type[APIModel]], type[BaseUser]]:
                 await asyncio.sleep(1.5)
                 self.first_name = json_['name']
                 return result
+
+            @router.put('/users/{id_}', skip_finalizer=True)
+            async def change(
+                    self,
+                    name: Annotated[str, Query()],
+                    job: Annotated[str, Query()]
+            ) -> bytes:
+                ...
+
+            @change.prepare
+            def _change_in(self, args: Args) -> Args:
+                args.url = format_str(args.url, {'id_': self.id})
+                return args
 
         return User
     return make_model

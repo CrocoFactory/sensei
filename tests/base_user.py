@@ -40,6 +40,14 @@ class BaseUser(ABC):
         ...
 
     @abstractmethod
+    def change(
+            self,
+            name: Annotated[str, Query()],
+            job: Annotated[str, Query()]
+    ) -> bytes:
+        ...
+
+    @abstractmethod
     def model_dump(
             self,
             *,

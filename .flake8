@@ -1,6 +1,11 @@
 [flake8]
-max-line-length = 118
+max-line-length = 120
 exclude =
     .git,
     __pycache__,
-    branding/
+    sensei/_compat.py
+    sensei/__init__.py
+    sensei/client/__init__.py
+    sensei/_internal/__init__.py
+    sensei/_internal/tools/__init__.py
+    sensei/_internal/_core/__init__.py

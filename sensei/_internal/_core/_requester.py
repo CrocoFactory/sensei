@@ -106,18 +106,6 @@ class Requester(ABC, Generic[ResponseModel]):
         self._is_async_response_finalizer = inspect.iscoroutinefunction(self._response_finalizer)
         self._response_case = response_case
 
-    @property
-    def client(self) -> BaseClient:
-        return self._client
-
-    @property
-    def endpoint(self) -> Endpoint:
-        return self._endpoint
-
-    @staticmethod
-    def _prepare(args: Args) -> Args:
-        return args
-
     def _finalize(self, response: IResponse) -> ResponseModel:
         endpoint = self._endpoint
         return endpoint.get_response(response_obj=response)

@@ -1,7 +1,7 @@
 from typing import Any
 
 
-class CollectionLimitError(Exception):
+class CollectionLimitError(ValueError):
     def __init__(self, collection: Any, limit: int, element_name: str = "element"):
         super().__init__(
             f'{collection} size limit exceeded. '

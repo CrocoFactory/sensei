@@ -12,28 +12,27 @@ _T = TypeVar("_T")
 
 
 def make_model(model_name: str, model_args: dict[str, Any]) -> type[BaseModel]:
-    if model_args:
-        annotations = {}
-        defaults = {}
-        for key, arg in model_args.items():
-            if isinstance(arg, (tuple, list)):
-                annotations[key] = arg[0]
-                if len(arg) == 2:
-                    defaults[key] = arg[1]
-            else:
-                annotations[key] = arg
+    annotations = {}
+    defaults = {}
+    for key, arg in model_args.items():
+        if isinstance(arg, (tuple, list)):
+            annotations[key] = arg[0]
+            if len(arg) == 2:
+                defaults[key] = arg[1]
+        else:
+            annotations[key] = arg
 
-        model: type[BaseModel] = ModelMetaclass(  # type: ignore
-            model_name,
-            (BaseModel,),
-            {
-                '__module__': sys.modules[__name__],
-                '__qualname__': model_name,
-                '__annotations__': annotations,
-                **defaults
-            }
-        )
-        return model
+    model: type[BaseModel] = ModelMetaclass(  # type: ignore
+        model_name,
+        (BaseModel,),
+        {
+            '__module__': sys.modules[__name__],
+            '__qualname__': model_name,
+            '__annotations__': annotations,
+            **defaults
+        }
+    )
+    return model
 
 
 def split_params(url: str, params: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:

@@ -9,8 +9,9 @@ from tests.mock_api import mock_api, SECRET_TOKEN, JWT_ALGORITHM
 
 class TestSync:
     @pytest.fixture
-    def user_model(self, model_base, sync_maker) -> type[BaseUser]:
-        return sync_maker(model_base)
+    def user_model(self, base_maker, sync_maker, router) -> type[BaseUser]:
+        base = base_maker(router)
+        return sync_maker(router, base)
 
     def test_get(self, user_model):
         user = user_model.get(1)
@@ -51,3 +52,8 @@ class TestSync:
         res = user.update(name="Brandy", job="Data Scientist")
         assert user.first_name == "Brandy"
         assert isinstance(res, datetime.datetime)
+
+    def test_change(self, user_model):
+        user = user_model.get(1)
+        res = user.change(name="Brandy", job="Data Scientist")
+        assert isinstance(res, bytes)

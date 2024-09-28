@@ -9,8 +9,9 @@ from tests.mock_api import mock_api, SECRET_TOKEN, JWT_ALGORITHM
 
 class TestAsync:
     @pytest.fixture
-    def user_model(self, model_base, async_maker) -> type[BaseUser]:
-        return async_maker(model_base)
+    def user_model(self, base_maker, async_maker, router) -> type[BaseUser]:
+        base = base_maker(router)
+        return async_maker(router, base)
 
     @pytest.mark.asyncio
     async def test_get(self, user_model):
@@ -56,3 +57,9 @@ class TestAsync:
         res = await user.update(name="Brandy", job="Data Scientist") # type: ignore
         assert user.first_name == "Brandy"
         assert isinstance(res, datetime.datetime)
+
+    @pytest.mark.asyncio
+    async def test_change(self, user_model):
+        user = await user_model.get(1)  # type: ignore
+        res = await user.change(name="Brandy", job="Data Scientist")  # type: ignore
+        assert isinstance(res, bytes)

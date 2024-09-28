@@ -1,6 +1,7 @@
 from __future__ import annotations
 from functools import wraps
-from typing import Callable, Optional
+from httpx import URL
+from typing import Callable, Optional, Any
 from sensei.client import Manager
 from ._endpoint import CaseConverter
 from ._requester import JsonFinalizer, Preparer
@@ -11,6 +12,7 @@ from ._types import RoutedFunction, IRouter, RoutedModel
 from ._hook import Hook
 from sensei.types import IRateLimit
 from sensei._descriptors import RateLimitAttr, PortAttr
+from sensei.cases import header_case as to_header_case
 
 _RouteDecorator = Callable[[Callable], RoutedFunction]
 
@@ -69,7 +71,7 @@ class Router(IRouter):
             query_case: CaseConverter = identical,
             body_case: CaseConverter = identical,
             cookie_case: CaseConverter = identical,
-            header_case: CaseConverter = identical,
+            header_case: CaseConverter = to_header_case,
             response_case: CaseConverter = identical,
             __finalize_json__: JsonFinalizer = identical,
             __prepare_args__: Preparer = identical
@@ -91,7 +93,7 @@ class Router(IRouter):
         self._linked_to_model: bool = False
 
     @property
-    def base_url(self) -> str:
+    def base_url(self) -> URL:
         """
         Get the base URL constructed from the host and port.
 
@@ -100,7 +102,8 @@ class Router(IRouter):
         """
         host = self._host
         port = self.port
-        return get_base_url(host, port)
+        base = get_base_url(host, port)
+        return URL(base)
 
     @property
     def manager(self) -> Optional[Manager]:
@@ -191,7 +194,7 @@ class Router(IRouter):
             )
 
             def _setattrs(
-                    instance,
+                    instance: Any,
                     func: Callable,
                     wrapper: Callable,
                     route: Route
@@ -205,9 +208,8 @@ class Router(IRouter):
                 @set_method_type
                 @wraps(func)
                 def wrapper(*args, **kwargs):
-                    if not len(args):
-                        args = None,
-                    _setattrs(args[0], func, wrapper, route)
+                    instance = args[0] if len(args) else None
+                    _setattrs(instance, func, wrapper, route)
                     res = route(*args, **kwargs)
                     _setattrs(None, func, wrapper, route)
                     return res
@@ -215,9 +217,8 @@ class Router(IRouter):
                 @set_method_type
                 @wraps(func)
                 async def wrapper(*args, **kwargs):
-                    if not len(args):
-                        args = None,
-                    _setattrs(args[0], func, wrapper, route)
+                    instance = args[0] if len(args) else None
+                    _setattrs(instance, func, wrapper, route)
                     res = await route(*args, **kwargs)
                     _setattrs(None, func, wrapper, route)
                     return res

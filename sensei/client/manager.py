@@ -7,8 +7,8 @@ _ClientType = TypeVar('_ClientType', bound=BaseClient)
 
 class Manager(Generic[_ClientType]):
     """
-    A generic manager class for handling a single client instance with type safety. The client type defined at creation
-    and it`s not reset.
+    A generic manager class for handling a single client instance with type safety. The client type defined at
+    creation and it`s not reset.
 
     This class manages an instance of a client (which must be a subclass of `BaseClient`),
     ensuring that only one client is set at a time. The class provides methods to set,
@@ -28,10 +28,7 @@ class Manager(Generic[_ClientType]):
             self._client = client
             self._client_type = type(client)
         else:
-            raise ValueError(
-                "Client must be an instance of AsyncClient or Client. "
-                "Alternatively, provide the type 'AsyncClient' or 'Client' to instantiate the corresponding Manager."
-            )
+            raise TypeError("Client must be an instance of AsyncClient or Client.")
 
     def set(self, client: _ClientType) -> None:
         """

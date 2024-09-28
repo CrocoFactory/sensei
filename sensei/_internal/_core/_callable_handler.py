@@ -118,7 +118,7 @@ class _CallableHandler(Generic[_Client]):
                 if method_type is MethodType.CLASS:
                     return_type = list[func.__self__]  # type: ignore
                 else:
-                    raise ValueError(f'Response "list[Self]" is only for class methods')
+                    raise ValueError('Response "list[Self]" is only for class methods')
             elif self._response_finalizer is None:
                 raise ValueError(f'Response finalizer must be set, if response is not from: {RESPONSE_TYPES}')
             else:

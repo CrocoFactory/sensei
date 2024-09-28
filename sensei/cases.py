@@ -41,9 +41,9 @@ def pascal_case(s: str) -> str:
 
 def constant_case(s: str) -> str:
     """Convert a string to CONSTANT_CASE."""
-    s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
-    s = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s)
-    s = re.sub(r'\W+', '_', s)
+    s = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', s)
+    s = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', s)
+    s = re.sub(r'[\W_]+', '_', s)
     return s.upper()
 
 

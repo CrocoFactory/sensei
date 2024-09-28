@@ -4,8 +4,9 @@ import typing
 from httpx import Client as _Client, AsyncClient as _AsyncClient, USE_CLIENT_DEFAULT, Response, BaseTransport
 from httpx._client import UseClientDefault, EventHook
 from httpx._config import DEFAULT_MAX_REDIRECTS, Limits, DEFAULT_LIMITS, DEFAULT_TIMEOUT_CONFIG
-from httpx._types import URLTypes, RequestContent, RequestData, RequestFiles, QueryParamTypes, HeaderTypes, CookieTypes, \
-    AuthTypes, TimeoutTypes, RequestExtensions, ProxiesTypes, ProxyTypes, CertTypes, VerifyTypes
+from httpx._types import (URLTypes, RequestContent, RequestData, RequestFiles, QueryParamTypes, HeaderTypes,
+                          CookieTypes, AuthTypes, TimeoutTypes, RequestExtensions, ProxiesTypes, ProxyTypes, CertTypes,
+                          VerifyTypes)
 from sensei._base_client import BaseClient
 from .rate_limiter import IRateLimit, RateLimiter, AsyncRateLimiter
 
