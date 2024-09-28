@@ -1,12 +1,23 @@
+from __future__ import annotations
+
 from abc import abstractmethod, ABC
-from ._utils import get_path_params, fill_path_params
+from ._utils import get_base_url
 from .types import IRateLimit, IResponse
 from sensei._descriptors import RateLimitAttr, PortAttr
 
 
+class _PortAttr(PortAttr):
+    def __set__(self, obj: object, value: int) -> None:
+        if not obj.__dict__.get('_port_set'):
+            super().__set__(obj, value)
+            obj.__dict__['_port_set'] = True
+        else:
+            raise AttributeError('Port can only be set at creation')
+
+
 class BaseClient(ABC):
     rate_limit = RateLimitAttr()
-    port = PortAttr()
+    port = _PortAttr()
 
     def __init__(
             self,
@@ -22,19 +33,18 @@ class BaseClient(ABC):
 
         self._host = host
 
-        if 'port' in get_path_params(host):
-            api_url = fill_path_params(host, {'port': port})
-        elif port is not None:
-            api_url = f'{host}:{port}'
-        else:
-            api_url = host
-
-        self._api_url = api_url
+        base_url = get_base_url(host, port)
+        self._api_url = base_url
 
     @property
     def host(self) -> str:
         return self._host
 
     @abstractmethod
-    def request(self, method: str, *args, **kwargs) -> IResponse:
+    def request(self, method: str, url: str, *args, **kwargs) -> IResponse:
+        pass
+
+    @property
+    @abstractmethod
+    def base_url(self) -> str:
         pass

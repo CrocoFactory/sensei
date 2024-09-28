@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import inspect
 from abc import ABC, abstractmethod
 from functools import wraps, partial
@@ -6,7 +8,7 @@ from sensei.client import Manager
 from ._endpoint import CaseConverter
 from ..tools import HTTPMethod, MethodType, identical
 from sensei._base_client import BaseClient
-from ._callable_handler import CallableHandler
+from ._callable_handler import CallableHandler, AsyncCallableHandler
 from ._requester import ResponseFinalizer, Preparer, JsonFinalizer
 from sensei.types import IRateLimit
 
@@ -45,6 +47,7 @@ class Route(ABC):
             case_converters: dict[str, CaseConverter],
             json_finalizer: JsonFinalizer = identical,
             pre_preparer: Preparer = identical,
+            response_case: CaseConverter = identical,
     ):
         if inspect.iscoroutinefunction(func):
             instance = super().__new__(_AsyncRoute)
@@ -83,7 +86,6 @@ class Route(ABC):
         self._response_finalizer: ResponseFinalizer | None = None
         self._preparer: Preparer = identical
         self._method_type: MethodType = MethodType.STATIC
-        self._is_async = None
 
         self._case_converters = case_converters
         self._json_finalizer = json_finalizer
@@ -130,6 +132,15 @@ class Route(ABC):
         return wrapper
 
     def finalize(self, func: ResponseFinalizer | None = None) -> Callable:
+        """
+        Args:
+            func (ResponseFinalizer | None):
+                Response finalizer, used to modify final response, primarily when response type of "routed"
+                function is not from declared. Executed after router`s __finalize_json__
+
+        Returns:
+            ResponseFinalizer: Wrapped function, used to finalize response
+        """
         def decorator(func: ResponseFinalizer) -> ResponseFinalizer:
             self._response_finalizer = self._get_wrapper(func)
             return func
@@ -140,6 +151,15 @@ class Route(ABC):
             return decorator(func)
 
     def prepare(self, func: Preparer | None = None) -> Callable:
+        """
+        Args:
+            func (Preparer | None):
+                Args preparer, used to prepare the args for request before it. Final value also must be `Args` instance.
+                Executed after router`s __prepare_args__
+
+        Returns:
+            Preparer: Wrapped function, used to prepare the args for request before it
+        """
         def decorator(func: Preparer) -> Preparer:
             self._preparer = self._get_wrapper(func)
             return func
@@ -173,7 +193,7 @@ class _SyncRoute(Route):
 
 class _AsyncRoute(Route):
     async def __call__(self, *args, **kwargs):
-        async with CallableHandler(
+        async with AsyncCallableHandler(
             func=self._func,
             host=self._host,
             port=self._port,

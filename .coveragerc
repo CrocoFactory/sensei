@@ -1,0 +1,8 @@
+[run]
+omit =
+    sensei/_internal/_core/_types.py
+    sensei/types.py
+    sensei/_compat.py
+    sensei/params.py
+    sensei/_base_client.py
+    tests/*

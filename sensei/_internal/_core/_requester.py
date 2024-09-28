@@ -1,32 +1,42 @@
+from __future__ import annotations
+
+import inspect
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, Any
-from ._endpoint import Endpoint, Args, ResponseModel
+from typing import Callable, Generic, Any, Awaitable, Union
+from ._endpoint import Endpoint, Args, ResponseModel, CaseConverter
 from sensei._base_client import BaseClient
 from sensei.client import Client, AsyncClient
-from sensei.types import IResponse, IRequest
+from sensei.types import IResponse, IRequest, Json
 from ..tools import identical
+from sensei._utils import placeholders
 
-Preparer = Callable[[Args], Args]
-ResponseFinalizer = Callable[[IResponse], ResponseModel]
-JsonFinalizer = Callable[[dict[str, Any]], dict[str, Any]]
+Preparer = Callable[[Args], Union[Args, Awaitable[Args]]]
+ResponseFinalizer = Callable[[IResponse], Union[ResponseModel, Awaitable[ResponseModel]]]
+JsonFinalizer = Callable[[Json], Json]
 
 
 class _DecoratedResponse(IResponse):
     __slots__ = (
         "_response",
-        "_json_finalizer"
+        "_json_finalizer",
+        "_response_case"
     )
 
     def __init__(
             self,
             response: IResponse,
-            json_finalizer: JsonFinalizer = identical
+            json_finalizer: JsonFinalizer = identical,
+            response_case: CaseConverter = identical,
     ):
         self._response = response
         self._json_finalizer = json_finalizer
+        self._response_case = response_case
 
-    def json(self) -> dict[str, Any] | list:
-        return self._json_finalizer(self._response.json())
+    def json(self) -> Json:
+        case = self._response_case
+        json = self._response.json()
+        json = {case(k): v for k, v in json.items()}
+        return self._json_finalizer(json)
 
     def raise_for_status(self) -> IResponse:
         return self._response.raise_for_status()
@@ -54,7 +64,10 @@ class Requester(ABC, Generic[ResponseModel]):
         "_response_finalizer",
         "_endpoint",
         "_json_finalizer",
-        "_preparer"
+        "_preparer",
+        "_is_async_preparer",
+        "_is_async_response_finalizer",
+        "_response_case"
     )
 
     def __new__(
@@ -65,6 +78,7 @@ class Requester(ABC, Generic[ResponseModel]):
             response_finalizer: ResponseFinalizer | None = None,
             json_finalizer: JsonFinalizer = identical,
             preparer: Preparer = identical,
+            response_case: CaseConverter = identical,
     ):
         if isinstance(client, AsyncClient):
             return super().__new__(_AsyncRequester)
@@ -81,31 +95,16 @@ class Requester(ABC, Generic[ResponseModel]):
             response_finalizer: ResponseFinalizer | None = None,
             json_finalizer: JsonFinalizer = identical,
             preparer: Preparer = identical,
+            response_case: CaseConverter = identical,
     ):
         self._client = client
         self._response_finalizer = response_finalizer or self._finalize
         self._endpoint = endpoint
         self._json_finalizer = json_finalizer
         self._preparer = preparer
-
-    @property
-    def client(self) -> BaseClient:
-        return self._client
-
-    @property
-    def endpoint(self) -> Endpoint:
-        return self._endpoint
-
-    @staticmethod
-    def _prepare(args: Args) -> Args:
-        return args
-
-    def _get_args(self, **kwargs) -> dict[str, Any]:
-        endpoint = self._endpoint
-        args = endpoint.get_args(**kwargs)
-        args = self._preparer(args).model_dump(mode="json", exclude_none=True, by_alias=True)
-
-        return {'method': endpoint.method, **args}
+        self._is_async_preparer = inspect.iscoroutinefunction(self._preparer)
+        self._is_async_response_finalizer = inspect.iscoroutinefunction(self._response_finalizer)
+        self._response_case = response_case
 
     def _finalize(self, response: IResponse) -> ResponseModel:
         endpoint = self._endpoint
@@ -115,52 +114,61 @@ class Requester(ABC, Generic[ResponseModel]):
     def request(self, **kwargs) -> ResponseModel:
         pass
 
+    def _dump_args(self, args: Args) -> dict[str, Any]:
+        endpoint = self._endpoint
+        args = args.model_dump(mode="json", exclude_none=True, by_alias=True)
+        if placeholders(url := args['url']):
+            raise ValueError(f'Path params of {url} params must be passed')
+        return {'method': endpoint.method, **args}
+
 
 class _AsyncRequester(Requester):
-    def __init__(
-            self,
-            client: BaseClient,
-            endpoint: Endpoint,
-            *,
-            response_finalizer: ResponseFinalizer | None = None,
-            json_finalizer: JsonFinalizer = identical,
-            preparer: Preparer = identical,
-    ):
-        super().__init__(
-            client,
-            endpoint,
-            response_finalizer=response_finalizer,
-            json_finalizer=json_finalizer,
-            preparer=preparer
-        )
+    async def _call_preparer(self, args: Args) -> Args:
+        result = self._preparer(args)
+        if self._is_async_preparer:
+            result = await result
+        return result
+
+    async def _call_response_finalizer(self, response: IResponse) -> ResponseModel:
+        result = self._response_finalizer(response)
+        if self._is_async_response_finalizer:
+            result = await result
+        return result
+
+    async def _get_args(self, **kwargs) -> dict[str, Any]:
+        endpoint = self._endpoint
+        args = endpoint.get_args(**kwargs)
+        args = await self._call_preparer(args)
+        return self._dump_args(args)
 
     async def request(self, **kwargs) -> ResponseModel:
         client = self._client
-        args = self._get_args(**kwargs)
+        args = await self._get_args(**kwargs)
 
         response = await client.request(**args)
         response.raise_for_status()
-        response = _DecoratedResponse(response, json_finalizer=self._json_finalizer)
-        return self._response_finalizer(response)
+        response = _DecoratedResponse(response, json_finalizer=self._json_finalizer, response_case=self._response_case)
+        return await self._call_response_finalizer(response)
 
 
 class _Requester(Requester):
-    def __init__(
-            self,
-            client: BaseClient,
-            endpoint: Endpoint,
-            *,
-            response_finalizer: ResponseFinalizer | None = None,
-            json_finalizer: JsonFinalizer = identical,
-            preparer: Preparer = identical,
-    ):
-        super().__init__(
-            client,
-            endpoint,
-            response_finalizer=response_finalizer,
-            json_finalizer=json_finalizer,
-            preparer=preparer
-        )
+    def _call_preparer(self, args: Args) -> Args:
+        result = self._preparer(args)
+        if self._is_async_preparer:
+            raise ValueError("If preparer is async, the route function must match it")
+        return result
+
+    def _call_response_finalizer(self, response: IResponse) -> ResponseModel:
+        result = self._response_finalizer(response)
+        if self._is_async_response_finalizer:
+            raise ValueError("If response finalizer is async, the route function must match it")
+        return result
+
+    def _get_args(self, **kwargs) -> dict[str, Any]:
+        endpoint = self._endpoint
+        args = endpoint.get_args(**kwargs)
+        args = self._call_preparer(args)
+        return self._dump_args(args)
 
     def request(self, **kwargs) -> ResponseModel:
         client = self._client
@@ -168,5 +176,5 @@ class _Requester(Requester):
 
         response = client.request(**args)
         response.raise_for_status()
-        response = _DecoratedResponse(response, json_finalizer=self._json_finalizer)
-        return self._response_finalizer(response)
+        response = _DecoratedResponse(response, json_finalizer=self._json_finalizer, response_case=self._response_case)
+        return self._call_response_finalizer(response)

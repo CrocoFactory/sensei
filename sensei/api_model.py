@@ -5,6 +5,7 @@ from pydantic._internal._model_construction import ModelMetaclass
 from ._internal import RoutedMethod, Hook, Args
 from ._utils import bind_attributes
 from ._utils import is_staticmethod, is_classmethod, is_selfmethod
+from .types import Json
 
 
 class _Namespace(dict):
@@ -45,28 +46,139 @@ class _ModelMeta(ModelMetaclass):
 
 
 class APIModel(BaseModel, metaclass=_ModelMeta):
+    """
+    Base class for creating Sensei API models. Don`t confuse it with Pydantic BaseModel, it`s used simultaneously
+    for validating output data and provide "routed" functions.
+
+    But usage rools are the same with BaseModel
+    Usage docs: https://docs.pydantic.dev/2.9/concepts/models/
+
+    To make the proper class, decorate it with @router.model. Avoiding this requirements will lead you to the issues.
+
+    Examples:
+        >>> from typing import Annotated, Any, Self
+        >>> from sensei import Router, Query, Path, APIModel
+        ...
+        >>> router = Router('https://reqres.in/api')
+        ...
+        >>> @router.model()
+        ... class User(APIModel):
+        ...     email: str
+        ...     id: int
+        ...     first_name: str
+        ...     last_name: str
+        ...     avatar: str
+        ...
+        ...     @classmethod
+        ...     @router.get('/users/{id_}')
+        ...     def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self:
+        ...         ...
+    """
+
     @staticmethod
-    def __finalize_json__(json: dict[str, Any]) -> dict[str, Any]:
+    def __finalize_json__(json: Json) -> Json:
+        """
+        Finalize the JSON response.
+
+        This hook is used to finalize the JSON response. The final value must be JSON serializable.
+
+        Args:
+            json (Json): The original JSON response.
+
+        Returns:
+            dict[str, Any]: The finalized JSON response.
+        """
         return json
 
     @staticmethod
     def __prepare_args__(args: Args) -> Args:
+        """
+        Prepare the arguments for the request.
+
+        This hook is used to prepare the arguments for the request before it is sent.
+        The final value must be an instance of `Args`.
+
+        Args:
+            args (Args): The original arguments.
+
+        Returns:
+            Args: The prepared arguments.
+        """
         return args
 
     @staticmethod
     def __query_case__(s: str) -> str:
+        """
+        Convert the case of query parameters.
+
+        This hook is used to convert the case of query parameters to the desired format.
+
+        Args:
+            s (str): The original query parameter string.
+
+        Returns:
+            str: The converted query parameter string.
+        """
         return s
 
     @staticmethod
     def __body_case__(s: str) -> str:
+        """
+        Convert the case of body parameters.
+
+        This hook is used to convert the case of body parameters to the desired format.
+
+        Args:
+            s (str): The original body parameter string.
+
+        Returns:
+            str: The converted body parameter string.
+        """
         return s
 
     @staticmethod
     def __cookie_case__(s: str) -> str:
+        """
+        Convert the case of cookie parameters.
+
+        This hook is used to convert the case of cookie parameters to the desired format.
+
+        Args:
+            s (str): The original cookie parameter string.
+
+        Returns:
+            str: The converted cookie parameter string.
+        """
         return s
 
     @staticmethod
     def __header_case__(s: str) -> str:
+        """
+        Convert the case of header parameters.
+
+        This hook is used to convert the case of header parameters to the desired format.
+
+        Args:
+            s (str): The original header parameter string.
+
+        Returns:
+            str: The converted header parameter string.
+        """
+        return s
+
+    @staticmethod
+    def __response_case__(s: str) -> str:
+        """
+        Convert the case of the JSON response keys.
+
+        This hook is used to convert the case of the JSON response keys to the desired format.
+
+        Args:
+            s (str): The original JSON key string.
+
+        Returns:
+            str: The converted JSON key string.
+        """
         return s
 
     def __str__(self):

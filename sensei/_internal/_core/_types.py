@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Protocol, TypeVar
 from ._endpoint import CaseConverter
@@ -26,7 +28,7 @@ class RoutedMethod(Protocol):
     __doc__: str
 
 
-class RoutedModel(Protocol):
+class _RoutedModel(Protocol):
     __router__ = ...
     __finalize_json__: JsonFinalizer
     __prepare_args__: Preparer
@@ -36,14 +38,14 @@ class RoutedModel(Protocol):
     __header_case__: CaseConverter
 
 
-SameModel = TypeVar("SameModel", bound=RoutedModel)
+RoutedModel = TypeVar("RoutedModel", bound=_RoutedModel)
 
 
 class IRouter(ABC):
     __slots__ = ()
 
     @abstractmethod
-    def model(self, model_obj: SameModel) -> SameModel:
+    def model(self, model_obj: RoutedModel | None) -> RoutedModel:
         pass
 
     @abstractmethod
@@ -54,7 +56,8 @@ class IRouter(ABC):
             query_case: CaseConverter | None = None,
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
-            header_case: CaseConverter | None = None
+            header_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> RoutedFunction:
         pass
 
@@ -66,7 +69,8 @@ class IRouter(ABC):
             query_case: CaseConverter | None = None,
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
-            header_case: CaseConverter | None = None
+            header_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> RoutedFunction:
         pass
 
@@ -79,6 +83,7 @@ class IRouter(ABC):
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
             header_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> RoutedFunction:
         pass
 
@@ -90,7 +95,8 @@ class IRouter(ABC):
             query_case: CaseConverter | None = None,
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
-            header_case: CaseConverter | None = None
+            header_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> RoutedFunction:
         pass
 
@@ -102,6 +108,7 @@ class IRouter(ABC):
             query_case: CaseConverter | None = None,
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
-            header_case: CaseConverter | None = None
+            header_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
     ) -> RoutedFunction:
         pass

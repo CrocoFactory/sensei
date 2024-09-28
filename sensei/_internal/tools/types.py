@@ -1,5 +1,6 @@
-from typing import Literal, Self
-from enum import StrEnum
+from typing import Literal
+from enum import Enum
+from typing_extensions import Self
 
 HTTPMethod = Literal[
     "GET",
@@ -14,7 +15,7 @@ HTTPMethod = Literal[
 ]
 
 
-class MethodType(StrEnum):
+class MethodType(Enum):
     INSTANCE = "instance"
     CLASS = "class"
     STATIC = "static"

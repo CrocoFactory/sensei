@@ -11,9 +11,7 @@ __all__ = [
 
 
 def snake_case(s: str) -> str:
-    """
-    Convert a string to snake_case.
-    """
+    """Convert a string to snake_case. """
     s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
     s = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s)
     s = re.sub(r'\W+', '_', s).lower()
@@ -22,9 +20,7 @@ def snake_case(s: str) -> str:
 
 
 def camel_case(s: str) -> str:
-    """
-    Convert a string to camelCase.
-    """
+    """Convert a string to camelCase."""
     s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
     s = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s)
     s = re.sub(r'\W+', '_', s)
@@ -34,9 +30,7 @@ def camel_case(s: str) -> str:
 
 
 def pascal_case(s: str) -> str:
-    """
-    Convert a string to PascalCase.
-    """
+    """Convert a string to PascalCase."""
     s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
     s = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s)
     s = re.sub(r'\W+', '_', s)
@@ -46,19 +40,15 @@ def pascal_case(s: str) -> str:
 
 
 def constant_case(s: str) -> str:
-    """
-    Convert a string to CONSTANT_CASE.
-    """
-    s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
-    s = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s)
-    s = re.sub(r'\W+', '_', s)
+    """Convert a string to CONSTANT_CASE."""
+    s = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', s)
+    s = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', s)
+    s = re.sub(r'[\W_]+', '_', s)
     return s.upper()
 
 
 def kebab_case(s: str) -> str:
-    """
-    Convert a string to kebab-case
-    """
+    """Convert a string to kebab-case."""
     s = re.sub(r"(\s|_|-)+", " ", s)
     s = re.sub(r"[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+",
                lambda mo: ' ' + mo.group(0).lower(), s)
@@ -67,9 +57,7 @@ def kebab_case(s: str) -> str:
 
 
 def header_case(s: str) -> str:
-    """
-    Convert a string to Header-Case.
-    """
+    """Convert a string to Header-Case."""
     s = re.sub('(.)([A-Z][a-z]+)', r'\1 \2', s)
     s = re.sub('([a-z0-9])([A-Z])', r'\1 \2', s)
     s = re.sub(r'[_\W]+', ' ', s)

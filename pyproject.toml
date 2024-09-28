@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'sensei'
-version = '0.1.0.beta3.post1'
+version = '0.1.0.rc1'
 description = 'The python framework, providing fast and robust way to build client-side API wrappers.'
 authors = ['Alexey  <axbelenkov@gmail.com>']
 license = 'MIT'
@@ -11,27 +11,35 @@ classifiers = [
     'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',
     'Topic :: Software Development :: Libraries :: Python Modules',
-    'Programming Language :: Python :: 3.11',
+    'Topic :: Software Development :: Libraries :: Application Frameworks',
+    'Framework :: Pydantic',
     'Programming Language :: Python :: 3 :: Only',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
     'License :: OSI Approved :: MIT License',
-    'Operating System :: Microsoft :: Windows',
-    'Operating System :: MacOS'
+    'Operating System :: OS Independent',
+    'Typing :: Typed'
 ]
 packages = [{ include = 'sensei' }]
 
 [tool.poetry.dependencies]
-python = '^3.11'
-pydantic = "^2.9.0"
+python = '^3.9'
 typing-extensions = "^4.12.2"
 httpx = "^0.27.2"
+pydantic = "^2.9.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"
-python-dotenv = "^1.0.1"
 build = "^1.2.1"
 twine = "^5.1.1"
-croco-cli = "^0.3.1"
 flake8 = "^7.1.1"
+respx = "^0.21.1"
+pyjwt = "^2.9.0"
+email-validator = "^2.2.0"
+coverage = "^7.6.1"
+pytest-asyncio = "^0.24.0"
 
 [build-system]
 requires = ['poetry-core']

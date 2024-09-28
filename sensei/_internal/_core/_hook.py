@@ -9,6 +9,7 @@ class Hook(Enum):
     BODY_CASE = "__body_case__"
     COOKIE_CASE = "__cookie_case__"
     HEADER_CASE = "__header_case__"
+    RESPONSE_CASE = "__response_case__"
 
     @classmethod
     def values(cls) -> list[str]:

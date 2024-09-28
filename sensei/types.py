@@ -1,5 +1,9 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Protocol, Mapping, Self, Any
+from typing import Protocol, Mapping, Any, Union
+from typing_extensions import Self
+
+Json = Union[dict, list[dict]]
 
 
 class IRateLimit(ABC):
@@ -85,7 +89,7 @@ class IResponse(Protocol):
         pass
 
     @abstractmethod
-    def json(self) -> dict[str, Any] | list:
+    def json(self) -> Json:
         pass
 
     @abstractmethod

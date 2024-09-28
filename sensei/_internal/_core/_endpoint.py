@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from functools import partial
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
-from sensei.types import IResponse
-from sensei._utils import fill_path_params
+from sensei.types import IResponse, Json
+from sensei._utils import format_str
 from sensei.params import Body, Query, Header, Cookie
 from sensei.cases import header_case as to_header_case
 from typing import Any, get_args, Callable, Annotated, TypeVar, Generic, get_origin
@@ -14,9 +16,9 @@ ResponseModel = TypeVar(
     'ResponseModel',
     type[BaseModel],
     str,
-    dict[str, Any],
+    dict,
     bytes,
-    list[dict[str, Any]],
+    list[dict],
     BaseModel,
     list[BaseModel],
 )
@@ -28,9 +30,23 @@ _PartialHandler = Callable[[IResponse], ResponseModel]
 
 
 class Args(BaseModel):
+    """
+    Model used in preparers as input and output argument. Stores request arguments
+
+    Attributes:
+        url (str): URL to which the request will be made.
+        params (dict[str, Any]): Dictionary of query parameters to be included in the URL.
+                                 Default is an empty dictionary.
+        json_ (Json): JSON payload for the request body.
+                                The field is aliased as 'json' and defaults to an empty dictionary.
+        headers (dict[str, Any]): Dictionary of HTTP headers to be sent with the request.
+                                  Default is an empty dictionary.
+        cookies (dict[str, Any]): Dictionary of cookies to be included in the request.
+                                  Default is an empty dictionary.
+    """
     url: str
     params: dict[str, Any] = {}
-    json_: dict[str, Any] = Field({}, alias="json")
+    json_: Json = Field({}, alias="json")
     headers: dict[str, Any] = {}
     cookies: dict[str, Any] = {}
 
@@ -48,7 +64,7 @@ class Endpoint(Generic[ResponseModel]):
     _response_handle_map: dict[_ConditionChecker, _ResponseHandler] = {
         lambda model: isinstance(model, type(BaseModel)): lambda model, response: model(**response.json()),
         lambda model: model is str: lambda model, response: response.text,
-        lambda model: model in (dict[str, Any], dict): lambda model, response: response.json(),
+        lambda model: dict in (model, get_origin(model)): lambda model, response: response.json(),
         lambda model: model is bytes: lambda model, response: response.content,
         lambda model: isinstance(model, BaseModel): lambda model, response: model,
         lambda model: model is None: lambda model, response: None,
@@ -104,10 +120,6 @@ class Endpoint(Generic[ResponseModel]):
         return self._method
 
     @property
-    def error_msg(self) -> str | None:
-        return self._error_msg
-
-    @property
     def params_model(self) -> type[BaseModel] | None:
         return self._params_model
 
@@ -160,10 +172,16 @@ class Endpoint(Generic[ResponseModel]):
 
         result = self._handle_if_condition(response_model)(response_obj)
 
+        to_validate = result
+
+        if isinstance(response_model, BaseModel):
+            response_model = type(response_model)
+            to_validate = response_model(**result.model_dump(mode='json', by_alias=True))
+
         class ValidationModel(BaseModel):
             result: response_model
 
-        ValidationModel(result=result)
+        ValidationModel(result=to_validate)
 
         return result
 
@@ -181,7 +199,8 @@ class Endpoint(Generic[ResponseModel]):
         annotations, _ = split_params(path, annotations_all)
 
         request_params = self._map_params(annotations, params)
-        url = fill_path_params(path, path_params)
+
+        url = format_str(path, path_params, True)
         return url, request_params
 
     def _map_params(

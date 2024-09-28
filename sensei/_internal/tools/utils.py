@@ -3,7 +3,7 @@ import inspect
 from functools import wraps
 from pydantic import BaseModel
 from collections import OrderedDict
-from sensei._utils import get_path_params
+from sensei._utils import placeholders
 from typing import Any, get_args, Callable, TypeVar
 from .types import HTTPMethod, MethodType
 from pydantic._internal._model_construction import ModelMetaclass
@@ -12,37 +12,37 @@ _T = TypeVar("_T")
 
 
 def make_model(model_name: str, model_args: dict[str, Any]) -> type[BaseModel]:
-    if model_args:
-        annotations = {}
-        defaults = {}
-        for key, arg in model_args.items():
-            if isinstance(arg, tuple | list):
-                annotations[key] = arg[0]
-                if len(arg) == 2:
-                    defaults[key] = arg[1]
-            else:
-                annotations[key] = arg
+    annotations = {}
+    defaults = {}
+    for key, arg in model_args.items():
+        if isinstance(arg, (tuple, list)):
+            annotations[key] = arg[0]
+            if len(arg) == 2:
+                defaults[key] = arg[1]
+        else:
+            annotations[key] = arg
 
-        model: type[BaseModel] = ModelMetaclass(  # type: ignore
-            model_name,
-            (BaseModel,),
-            {
-                '__module__': sys.modules[__name__],
-                '__qualname__': model_name,
-                '__annotations__': annotations,
-                **defaults
-            }
-        )
-        return model
+    model: type[BaseModel] = ModelMetaclass(  # type: ignore
+        model_name,
+        (BaseModel,),
+        {
+            '__module__': sys.modules[__name__],
+            '__qualname__': model_name,
+            '__annotations__': annotations,
+            **defaults
+        }
+    )
+    return model
 
 
 def split_params(url: str, params: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    path_params_names = get_path_params(url)
+    path_params_names = placeholders(url)
 
     path_params = {}
     for path_param_name in path_params_names:
-        path_params[path_param_name] = params[path_param_name]
-        del params[path_param_name]
+        if value := params.get(path_param_name):
+            path_params[path_param_name] = value
+            del params[path_param_name]
 
     return params, path_params
 
@@ -100,3 +100,8 @@ def set_method_type(func: Callable):
 
 def identical(value: _T) -> _T:
     return value
+
+
+def is_coroutine_function(func: Callable) -> bool:
+    return (inspect.iscoroutinefunction(func) or
+            (hasattr(func, '__wrapped__') and inspect.iscoroutinefunction(func.__wrapped__)))

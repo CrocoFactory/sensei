@@ -1,14 +1,19 @@
+from __future__ import annotations
+
 import typing
 from httpx import Client as _Client, AsyncClient as _AsyncClient, USE_CLIENT_DEFAULT, Response, BaseTransport
 from httpx._client import UseClientDefault, EventHook
 from httpx._config import DEFAULT_MAX_REDIRECTS, Limits, DEFAULT_LIMITS, DEFAULT_TIMEOUT_CONFIG
-from httpx._types import URLTypes, RequestContent, RequestData, RequestFiles, QueryParamTypes, HeaderTypes, CookieTypes, \
-    AuthTypes, TimeoutTypes, RequestExtensions, ProxiesTypes, ProxyTypes, CertTypes, VerifyTypes
+from httpx._types import (URLTypes, RequestContent, RequestData, RequestFiles, QueryParamTypes, HeaderTypes,
+                          CookieTypes, AuthTypes, TimeoutTypes, RequestExtensions, ProxiesTypes, ProxyTypes, CertTypes,
+                          VerifyTypes)
 from sensei._base_client import BaseClient
 from .rate_limiter import IRateLimit, RateLimiter, AsyncRateLimiter
 
 
 class Client(_Client, BaseClient):
+    """An HTTP client, with connection pooling, HTTP/2, redirects, cookie persistence, etc."""
+
     def __init__(
             self,
             *,
@@ -79,6 +84,7 @@ class Client(_Client, BaseClient):
             timeout: TimeoutTypes | UseClientDefault = USE_CLIENT_DEFAULT,
             extensions: RequestExtensions | None = None,
     ) -> Response:
+        """Build and send an HTTP request."""
         if self.rate_limit:
             RateLimiter(self.rate_limit).wait_for_slot()
 
@@ -100,6 +106,8 @@ class Client(_Client, BaseClient):
 
 
 class AsyncClient(_AsyncClient, BaseClient):
+    """An HTTP client, with connection pooling, HTTP/2, redirects, cookie persistence, etc."""
+
     def __init__(
             self,
             *,
@@ -170,6 +178,7 @@ class AsyncClient(_AsyncClient, BaseClient):
             timeout: TimeoutTypes | UseClientDefault = USE_CLIENT_DEFAULT,
             extensions: RequestExtensions | None = None,
     ) -> Response:
+        """Build and send an HTTP request."""
         if self.rate_limit:
             await AsyncRateLimiter(self.rate_limit).wait_for_slot()
 

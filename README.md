@@ -5,11 +5,9 @@
 </h1><br>
 </a>
 
-[![PyPi Version](https://img.shields.io/pypi/v/sensei)](https://pypi.org/project/sensei/)
-[![PyPI Downloads](https://img.shields.io/pypi/dm/sensei?label=downloads)](https://pypi.org/project/sensei/)
-[![License](https://img.shields.io/github/license/CrocoFactory/sensei.svg)](https://pypi.org/project/sensei/)
-[![Last Commit](https://img.shields.io/github/last-commit/CrocoFactory/sensei.svg)](https://pypi.org/project/sensei/)
-[![Development Status](https://img.shields.io/pypi/status/sensei)](https://pypi.org/project/sensei/)
+[![Python versions](https://img.shields.io/pypi/pyversions/sensei?color=%23F94526)](https://pypi.org/project/sensei/)
+[![PyPi Version](https://img.shields.io/pypi/v/sensei?color=%23F94526)](https://pypi.org/project/sensei/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/sensei?label=downloads&color=%23F94526)](https://pypi.org/project/sensei/)
 
 The python framework, providing fast and robust way to build client-side API wrappers.
                            
@@ -24,7 +22,7 @@ Here is example of OOP style.
 
 ```python
 from typing import Annotated, Any, Self
-from sensei import Router, Query, Path, APIModel, Header, Args, pascal_case, fill_path_params, RateLimit
+from sensei import Router, Query, Path, APIModel, Header, Args, pascal_case, format_str, RateLimit
 
 router = Router('https://reqres.in/api', rate_limit=RateLimit(5, 1))
 
@@ -71,7 +69,7 @@ class User(BaseModel):
     @delete.prepare
     def _delete_in(self, args: Args) -> Args:
         url = args.url
-        url = fill_path_params(url, {'id_': self.id})
+        url = format_str(url, {'id_': self.id})
         args.url = url
         return args
 
