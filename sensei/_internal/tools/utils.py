@@ -40,7 +40,7 @@ def split_params(url: str, params: dict[str, Any]) -> tuple[dict[str, Any], dict
 
     path_params = {}
     for path_param_name in path_params_names:
-        if value := params.get(path_param_name):
+        if (value := params.get(path_param_name)) is not None:
             path_params[path_param_name] = value
             del params[path_param_name]
 
