@@ -56,20 +56,3 @@ jobs:
           fi
           echo "coverage_percent=$coverage_percent" >> $GITHUB_OUTPUT
         shell: bash
-
-      # Replace the coverage badge
-      - name: Generate coverage badge
-        run: |
-          wget -O ./badges/coverage.svg "https://img.shields.io/badge/coverage-${{ steps.coverage_check.outputs.coverage_percent }}%25-%23F94526"
-
-      # Commit the updated coverage badge to the repo
-      - name: Commit coverage badge
-        run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git checkout main
-          git add ./badges/coverage.svg
-          git commit -m "Update coverage badge"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
