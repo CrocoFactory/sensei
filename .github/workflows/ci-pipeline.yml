@@ -6,6 +6,7 @@ on:
       - main
     paths-ignore:
       - 'badges/**'  # Ignore badge updates to avoid triggering the workflow again
+      - '.github/**'
   pull_request:
     branches:
       - main
@@ -23,25 +24,25 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.9
+
+      - name: Setup Poetry
+        uses: Gr1N/setup-poetry@v9
 
       # Install dependencies
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install pytest coverage flake8
+          poetry install
 
       # Run flake8 linting
       - name: Run linting with flake8
         run: |
-          flake8 .
+          flake8 sensei
 
       # Run pytest and generate coverage report
       - name: Run tests and generate coverage
         run: |
-          coverage run --source=. -m pytest tests
-          coverage report
-          coverage xml
+          coverage run -m pytest tests
 
       # Fail if coverage is less than 90%
       - name: Check coverage threshold
