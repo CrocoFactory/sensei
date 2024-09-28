@@ -1,0 +1,75 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'badges/**'  # Ignore badge updates to avoid triggering the workflow again
+      - '.github/workflows/**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Setup Poetry
+        uses: Gr1N/setup-poetry@v9
+
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          poetry install
+
+      # Run flake8 linting
+      - name: Run linting with flake8
+        run: |
+          poetry run flake8 sensei
+
+      # Run pytest and generate coverage report
+      - name: Run tests and generate coverage
+        run: |
+          poetry run coverage run -m pytest tests
+
+      # Fail if coverage is less than 90%
+      - name: Check coverage threshold
+        id: coverage_check
+        run: |
+          coverage_percent=$(poetry run coverage report | grep TOTAL | awk '{print $4}' | sed 's/%//')
+          echo "Current coverage: $coverage_percent%"
+          if (( $(echo "$coverage_percent < 90" | bc -l) )); then
+            echo "Test coverage is below 90%."
+            exit 1
+          fi
+          echo "coverage_percent=$coverage_percent" >> $GITHUB_OUTPUT
+        shell: bash
+
+      # Replace the coverage badge
+      - name: Generate coverage badge
+        run: |
+          wget -O ./badges/coverage.svg "https://img.shields.io/badge/coverage-${{ steps.coverage_check.outputs.coverage_percent }}%25-%23F94526"
+
+      # Commit the updated coverage badge to the repo
+      - name: Commit coverage badge
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git checkout main
+          git add ./badges/coverage.svg
+          git commit -m "Update coverage badge"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
