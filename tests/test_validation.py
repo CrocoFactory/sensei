@@ -1,4 +1,5 @@
 import pytest
+from httpx import HTTPStatusError
 from typing_extensions import Self
 from sensei import APIModel
 
@@ -36,3 +37,10 @@ class TestValidation:
 
         with pytest.raises(ValueError):
             print(_ValidationModel().delete())
+
+    def test_raise_for_status(self, router, base_maker, sync_maker):
+        base = base_maker(router)
+        model = sync_maker(router, base)
+
+        with pytest.raises(HTTPStatusError):
+            model.get(0)

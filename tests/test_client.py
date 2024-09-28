@@ -76,7 +76,6 @@ class TestClient:
         base = base_maker(router)
         model = sync_maker(router, base)
 
-        now = time.time()
         model.get(1)
         assert rate_limit._tokens == 1
 
@@ -88,6 +87,5 @@ class TestClient:
         base = base_maker(router)
         model = async_maker(router, base)
 
-        now = time.time()
         await model.get(1)  # type: ignore
         assert rate_limit._tokens == 1
