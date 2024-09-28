@@ -81,7 +81,7 @@ class TestClient:
         assert rate_limit._tokens == 1
         model.get(2)
 
-        for i in range(4):
+        for i in range(1, 4):
             model.get(i)
 
         assert time.time() - now >= 2
@@ -99,7 +99,7 @@ class TestClient:
         assert rate_limit._tokens == 1
         await model.get(2)  # type: ignore
 
-        for i in range(4):
-            await model.get(i) # type: ignore
+        for i in range(1, 4):
+            await model.get(i)  # type: ignore
 
         assert time.time() - now >= 2
