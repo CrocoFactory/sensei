@@ -6,7 +6,7 @@ on:
       - main
     paths-ignore:
       - 'badges/**'  # Ignore badge updates to avoid triggering the workflow again
-      - '.github/**'
+      - '.github/workflows/**'
   pull_request:
     branches:
       - main
@@ -37,18 +37,18 @@ jobs:
       # Run flake8 linting
       - name: Run linting with flake8
         run: |
-          flake8 sensei
+          poetry run flake8 sensei
 
       # Run pytest and generate coverage report
       - name: Run tests and generate coverage
         run: |
-          coverage run -m pytest tests
+          poetry run coverage run -m pytest tests
 
       # Fail if coverage is less than 90%
       - name: Check coverage threshold
         id: coverage_check
         run: |
-          coverage_percent=$(coverage report | grep TOTAL | awk '{print $4}' | sed 's/%//')
+          coverage_percent=$(poetry run coverage report | grep TOTAL | awk '{print $4}' | sed 's/%//')
           echo "Current coverage: $coverage_percent%"
           if (( $(echo "$coverage_percent < 90" | bc -l) )); then
             echo "Test coverage is below 90%."
