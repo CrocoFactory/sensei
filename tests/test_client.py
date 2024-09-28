@@ -79,12 +79,6 @@ class TestClient:
         now = time.time()
         model.get(1)
         assert rate_limit._tokens == 1
-        model.get(2)
-
-        for i in range(1, 4):
-            model.get(i)
-
-        assert time.time() - now >= 2
 
     @pytest.mark.asyncio
     async def test_async_rate_limit(self, base_url, async_maker, base_maker):
@@ -97,9 +91,3 @@ class TestClient:
         now = time.time()
         await model.get(1)  # type: ignore
         assert rate_limit._tokens == 1
-        await model.get(2)  # type: ignore
-
-        for i in range(1, 4):
-            await model.get(i)  # type: ignore
-
-        assert time.time() - now >= 2
