@@ -1,7 +1,7 @@
 # sensei
 <a href="https://pypi.org/project/sensei/">
 <h1 align="center">
-<img alt="Logo Banner" src="https://raw.githubusercontent.com/CrocoFactory/.github/main/branding/sensei/logo/bookmark_transparent.png" width="300">
+<img alt="Logo Banner" src="https://raw.githubusercontent.com/CrocoFactory/.github/main/branding/sensei/logo/bookmark_transparent.svg" width="300">
 </h1><br>
 </a>
 
@@ -9,7 +9,7 @@
 [![PyPi Version](https://img.shields.io/pypi/v/sensei?color=%23F94526)](https://pypi.org/project/sensei/)
 [![Coverage](https://raw.githubusercontent.com/CrocoFactory/sensei/main/badges/coverage.svg)](https://pypi.org/project/sensei/)
 
-The python framework, providing fast and robust way to build client-side API wrappers.
+The python framework, providing quick way to build client-side API wrappers. Use type annotations, to build requests, with little or no implementation
                            
 - **[Maintain](https://www.patreon.com/user/membership?u=142083211)**
 - **[Bug reports](https://github.com/CrocoFactory/sensei/issues)**
@@ -18,7 +18,14 @@ Source code is made available under the [MIT License](LICENSE).
                    
 # Quick Overview
 
-Here is example of OOP style.
+API Wrapper should follow these principles:
+- Provide sync and async code versions
+- Validate data before accessing the API. Because better outcome is catching exception, thrown due to wrong data, than getting json explaining reason of error.
+- Handle QPS (Queries per second) limits.
+
+To follow these principles, you either to violate DRY or have to maintain bad code architecture. Sensei is tool to avoid these issues.
+
+Example of OOP code.
 
 ```python
 from typing import Annotated, Any, Self
