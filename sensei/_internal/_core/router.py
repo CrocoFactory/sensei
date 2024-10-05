@@ -160,6 +160,7 @@ class Router(IRouter):
             *,
             case_converters: dict[str, CaseConverter],
             skip_finalizer: bool = False,
+            skip_preparer: bool = False,
     ) -> Callable:
         """
         Create a decorator for a specific HTTP method and path.
@@ -171,8 +172,10 @@ class Router(IRouter):
                 The HTTP method for the route (e.g., GET, POST).
             case_converters (dict[str, CaseConverter]):
                 A dictionary of case converters for query, body, cookie, and header parameters.
-            skip_finalizer:
+            skip_finalizer (bool):
                 Skip JSON finalizer, when finalizing response. Defaults to `False`.
+            skip_preparer (bool):
+                Skip preparing the arguments for the request. Defaults to `False`.
 
         Returns:
             Callable: A decorator that transforms a function into a routed function.
@@ -180,6 +183,7 @@ class Router(IRouter):
 
         def decorator(func: Callable) -> Callable:
             json_finalizer = identical if skip_finalizer else self._finalize_json
+            pre_preparer = identical if skip_preparer else self._prepare_args
             route = Route(
                 path=path,
                 method=method,
@@ -190,7 +194,7 @@ class Router(IRouter):
                 rate_limit=self.rate_limit,
                 case_converters=case_converters,
                 json_finalizer=json_finalizer,
-                pre_preparer=self._prepare_args
+                pre_preparer=pre_preparer
             )
 
             def _setattrs(
@@ -275,6 +279,7 @@ class Router(IRouter):
             header_case: CaseConverter | None = None,
             response_case: CaseConverter | None = None,
             skip_finalizer: bool = False,
+            skip_preparer: bool = False,
     ) -> _RouteDecorator:
         """
         Create a route using the HTTP GET method.
@@ -295,8 +300,10 @@ class Router(IRouter):
                 Case converter for header parameters. Defaults to using the router's default.
             response_case (CaseConverter | None, optional):
                 Case converter for JSON response. Defaults to using the router's default.
-            skip_finalizer:
+            skip_finalizer (bool):
                 Skip JSON finalizer, when finalizing response. Defaults to `False`.
+            skip_preparer (bool):
+                Skip preparing the arguments for the request. Defaults to `False`.
 
         Returns:
             RoutedFunction: A routed function that sends a GET request according to the specified path and validates
@@ -311,7 +318,8 @@ class Router(IRouter):
             path=path,
             method="GET",
             case_converters=converters,
-            skip_finalizer=skip_finalizer
+            skip_finalizer=skip_finalizer,
+            skip_preparer=skip_preparer,
         )
         return decorator
 
@@ -325,6 +333,7 @@ class Router(IRouter):
             header_case: CaseConverter | None = None,
             response_case: CaseConverter | None = None,
             skip_finalizer: bool = False,
+            skip_preparer: bool = False,
     ) -> _RouteDecorator:
         """
         Create a route using the HTTP POST method.
@@ -343,10 +352,12 @@ class Router(IRouter):
                 Case converter for cookie parameters. Defaults to using the router's default.
             header_case (CaseConverter | None, optional):
                 Case converter for header parameters. Defaults to using the router's default.
-            response_case:
+            response_case (CaseConverter | None, optional):
                 Case converter for JSON response. Defaults to using the router's default.
-            skip_finalizer:
+            skip_finalizer (bool):
                 Skip JSON finalizer, when finalizing response. Defaults to `False`.
+            skip_preparer (bool):
+                Skip preparing the arguments for the request. Defaults to `False`.
 
         Returns:
             RoutedFunction: A routed function that sends a POST request according to the specified path and validates
@@ -361,7 +372,8 @@ class Router(IRouter):
             path=path,
             method="POST",
             case_converters=converters,
-            skip_finalizer=skip_finalizer
+            skip_finalizer=skip_finalizer,
+            skip_preparer=skip_preparer,
         )
         return decorator
 
@@ -375,6 +387,7 @@ class Router(IRouter):
             header_case: CaseConverter | None = None,
             response_case: CaseConverter | None = None,
             skip_finalizer: bool = False,
+            skip_preparer: bool = False,
     ) -> _RouteDecorator:
         """
         Create a route using the HTTP PATCH method.
@@ -393,10 +406,12 @@ class Router(IRouter):
                 Case converter for cookie parameters. Defaults to using the router's default.
             header_case (CaseConverter | None, optional):
                 Case converter for header parameters. Defaults to using the router's default.
-            response_case:
+            response_case (CaseConverter | None, optional):
                 Case converter for JSON response. Defaults to using the router's default.
-            skip_finalizer:
+            skip_finalizer (bool):
                 Skip JSON finalizer, when finalizing response. Defaults to `False`.
+            skip_preparer (bool):
+                Skip preparing the arguments for the request. Defaults to `False`.
 
         Returns:
             RoutedFunction: A routed function that sends a PATCH request according to the specified path and validates
@@ -411,7 +426,8 @@ class Router(IRouter):
             path=path,
             method="PATCH",
             case_converters=converters,
-            skip_finalizer=skip_finalizer
+            skip_finalizer=skip_finalizer,
+            skip_preparer=skip_preparer,
         )
         return decorator
 
@@ -425,6 +441,7 @@ class Router(IRouter):
             header_case: CaseConverter | None = None,
             response_case: CaseConverter | None = None,
             skip_finalizer: bool = False,
+            skip_preparer: bool = False,
     ) -> _RouteDecorator:
         """
         Create a route using the HTTP PUT method.
@@ -447,6 +464,8 @@ class Router(IRouter):
                 Case converter for JSON response. Defaults to using the router's default.
             skip_finalizer:
                 Skip JSON finalizer, when finalizing response. Defaults to `False`.
+            skip_preparer (bool):
+                Skip preparing the arguments for the request. Defaults to `False`.
 
         Returns:
             RoutedFunction: A routed function that sends a PUT request according to the specified path and validates
@@ -461,7 +480,8 @@ class Router(IRouter):
             path=path,
             method="PUT",
             case_converters=converters,
-            skip_finalizer=skip_finalizer
+            skip_finalizer=skip_finalizer,
+            skip_preparer=skip_preparer,
         )
         return decorator
 
@@ -475,6 +495,7 @@ class Router(IRouter):
             header_case: CaseConverter | None = None,
             response_case: CaseConverter | None = None,
             skip_finalizer: bool = False,
+            skip_preparer: bool = False,
     ) -> _RouteDecorator:
         """
         Create a route using the HTTP DELETE method.
@@ -497,6 +518,8 @@ class Router(IRouter):
                 Case converter for JSON response. Defaults to using the router's default.
             skip_finalizer:
                 Skip JSON finalizer, when finalizing response. Defaults to `False`.
+            skip_preparer (bool):
+                Skip preparing the arguments for the request. Defaults to `False`.
 
         Returns:
             RoutedFunction: A routed function that sends a DELETE request according to the specified path and validates
@@ -511,6 +534,7 @@ class Router(IRouter):
             path=path,
             method="DELETE",
             case_converters=converters,
-            skip_finalizer=skip_finalizer
+            skip_finalizer=skip_finalizer,
+            skip_preparer=skip_preparer,
         )
         return decorator

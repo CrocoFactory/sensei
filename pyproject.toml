@@ -1,7 +1,7 @@
 [tool.poetry]
 name = 'sensei'
-version = '0.1.0.rc2'
-description = 'The python framework, providing fast and robust way to build client-side API wrappers.'
+version = '0.1.0.rc3'
+description = 'The python framework, providing quick way to build client-side API wrappers. Use type annotations, to build requests, with little or no implementation'
 authors = ['Alexey  <axbelenkov@gmail.com>']
 license = 'MIT'
 readme = 'README.md'
@@ -40,6 +40,8 @@ pyjwt = "^2.9.0"
 email-validator = "^2.2.0"
 coverage = "^7.6.1"
 pytest-asyncio = "^0.24.0"
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.5.39"
 
 [build-system]
 requires = ['poetry-core']
