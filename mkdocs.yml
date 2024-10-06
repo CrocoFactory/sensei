@@ -1,0 +1,6 @@
+site_name: My Docs
+site_url: https://sensei.factorycroco.com
+use_directory_urls: false
+
+theme:
+  name: 'material'
