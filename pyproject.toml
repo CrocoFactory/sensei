@@ -1,12 +1,10 @@
 [tool.poetry]
 name = 'sensei'
-version = '0.1.0.rc3'
-description = 'The python framework, providing quick way to build client-side API wrappers. Use type annotations, to build requests, with little or no implementation'
+version = '0.1.0.rc4'
+description = 'The python framework, providing quick way to build API wrappers. Build painless API Requests with minimal implementation'
 authors = ['Alexey  <axbelenkov@gmail.com>']
 license = 'MIT'
 readme = 'README.md'
-repository = 'https://github.com/CrocoFactory/sensei'
-homepage = 'https://github.com/CrocoFactory/sensei'
 classifiers = [
     'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',
@@ -23,6 +21,14 @@ classifiers = [
     'Typing :: Typed'
 ]
 packages = [{ include = 'sensei' }]
+
+[project.urls]
+homepage = "https://sensei.factorycroco.com"
+documentation = "https://sensei.factorycroco.com"
+source = "https://github.com/CrocoFactory/sensei"
+download = "https://pypi.org/project/sensei/#files"
+tracker = "https://github.com/CrocoFactory/sensei/issues"
+
 
 [tool.poetry.dependencies]
 python = '^3.9'

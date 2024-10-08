@@ -11,10 +11,10 @@ class RoutedFunction(Protocol):
     def __call__(self, *args, **kwargs):
         ...
 
-    def prepare(self, preparer: Preparer) -> Preparer:
+    def prepare(self, preparer: Preparer | None = None) -> Preparer:
         ...
 
-    def finalize(self, finalizer: ResponseFinalizer) -> ResponseFinalizer:
+    def finalize(self, finalizer: ResponseFinalizer | None = None) -> ResponseFinalizer:
         ...
 
     __method_type__: MethodType

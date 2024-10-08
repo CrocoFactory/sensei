@@ -3,6 +3,7 @@ omit =
     sensei/_internal/_core/_types.py
     sensei/types.py
     sensei/_compat.py
-    sensei/params.py
+    sensei/_params.py
+    sensei/params_functions.py
     sensei/_base_client.py
     tests/*

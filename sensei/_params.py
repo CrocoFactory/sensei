@@ -1,9 +1,9 @@
 import warnings
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union, TypedDict
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 from pydantic import AnyUrl
 from pydantic.fields import FieldInfo
-from typing_extensions import Annotated, deprecated
+from typing_extensions import Annotated, deprecated, TypedDict
 from ._compat import Undefined, PYDANTIC_V2, PYDANTIC_VERSION
 
 _Unset: Any = Undefined
@@ -101,7 +101,7 @@ class Param(FieldInfo):
             max_length=max_length,
             discriminator=discriminator,
             multiple_of=multiple_of,
-            allow_nan=allow_inf_nan,
+            allow_inf_nan=allow_inf_nan,
             max_digits=max_digits,
             decimal_places=decimal_places,
             **extra,
@@ -485,7 +485,7 @@ class Body(FieldInfo):
         *,
         default_factory: Union[Callable[[], Any], None] = _Unset,
         annotation: Optional[Any] = None,
-        embed: bool = False,
+        embed: Union[bool, None] = None,
         media_type: str = "application/json",
         alias: Optional[str] = None,
         alias_priority: Union[int, None] = _Unset,
@@ -552,7 +552,7 @@ class Body(FieldInfo):
             max_length=max_length,
             discriminator=discriminator,
             multiple_of=multiple_of,
-            allow_nan=allow_inf_nan,
+            allow_inf_nan=allow_inf_nan,
             max_digits=max_digits,
             decimal_places=decimal_places,
             **extra,
@@ -561,7 +561,7 @@ class Body(FieldInfo):
             kwargs["examples"] = examples
         if regex is not None:
             warnings.warn(
-                "`regex` has been depreacated, please use `pattern` instead",
+                "`regex` has been deprecated, please use `pattern` instead",
                 category=DeprecationWarning,
                 stacklevel=4,
             )
@@ -587,7 +587,6 @@ class Body(FieldInfo):
             kwargs.update(**current_json_schema_extra)
 
         use_kwargs = {k: v for k, v in kwargs.items() if v is not _Unset}
-
         super().__init__(**use_kwargs)
 
     def __repr__(self) -> str:
