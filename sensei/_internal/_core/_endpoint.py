@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from functools import partial
 from pydantic import BaseModel, Field
-from pydantic.fields import FieldInfo
 from sensei.types import IResponse, Json
 from sensei._utils import format_str
-from sensei.params import Body, Query, Header, Cookie
+from sensei._params import Body, Query, Header, Cookie, Param
 from sensei.cases import header_case as to_header_case
-from typing import Any, get_args, Callable, Annotated, TypeVar, Generic, get_origin
+from typing import Any, get_args, Callable, TypeVar, Generic, get_origin
 from ..tools import ChainedMap, split_params, make_model, is_safe_method, HTTPMethod, validate_method, identical
 
 CaseConverter = Callable[[str], str]
@@ -195,17 +194,17 @@ class Endpoint(Generic[ResponseModel]):
         params_all = params_model_instance.model_dump(mode='json', by_alias=True)
         params, path_params = split_params(path, params_all)
 
-        annotations_all = params_model.__annotations__.copy()
-        annotations, _ = split_params(path, annotations_all)
+        fields = params_model.model_fields.copy()
+        fields, _ = split_params(path, fields)
 
-        request_params = self._map_params(annotations, params)
+        request_params = self._map_params(fields, params)
 
         url = format_str(path, path_params, True)
         return url, request_params
 
     def _map_params(
             self,
-            annotations: dict[str, Any],
+            fields: dict[str, Any],
             params: dict[str, Any]
     ) -> dict[str, Any]:
         new_params = {
@@ -222,19 +221,18 @@ class Endpoint(Generic[ResponseModel]):
             Header: 'headers',
         }
 
-        type_to_converter = ChainedMap[type[FieldInfo], CaseConverter](annotation_map, self._case_converters)
-        type_to_params = ChainedMap[type[FieldInfo], dict[str, Any]](annotation_map, new_params)
-        temp_type = type(Annotated[int, int])
+        type_to_converter = ChainedMap[type[Param], CaseConverter](annotation_map, self._case_converters)
+        type_to_params = ChainedMap[type[Param], dict[str, Any]](annotation_map, new_params)
 
-        for key, value in annotations.items():
-            if isinstance(value, temp_type):
-                param_annotation = get_args(value)[1]
-
-                param_type = type(param_annotation)
+        for key, value in fields.items():
+            types = Body, Cookie, Header, Query
+            if isinstance(value, types):
+                param_type = type(value)
 
                 converted = type_to_converter[param_type](key)
 
-                result_key = param_annotation.alias if param_annotation.alias else converted
+                alias = value.alias
+                result_key = alias if alias else converted
                 type_to_params[param_type][result_key] = params[key]
             else:
                 param_type = Query if is_safe_method(self.method) else Body
