@@ -15,11 +15,11 @@ The Python framework, that provides a quick way to build API wrappers. Use type 
 
 ---
 
-**Documentation:** https://sensei.factorycroco.com 
+**Documentation:** [https://sensei.factorycroco.com](https://sensei.factorycroco.com) 
 
-**Source code:** https://github.com/CrocoFactory/sensei
+**Source code:** [https://github.com/CrocoFactory/sensei](https://github.com/CrocoFactory/sensei)
 
-**Maintain:** https://www.patreon.com/user/membership?u=142083211
+**Maintain:** [https://www.patreon.com/user/...](https://www.patreon.com/user/membership?u=142083211)
 
 ---
     
@@ -31,7 +31,7 @@ There are key features provided by `sensei`:
 - **Robust:** Auto validation data before and after request
 
 
-# Quick Overview
+## Quick Overview
 
 API Wrapper should provide these features for users:
 - Provide sync and async code versions
@@ -366,7 +366,7 @@ pokemon = get_pokemon(pokemon_name="pikachu")
 print(pokemon)
 ```
 
-# Installing sensei
+## Installing sensei
 To install `sensei` from PyPi, you can use that:
 
 ```shell

@@ -143,7 +143,9 @@ class _CallableHandler(Generic[_Client]):
         return requester
 
     def _get_request_args(self, client: BaseClient) -> tuple[Requester, dict]:
-        if client.host != self._host:
+        client_host = client.host['-1'] if client.host[-1] == '\\' else client
+        self_host = self._host['-1'] if self._host[-1] == '\\' else self._host
+        if client_host == self_host:
             raise ValueError('Client host must be equal to default host')
 
         if client.port != self._port:

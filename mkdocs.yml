@@ -3,14 +3,6 @@ site_description: The Python framework, providing a quick way to build API wrapp
 site_url: https://sensei.factorycroco.com
 use_directory_urls: false
 
-markdown_extensions:
-  - pymdownx.highlight:
-      anchor_linenums: true
-      line_spans: __span
-      pygments_lang_class: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - pymdownx.superfences
 
 theme:
   name: material
@@ -62,4 +54,54 @@ repo_name: CrocoFactory/sensei
 repo_url: https://github.com/CrocoFactory/sensei
 
 nav:
-- Sensei: index.md
+- Sensei:
+  - Welcome to Sensei: index.md
+- Learn:
+  - learn/learn.md
+  - Type Hints: learn/type_hints.md
+  - Concurrency/Parallelism: learn/concurrency_parallelism.md
+  - HTTP Requests: learn/http_requests.md
+
+
+markdown_extensions:
+  abbr:
+  attr_list:
+  footnotes:
+  md_in_html:
+  tables:
+  toc:
+    permalink: true
+
+  pymdownx.betterem:
+    smart_enable: all
+  pymdownx.caret:
+  pymdownx.highlight:
+    line_spans: __span
+  pymdownx.inlinehilite:
+  pymdownx.keys:
+  pymdownx.mark:
+  pymdownx.superfences:
+    custom_fences:
+    - name: mermaid
+      class: mermaid
+      format: !!python/name:pymdownx.superfences.fence_code_format
+  pymdownx.tilde:
+
+  pymdownx.blocks.admonition:
+    types:
+      - note
+      - attention
+      - caution
+      - danger
+      - error
+      - tip
+      - hint
+      - warning
+      - info
+      - check
+  pymdownx.blocks.details:
+  pymdownx.blocks.tab:
+    alternate_style: True
+
+  mdx_include:
+  markdown_include_variants:
