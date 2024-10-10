@@ -6,6 +6,7 @@ from functools import wraps, partial
 from typing import Callable, TypeVar
 from sensei.client import Manager
 from ._endpoint import CaseConverter
+from ._types import IRouter
 from ..tools import HTTPMethod, MethodType, identical
 from sensei._base_client import BaseClient
 from ._callable_handler import CallableHandler, AsyncCallableHandler
@@ -20,10 +21,7 @@ class Route(ABC):
         '_path',
         '_method',
         '_func',
-        '_manager',
         '_host',
-        '_port',
-        '_rate_limit',
         '_response_finalizer',
         '_method_type',
         '_is_async',
@@ -31,23 +29,21 @@ class Route(ABC):
         '_preparer',
         '_json_finalizer',
         '_pre_preparer',
-        '__self__'
+        '__self__',
+        '_router',
     )
 
     def __new__(
             cls,
             path: str,
             method: HTTPMethod,
+            router: IRouter,
             *,
             func: Callable,
-            manager: Manager[_Client],
             host: str,
-            port: int | None = None,
-            rate_limit: IRateLimit | None = None,
             case_converters: dict[str, CaseConverter],
             json_finalizer: JsonFinalizer = identical,
             pre_preparer: Preparer = identical,
-            response_case: CaseConverter = identical,
     ):
         if inspect.iscoroutinefunction(func):
             instance = super().__new__(_AsyncRoute)
@@ -64,12 +60,10 @@ class Route(ABC):
             self,
             path: str,
             method: HTTPMethod,
+            router: IRouter,
             *,
             func: Callable,
-            manager: Manager[_Client],
             host: str,
-            port: int | None = None,
-            rate_limit: IRateLimit | None = None,
             case_converters: dict[str, CaseConverter],
             json_finalizer: JsonFinalizer | None = None,
             pre_preparer: Preparer = identical,
@@ -77,12 +71,9 @@ class Route(ABC):
         self._path = path
         self._method = method
         self._func = func
-        self._manager = manager
-        self._rate_limit = rate_limit
+        self._router = router
 
         self._host = host
-        self._port = port
-
         self._response_finalizer: ResponseFinalizer | None = None
         self._preparer: Preparer = identical
         self._method_type: MethodType = MethodType.STATIC
@@ -175,10 +166,8 @@ class _SyncRoute(Route):
         with CallableHandler(
             func=self._func,
             host=self._host,
-            port=self._port,
-            rate_limit=self._rate_limit,
+            router=self._router,
             request_args=(args, kwargs),
-            manager=self._manager,
             method_type=self._method_type,
             path=self.path,
             method=self._method,
@@ -196,10 +185,8 @@ class _AsyncRoute(Route):
         async with AsyncCallableHandler(
             func=self._func,
             host=self._host,
-            port=self._port,
-            rate_limit=self._rate_limit,
+            router=self._router,
             request_args=(args, kwargs),
-            manager=self._manager,
             method_type=self._method_type,
             path=self.path,
             method=self._method,

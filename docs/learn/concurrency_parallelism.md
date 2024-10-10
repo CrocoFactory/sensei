@@ -1,6 +1,6 @@
 ## Concurrency and Parallelism
 
-### What is Concurrency?
+### Concurrency
 
 Concurrency is the ability of a system to handle multiple tasks or operations simultaneously, often by interleaving them. 
 In programming, concurrency allows a system to make progress on more than one task at a time, improving efficiency, 
@@ -25,10 +25,6 @@ For example, if you have a multicore processor, parallelism allows two tasks to 
 | **Resources**           | Typically uses a single core or CPU, switching between tasks (time slicing).     | Requires multiple cores, processors, or machines to execute tasks at the same time. |
 | **Objective**           | Manage multiple tasks and ensure progress on all of them, optimizing responsiveness. | Speed up execution by performing tasks simultaneously, reducing execution time. |
 | **Example**             | A web server handling multiple requests, switching between them.                 | Data analysis on multiple data sets on separate CPU cores at the same time.   |
-
-
-In summary, **concurrency** is about managing multiple tasks by interleaving them, while **parallelism** is about running 
-multiple tasks truly at the same time.
 
 ---
 
@@ -64,15 +60,30 @@ advantage of multiple CPU cores to perform multiple tasks at the same time.
 
 However, Python’s **threading** library behaves differently due to the presence of the GIL:
 
-- **Concurrency vs. Parallelism**:  
-  Python threads can still provide **concurrency**, but they do not achieve true **parallelism** for CPU-bound tasks 
-  because the GIL prevents more than one thread from running Python code at once. Even on a machine with multiple cores, 
-  only one thread executes Python bytecode at any given time.
+#### Concurrency or Parallelism? 
+Python threads can still provide **concurrency**, but they do not achieve true **parallelism** for CPU-bound tasks 
+because the GIL prevents more than one thread from running Python code at once. Even on a machine with multiple cores, 
+only one thread executes Python bytecode at any given time.
 
-- **CPU-bound vs. I/O-bound**:  
-  - **CPU-bound tasks** (such as heavy computations) suffer from the GIL because only one thread can execute at a time, 
-                preventing full utilization of multi-core CPUs.
-  - **I/O-bound tasks** (such as network requests, file reading/writing) can benefit from Python threads. While one thread is waiting for I/O operations to complete, the GIL is released, allowing another thread to execute. Thus, Python’s threading model works well for programs that perform a lot of waiting (like web servers), even if they don’t achieve true parallelism.
+#### CPU-bound and I/O-bound
+
+* **CPU-bound work** refers to tasks that require intense use of the processor, where the CPU is the main limiting factor 
+    for performance.
+    
+    Examples include mathematical computations, data processing, and running algorithms.
+    
+    Attempt to apply threading suffers from the GIL because only one thread can execute at a time,
+    preventing full utilization of multi-core CPUs.
+
+* **I/O-bound work** refers to tasks limited by input/output operations, such as reading from disk, network requests, 
+    or database queries.
+
+    These tasks spend more time waiting for data to be read or written than using the CPU.
+    This work can benefit from Python threading. While one thread is waiting for I/O operations to complete, the GIL is released, allowing 
+    another thread to execute. Thus, Python’s threading model works well for programs that perform a lot of waiting (like web servers), even if 
+    they don’t achieve true parallelism.
+            
+#### Python Threads vs Traditional threads
 
 Here’s a breakdown of the differences between Python threads and traditional threads:
 
@@ -132,8 +143,6 @@ While the GIL limits Python’s threading model for CPU-bound tasks, there are s
         p.join()
     ```  
     Using multiprocessing, you can fully utilize multiple CPU cores for CPU-bound tasks since each process operates independently.
-* Asyncio
-    For I/O-bound tasks, the `asyncio` module is often a better solution than threading. asyncio allows for asynchronous programming using an event loop and is highly efficient for I/O-bound concurrency, such as handling many network requests.
 * Other Python Implementations:
   If the GIL is a significant limitation, you can consider using other Python implementations like Jython (Python for the JVM) or IronPython (Python for .NET), which do not have a GIL and can achieve true parallelism with threads. However, these implementations are less commonly used and have different ecosystems from CPython.
 * C Extensions:
@@ -143,11 +152,38 @@ While the GIL limits Python’s threading model for CPU-bound tasks, there are s
 
 ## `async` and `await`
 
+### Sync/Async
+Synchronous (sync) and asynchronous (async) programming refer to different approaches in handling the execution of code, particularly how input/output (I/O) operations are managed in relation to time and other tasks.
+
+#### Synchronous Programming
+In synchronous programming, I/O tasks are executed one after another in a sequential manner. Each I/O operation must be completed before the next one begins. This means the program follows a predictable order, where the completion of a task fully blocks the program's flow until it finishes. In other words, the program "waits" for each I/O operation to complete before moving to the next.
+
+**Key aspects:**
+
+- Sequential execution: The next step doesn’t start until the current one finishes, especially when dealing with I/O tasks.
+  
+- Blocking: An I/O operation can block the entire program from proceeding until it completes, such as waiting for a file to be read or data from a network to arrive.
+
+- Simple to reason about: Since I/O tasks are executed one after another, it's easier to understand how data flows between steps.
+
+#### Asynchronous Programming
+Asynchronous programming, on the other hand, allows multiple I/O tasks to be in progress at the same time without having to wait for one to finish before starting another. This involves running tasks independently or scheduling them in a way that allows for concurrency. Instead of waiting for an I/O operation to finish, the program can proceed to other tasks and handle the result of the previous task once it's ready.
+
+**Key aspects:**
+
+- Non-blocking: I/O tasks don’t stop the program's flow, allowing other operations to be executed while waiting for the I/O result, such as performing other computations while waiting for a network response.
+
+- Concurrency: Multiple I/O operations can be initiated, and their completion times are managed independently.
+
+- Requires more complex reasoning: Since I/O tasks are handled out of order, you need to track when and how different operations complete.
+
+### Asynchronous Programming in Python 
+
 Python introduced the **`asyncio`** module in Python 3.4, and starting from Python 3.5, the **`async`** and **`await`** 
 keywords were introduced to write asynchronous code in a clean, readable manner. These tools allow developers to 
 implement concurrency using coroutines without the complexities of threads or processes.
 
-### Coroutines
+#### Coroutines
 
 A **coroutine** is a function that can be paused and resumed. In Python, you define a coroutine using the `async def` 
 syntax. Coroutines are the foundation of asynchronous programming in Python.
@@ -166,7 +202,7 @@ async def say_hello():
 In this example, `say_hello` is an asynchronous function. The `await` keyword tells the function to "pause" its execution 
 and wait for the result of `asyncio.sleep(1)`, which simulates a one-second delay without blocking other tasks.
 
-### Running Coroutines
+#### Running Coroutines
 
 To run a coroutine, you can use `asyncio.run()`:
 
@@ -182,69 +218,7 @@ asyncio.run(main())
 The `await` keyword is essential when calling another coroutine. It suspends the current coroutine until the awaited 
 coroutine completes, allowing other tasks to be executed during that time.
 
-### Benefits of `async/await` in Python
-
-* **Non-blocking I/O Operations**  
-   `async/await` shines in scenarios where I/O operations (e.g., network requests, file handling) are frequent. 
-   In traditional synchronous programming, tasks would block the main thread while waiting for I/O operations to complete, 
-   resulting in inefficiency. With `async/await`, your program can handle I/O-bound tasks concurrently, making better 
-   use of resources.
-
-   For example, consider a program that needs to download multiple web pages:
-
-   **Synchronous Version:**
-
-   ```python
-   import requests
-
-   def download_page(url):
-       response = requests.get(url)
-       return response.text
-
-   for url in urls:
-       page = download_page(url)
-       print(f"Downloaded {len(page)} characters")
-   ```
-
-   **Asynchronous Version:**
-
-   ```python
-   import aiohttp
-   import asyncio
-
-   async def download_page(session, url):
-       async with session.get(url) as response:
-           return await response.text()
-
-   async def main():
-       async with aiohttp.ClientSession() as session:
-           tasks = [download_page(session, url) for url in urls]
-           pages = await asyncio.gather(*tasks)
-           for page in pages:
-               print(f"Downloaded {len(page)} characters")
-
-   asyncio.run(main())
-   ```
-
-   In the asynchronous version, multiple pages can be downloaded concurrently, improving the overall performance, 
-   especially for I/O-bound tasks. In contrast, `async/await` allows the program to switch between tasks when it hits an I/O operation.
-
-* **Simplified Syntax**  
-   Without `async/await`, handling concurrency would require more complex techniques, such as using threads or callback-based 
-   approaches. Threads introduce additional complexity with context switching, synchronization, and debugging challenges.
-
-   Before, asynchronous programming often involved callbacks, which could lead to deeply nested code, known 
-   as "callback hell." `async/await` provides a linear, more intuitive flow of code while retaining the benefits of concurrency.
-
-* **Lower Memory Usage**  
-   `asyncio`-based coroutines are lightweight compared to threads. They consume fewer resources because they don’t 
-   involve OS-level threads, and switching between coroutines is much cheaper than switching between threads. This 
-   means that you can handle a large number of concurrent tasks (like thousands of web requests) with significantly 
-   less memory overhead.
-* 
----
-
-### Asyncio Event Loop
+#### Asyncio Event Loop
 
 At the heart of Python’s asynchronous programming model is the **event loop**. The event loop is responsible for managing the execution of coroutines, handling I/O operations, and scheduling tasks.
 
@@ -255,6 +229,66 @@ Here's how the event loop works:
 - Once the awaited task completes, the event loop returns to the paused coroutine and resumes it.
 
 You can think of the event loop as a conductor, coordinating when each coroutine gets a turn to execute.
+
+#### Benefits of `async/await` in Python
+
+* **Non-blocking I/O Operations**  
+    `async/await` shines in scenarios where I/O operations (e.g., network requests, file handling) are frequent. 
+    In traditional synchronous programming, tasks would block the main thread while waiting for I/O operations to complete, 
+    resulting in inefficiency. With `async/await`, your program can handle I/O-bound tasks concurrently, making better 
+    use of resources.
+    
+    For example, consider a program that needs to download multiple web pages:
+    
+    **Synchronous Version:**
+    
+    ```python
+    import requests
+    
+    def download_page(url):
+       response = requests.get(url)
+       return response.text
+    
+    for url in urls:
+       page = download_page(url)
+       print(f"Downloaded {len(page)} characters")
+    ```
+  
+    **Asynchronous Version:**
+    
+    ```python
+    import aiohttp
+    import asyncio
+    
+    async def download_page(session, url):
+       async with session.get(url) as response:
+           return await response.text()
+    
+    async def main():
+       async with aiohttp.ClientSession() as session:
+           tasks = [download_page(session, url) for url in urls]
+           pages = await asyncio.gather(*tasks)
+           for page in pages:
+               print(f"Downloaded {len(page)} characters")
+    
+    asyncio.run(main())
+    ```
+    
+    In the asynchronous version, multiple pages can be downloaded concurrently, improving the overall performance, 
+    especially for I/O-bound tasks. In contrast, `async/await` allows the program to switch between tasks when it hits an I/O operation.
+
+  * **Simplified Syntax**  
+     Without `async/await`, handling concurrency would require more complex techniques, such as using threads or callback-based 
+     approaches. Threads introduce additional complexity with context switching, synchronization, and debugging challenges.
+
+     Before, asynchronous programming often involved callbacks, which could lead to deeply nested code, known 
+     as "callback hell." `async/await` provides a linear, more intuitive flow of code while retaining the benefits of concurrency.
+
+* **Lower Memory Usage**  
+   `asyncio`-based coroutines are lightweight compared to threads. They consume fewer resources because they don’t 
+   involve OS-level threads, and switching between coroutines is much cheaper than switching between threads. This 
+   means that you can handle a large number of concurrent tasks (like thousands of web requests) with significantly 
+   less memory overhead.
 
 ---
 

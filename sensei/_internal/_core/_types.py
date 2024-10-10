@@ -5,6 +5,8 @@ from typing import Protocol, TypeVar
 from ._endpoint import CaseConverter
 from ._requester import ResponseFinalizer, Preparer, JsonFinalizer
 from ..tools import MethodType
+from sensei.client import Manager
+from sensei.types import IRateLimit
 
 
 class RoutedFunction(Protocol):
@@ -44,6 +46,21 @@ RoutedModel = TypeVar("RoutedModel", bound=_RoutedModel)
 class IRouter(ABC):
     __slots__ = ()
 
+    @property
+    @abstractmethod
+    def manager(self) -> Manager:
+        pass
+
+    @property
+    @abstractmethod
+    def port(self) -> int:
+        pass
+
+    @property
+    @abstractmethod
+    def rate_limit(self) -> IRateLimit:
+        pass
+
     @abstractmethod
     def model(self, model_obj: RoutedModel | None) -> RoutedModel:
         pass
@@ -54,7 +71,6 @@ class IRouter(ABC):
             path: str,
             /, *,
             query_case: CaseConverter | None = None,
-            body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
             header_case: CaseConverter | None = None,
             skip_finalizer: bool = False,
@@ -106,7 +122,30 @@ class IRouter(ABC):
             path: str,
             /, *,
             query_case: CaseConverter | None = None,
-            body_case: CaseConverter | None = None,
+            cookie_case: CaseConverter | None = None,
+            header_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
+    ) -> RoutedFunction:
+        pass
+
+    @abstractmethod
+    def options(
+            self,
+            path: str,
+            /, *,
+            query_case: CaseConverter | None = None,
+            cookie_case: CaseConverter | None = None,
+            header_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
+    ) -> RoutedFunction:
+        pass
+
+    @abstractmethod
+    def head(
+            self,
+            path: str,
+            /, *,
+            query_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
             header_case: CaseConverter | None = None,
             skip_finalizer: bool = False,

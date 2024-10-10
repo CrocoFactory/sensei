@@ -3,12 +3,13 @@ from __future__ import annotations
 import inspect
 from typing import Callable, TypeVar, Generic, Any, get_origin, get_args
 from typing_extensions import Self
-from sensei.client import Manager, AsyncClient, Client
+from sensei.client import AsyncClient, Client
 from sensei._base_client import BaseClient
 from ._endpoint import Endpoint, ResponseModel, RESPONSE_TYPES, CaseConverter, Args
 from ._requester import Requester, ResponseFinalizer, Preparer, JsonFinalizer
+from ._types import IRouter
 from ..tools import HTTPMethod, args_to_kwargs, MethodType, identical
-from sensei.types import IRateLimit, IResponse
+from sensei.types import IResponse
 from ..tools.utils import is_coroutine_function
 
 _Client = TypeVar('_Client', bound=BaseClient)
@@ -18,12 +19,9 @@ _RequestArgs = tuple[tuple[Any, ...], dict[str, Any]]
 class _CallableHandler(Generic[_Client]):
     __slots__ = (
         '_func',
-        '_manager',
         '_method',
         '_path',
-        '_rate_limit',
         '_host',
-        '_port',
         '_request_args',
         '_method_type',
         '_temp_client',
@@ -31,6 +29,7 @@ class _CallableHandler(Generic[_Client]):
         '_preparer',
         '_converters',
         '_json_finalizer',
+        '_router'
     )
 
     def __init__(
@@ -38,13 +37,11 @@ class _CallableHandler(Generic[_Client]):
             *,
             path: str,
             method: HTTPMethod,
+            router: IRouter,
             func: Callable,
             host: str,
-            port: int | None = None,
-            rate_limit: IRateLimit | None = None,
             request_args: _RequestArgs,
             method_type: MethodType,
-            manager: Manager[_Client] | None,
             case_converters: dict[str, CaseConverter],
             response_finalizer: ResponseFinalizer | None = None,
             json_finalizer: JsonFinalizer = identical,
@@ -52,12 +49,10 @@ class _CallableHandler(Generic[_Client]):
             post_preparer: Preparer = identical,
     ):
         self._func = func
-        self._manager = manager
+        self._router = router
         self._method = method
         self._path = path
         self._host = host
-        self._port = port
-        self._rate_limit = rate_limit
 
         self._request_args = request_args
         self._method_type = method_type
@@ -148,7 +143,7 @@ class _CallableHandler(Generic[_Client]):
         if client_host == self_host:
             raise ValueError('Client host must be equal to default host')
 
-        if client.port != self._port:
+        if client.port != self._router.port:
             raise ValueError('Client port must be equal to default port')
 
         requester = self._make_requester(client)
@@ -163,9 +158,10 @@ class _CallableHandler(Generic[_Client]):
 
 class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]):
     async def __aenter__(self) -> ResponseModel:
-        manager = self._manager
+        router = self._router
+        manager = router.manager
         if manager is None or manager.empty():
-            client = AsyncClient(host=self._host, port=self._port, rate_limit=self._rate_limit)
+            client = AsyncClient(host=self._host, port=router.port, rate_limit=router.rate_limit)
             await client.__aenter__()
             self._temp_client = client
         else:
@@ -185,9 +181,11 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
 
 class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
     def __enter__(self) -> ResponseModel:
-        manager = self._manager
+        router = self._router
+        manager = router.manager
+
         if manager is None or manager.empty():
-            client = Client(host=self._host, port=self._port, rate_limit=self._rate_limit)
+            client = Client(host=self._host, port=router.port, rate_limit=router.rate_limit)
             client.__enter__()
             self._temp_client = client
         else:

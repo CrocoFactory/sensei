@@ -4,7 +4,7 @@ from functools import partial
 from pydantic import BaseModel, Field
 from sensei.types import IResponse, Json
 from sensei._utils import format_str
-from sensei._params import Body, Query, Header, Cookie, Param
+from sensei._params import Body, Query, Header, Cookie, Param, File, Form
 from sensei.cases import header_case as to_header_case
 from typing import Any, get_args, Callable, TypeVar, Generic, get_origin
 from ..tools import ChainedMap, split_params, make_model, is_safe_method, HTTPMethod, validate_method, identical
@@ -98,7 +98,9 @@ class Endpoint(Generic[ResponseModel]):
             'params': query_case,
             'json': body_case,
             'cookies': cookie_case,
-            'headers': header_case
+            'headers': header_case,
+            'files': body_case,
+            'data': body_case,
         }
 
         for k in converters.keys():
@@ -211,12 +213,16 @@ class Endpoint(Generic[ResponseModel]):
             'params': {},
             'json': {},
             'headers': {},
-            'cookies': {}
+            'cookies': {},
+            'data': {},
+            'files': {}
         }
 
         annotation_map = {
             Query: 'params',
-            Body: 'json',
+            Body: 'data',
+            Form: 'data',
+            File: 'files',
             Cookie: 'cookies',
             Header: 'headers',
         }
@@ -225,15 +231,30 @@ class Endpoint(Generic[ResponseModel]):
         type_to_params = ChainedMap[type[Param], dict[str, Any]](annotation_map, new_params)
 
         for key, value in fields.items():
-            types = Body, Cookie, Header, Query
+            types = Body, Cookie, Header, Query, File, Form
             if isinstance(value, types):
+                condition = isinstance(value, Body)
+                new_params_key = 'data'
+                if condition:
+                    media_type_map = {
+                        'application/json': 'json',
+                        'application/vnd.api+json': 'json',
+                        'application/ld+json': 'json',
+                        'multipart/form-data': 'files'
+                    }
+                    new_params_key = result if (result := media_type_map.get(value.media_type)) else 'data'
+
                 param_type = type(value)
 
                 converted = type_to_converter[param_type](key)
 
                 alias = value.alias
                 result_key = alias if alias else converted
-                type_to_params[param_type][result_key] = params[key]
+
+                if condition:
+                    new_params[new_params_key][result_key] = params[key]
+                else:
+                    type_to_params[param_type][result_key] = params[key]
             else:
                 param_type = Query if is_safe_method(self.method) else Body
 

@@ -489,7 +489,6 @@ class Body(FieldInfo):
         media_type: str = "application/json",
         alias: Optional[str] = None,
         alias_priority: Union[int, None] = _Unset,
-        # validation_alias: str | AliasPath | AliasChoices | None
         validation_alias: Union[str, None] = None,
         serialization_alias: Union[str, None] = None,
         title: Optional[str] = None,
