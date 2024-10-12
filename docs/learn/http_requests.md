@@ -1,5 +1,4 @@
-
-## What are HTTP Requests?
+## Requests
 
 When building or interacting with web APIs (Application Programming Interfaces), it's essential to understand how 
 communication between clients (like your browser or an application) and servers occurs. HTTP (Hypertext Transfer Protocol) 
@@ -11,7 +10,7 @@ with APIs.
 
 ---
 
-## What is HTTP?
+## HTTP Protocol
 
 **HTTP** is a protocol that defines how messages are formatted and transmitted between a client (such as a web browser) 
 and a server. It also determines how servers respond to various requests.
@@ -23,8 +22,28 @@ The server then sends a response back, usually in the form of data, a status cod
 
 ## HTTP Methods
 
-An **idempotent** method is an operation that can be performed multiple times without changing the result beyond the 
-initial application. In the context of HTTP methods, idempotency ensures that making the same request multiple times will yield the same outcome as making it once. This property is especially important in web APIs, as it helps maintain consistency and predictability in interactions.
+An HTTP method is a way for a client (such as a web browser) to communicate with a server by specifying the desired
+action on a resource.
+HTTP methods are part of the HTTP protocol, which governs how data is transferred over the web.
+
+### **Safe Methods**
+
+A method is considered **safe** if it does not modify any resources on the server. It should only retrieve or provide
+information without making changes to the server's data or state. Even though the server might perform internal
+operations (such as logging), the state of the resources remains unaffected.
+
+**GET**, **HEAD**, and **OPTIONS** are safe.
+
+### **Idempotent Methods**
+
+A method is **idempotent** if making multiple identical requests has the same effect as making a single request.
+In other words, whether you call the method once or multiple times, the result will be the same, without causing
+additional side effects from repeated requests.
+**If method is idempotent, this is safe*
+
+**GET**, **PUT**, **DELETE**, **HEAD**, **OPTIONS**, and **PATCH** are idempotent.
+
+### Methods
 
 There are several HTTP methods, each with a specific role. Let’s explore the most commonly used ones:
 
@@ -34,9 +53,9 @@ There are several HTTP methods, each with a specific role. Let’s explore the m
 - **Example**: 
     - Retrieving a list of products from an online store.
     - Accessing a user’s profile information.
-  
-- **How it works**: GET is idempotent. When you send a GET request, you're asking the server to send back the requested resource. 
-   It’s a read-only operation, meaning it doesn’t change any server data.
+
+- **How it works**: When you send a GET request, you're asking the server to send back the requested resource.
+  It’s a read-only operation, meaning it doesn’t change any server data.
 
 ```http
 GET /users/123
@@ -73,7 +92,7 @@ In this example, the client is sending a new user’s data to the server, and th
     - Updating a product’s price.
     - Changing user account information.
 
-- **How it works**: PUT is idempotent. This method usually replaces the entire resource with the new data you send.
+- **How it works**: This method usually replaces the entire resource with the new data you send.
 
 ```http
 PUT /users/123
@@ -114,7 +133,8 @@ In this example, only the email field of the user with ID `123` is updated.
     - Deleting a product from an online store.
     - Removing a user’s account from the system.
 
-- **How it works**: DELETE is idempotent. The server deletes the specified resource, and after the operation, the resource is no longer available.
+- **How it works**: The server deletes the specified resource, and after the operation, the resource is no longer
+  available.
 
 ```http
 DELETE /users/123
@@ -124,12 +144,26 @@ This request will remove the user with ID `123` from the server.
 
 ---
 
-## API Endpoints and Routes
+## Endpoints
+
+The **route** in a URL refers to the specific part that comes after the domain name
+and defines the path to a particular resource or page on the server.
+In this structure:
+
+```
+https://example.com/products/electronics
+```
+
+- `https://example.com` is the domain name.
+- `/products/electronics` is the route.
+
+The route typically includes the path and any parameters or queries that specify what the user is requesting, like
+`/docs`, `/about`, `/contact`, etc. It's used by the server or client-side router to determine which content to display.
 
 An **API endpoint** is a specific path where the client can send requests. The endpoint typically includes a 
 **route** (or URL) and is associated with an HTTP method.
 
-- Example: `/users` could be an endpoint for a user-related API.  
+- Example: Route `/users` could be an endpoint for a user-related API.
 - A **route** can often include parameters to identify specific resources, like `/users/123` where `123` is the 
   user’s ID.
 
@@ -141,16 +175,73 @@ When interacting with an API, you’ll combine a method with an endpoint to perf
 
 ---
 
-## HTTP Status Codes
+## Response
 
-HTTP status codes are standardized codes returned by the server in response to an HTTP request. They provide information about the status of the request, and they are grouped into five categories, each representing a different type of response.
+An **HTTP response** is a message sent by a server to a client in response to an HTTP request.
+It contains status information about the request and the requested content, if applicable.
+The response is composed of several key components:
+
+1. **Status Line**: This line includes the HTTP version, a status code, and a reason phrase. The status code indicates
+   `the outcome of the request, while the reason phrase provides a textual description.
+
+    - **Example**:
+      ```
+      HTTP/1.1 200 OK
+      ```
+
+2. **Headers**: HTTP headers provide additional context and metadata about the response. Headers can include information
+   about the content type, content length, caching policies, server information, and more.
+
+    - **Example**:
+      ```
+      Content-Type: application/json
+      Content-Length: 1234
+      ```
+
+3. **Body**: The body of the response contains the actual content returned by the server. Depending on the request and
+   the endpoint, this content can be in various formats, such as HTML, JSON, XML, or plain text.
+
+    - **Example** (JSON response body):
+      ```json
+      {
+          "id": 123,
+          "name": "John Doe",
+          "email": "john@example.com"
+      } 
+      ```
+
+The structure of an HTTP response looks like this:
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 1234
+
+{
+    "id": 123,
+    "name": "John Doe",
+    "email": "john@example.com"
+}
+```
+
+---
+
+## Status Codes
+
+HTTP status codes are standardized codes returned by the server in response to an HTTP request.
+They provide information about the status of the request, and they are grouped into five categories,
+each representing a different type of response.
 
 #### 1. 1xx Informational
 
-These codes indicate that the request has been received and is still being processed. They are primarily used for communication between the client and server during the request lifecycle.
+These codes indicate that the request has been received and is still being processed.
+They are primarily used for communication between the client and server during the request lifecycle.
 
-- **100 Continue**: The server has received the initial part of the request and the client should continue with the rest of the request. This status is often sent in response to a `POST` or `PUT` request where the client must send a large amount of data.
-- **101 Switching Protocols**: The server is switching protocols as requested by the client. This is commonly used when a client requests to switch from HTTP to a different protocol, such as WebSocket.
+- **100 Continue**: The server has received the initial part of the request and the client should continue with the
+  rest of the request. This status is often sent in response to a `POST` or `PUT` request where the client must send
+  a large amount of data.
+- **101 Switching Protocols**: The server is switching protocols as requested by the client. This is commonly used when
+  a client requests to switch from HTTP to a different protocol, such as WebSocket.
 
 #### 2. 2xx Success
 
@@ -186,12 +277,110 @@ These codes indicate that the server failed to fulfill a valid request.
 - **503 Service Unavailable**: The server is currently unable to handle the request due to temporary overload or maintenance.
 
 ---
+
+## Media Types (MIME Types)
+
+**Media types**, also known as **MIME types** (Multipurpose Internet Mail Extensions), are a standard way of indicating
+the nature and format of a file or data being transmitted over the Internet. They help clients and servers understand
+how to process and display the content being sent or received.
+
+A MIME type consists of two parts: a type and a subtype, separated by a slash (`/`):
+
+- **Type**: The general category of the data, such as `text`, `image`, `audio`, `video`, or `application`.
+- **Subtype**: A specific format of the type.
+
+### Common Media Types
+
+Here are some common MIME types you might encounter:
+
+- **text/html**: HTML documents.
+- **text/plain**: Plain text files.
+- **application/json**: JSON data.
+- **application/xml**: XML data.
+- **image/jpeg**: JPEG images.
+- **image/png**: PNG images.
+- **application/x-www-form-urlencoded** and **multipart/form-data**: Form data.
+- **application/octet-stream**: Binary data (used for files that do not fit into other categories).
+
+### Form Data
+
+**Form data** is a media type used when submitting data from an HTML form to a server. It typically uses the
+`application/x-www-form-urlencoded` or `multipart/form-data` MIME types.
+
+1. **application/x-www-form-urlencoded**: This is the default encoding for HTML forms. In this format, the form data is
+   encoded as key-value pairs, where keys and values are URL-encoded, and each pair is separated by an ampersand (`&`).
+
+    - **Example**: If a form contains two fields, `username` and `password`, the encoded data might look like this:
+      ```
+      username=johndoe&password=secret123
+      ```
+
+2. **multipart/form-data**: This encoding type is used when a form includes file uploads. In this format, each form
+   field is sent as a separate part of the request body, allowing for binary data (like files) to be transmitted.
+   Each part has its own set of headers, including `Content-Disposition` to indicate the form field name and the
+   filename, and optionally `Content-Type` to specify the type of the file.
+
+    - **Example**:
+      ```
+      --boundary
+      Content-Disposition: form-data; name="username"
  
+      johndoe
+      --boundary
+      Content-Disposition: form-data; name="file"; filename="photo.jpg"
+      Content-Type: image/jpeg
+ 
+      [binary data]
+      --boundary--
+      ```
+
+In the above example, `--boundary` is a delimiter that separates the different parts of the form data.
+
+### Example of Setting Content-Type
+
+When a server sends a response, it often includes a `Content-Type` header to specify the media type of the response
+body.
+For example, if a server is sending JSON data, it might look like this:
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+    "message": "Hello, World!"
+}
+```
+
+When submitting a form that includes file uploads, the `Content-Type` header might look like this:
+
+```
+POST /upload HTTP/1.1
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="username"
+
+johndoe
+--boundary
+Content-Disposition: form-data; name="file"; filename="photo.jpg"
+Content-Type: image/jpeg
+
+[binary data]
+--boundary--
+```
+
+Setting the appropriate MIME type is crucial for ensuring that clients interpret the response data correctly.
+For instance, a browser will render HTML content as a web page,
+while JSON data will be parsed as a JavaScript object in client-side applications.
+
+---
+
 ## Making HTTP Requests in Python
 
-The `requests` module is a popular library in Python that simplifies making HTTP requests. To get started, you first need to install the module if you haven’t already. You can do this using pip:
+The `requests` module is a popular library in Python that simplifies making HTTP requests. To get started, you first
+need to install the module if you haven’t already. You can do this using pip:
 
-```bash
+```shell
 pip install requests
 ```
 
@@ -244,7 +433,9 @@ response = requests.get('https://api.example.com/data', params=params)
 
 ### Body Parameters
 
-Body parameters are used to send data to the server as part of the request body, particularly in POST and PUT requests. This data can be sent in various formats, such as JSON, form data, or XML. Body parameters are not visible in the URL and are used for operations that create or update resources.
+Body parameters are used to send data to the server as part of the request body, particularly in POST and PUT requests.
+This data can be sent in various media types, such as JSON, form data,
+or XML. Body parameters are not visible in the URL and are used for operations that create or update resources.
 
 When sending JSON data, you can use the `json` argument in `requests`:
 
@@ -264,9 +455,20 @@ form_data = {'key': 'value', 'another_key': 'another_value'}
 response = requests.post('https://api.example.com/data', data=form_data)
 ```
 
+For files, you can use the `files` argument
+
+```python
+import requests
+
+files = {'file': open('mynotes.txt')}
+response = requests.post('https://api.example.com/data', files=files)
+```
+
 ### Path Parameters
 
-Path parameters are used to specify specific resources within the URL. They are part of the URL path and are typically enclosed in curly braces `{}` in the API definition. Path parameters allow you to pass information that determines which resource you want to interact with.
+Path parameters are used to specify specific resources within the URL. They are part of the URL path and are typically
+enclosed in curly braces `{}` in the API definition. Path parameters allow you to pass information that determines
+which resource you want to interact with.
 
 For example, in the following URL, `123` is a path parameter representing a specific resource ID:
 
@@ -285,7 +487,9 @@ response = requests.get(f'https://api.example.com/data/{resource_id}')
 
 ### Headers
 
-Headers are key-value pairs sent along with the request that provide additional context or metadata about the request. Headers can include information such as content type, authorization tokens, user agents, and more. They are essential for ensuring the server correctly processes the request.
+Headers are key-value pairs sent along with the request that provide additional context or metadata about the request.
+Headers can include information such as content type, authorization tokens, user agents, and more.
+They are essential for ensuring the server correctly processes the request.
 
 You can pass headers in `requests` using the `headers` argument:
 
@@ -298,7 +502,9 @@ response = requests.get('https://api.example.com/data', headers=headers)
 
 ### Cookies
 
-Cookies are small pieces of data stored on the client side and sent along with HTTP requests. They are often used for session management, tracking user preferences, or maintaining state between requests. When the server sets a cookie, it can be sent back with subsequent requests to maintain the session or other data.
+Cookies are small pieces of data stored on the client side and sent along with HTTP requests.
+They are often used for session management, tracking user preferences, or maintaining state between requests.
+When the server sets a cookie, it can be sent back with subsequent requests to maintain the session or other data.
 
 In `requests`, you can manage cookies by passing them in the `cookies` argument:
 
@@ -392,7 +598,6 @@ Using these parameters helps you create a more organized and efficient codebase,
 Closing the `httpx.Client` is crucial for proper resource management. When you create a client instance, it opens a connection pool to the specified server(s). If you don't close the client after use, it can lead to several issues:
 
 - **Resource Leakage**: Open connections may linger indefinitely, consuming system resources and leading to potential memory exhaustion or application slowdowns.
-- **Socket Limits**: Operating systems impose limits on the number of open sockets. Not closing clients can result in hitting these limits, causing errors when trying to make new connections.
 - **Graceful Shutdown**: Closing the client ensures that any pending requests complete correctly and that resources associated with the client are released.
 
 To ensure the client is closed properly, you can use it within a `with` statement, which automatically closes the client when the block is exited:
@@ -407,6 +612,11 @@ with httpx.Client() as client:
 
 This practice promotes efficient resource management and helps avoid potential issues related to unclosed connections.
 
-### Conclusion
+## Conclusion
 
-`httpx` provides a robust and modern alternative to the `requests` library, with enhancements such as asynchronous support and improved client management. Its API design makes it easy for existing `requests` users to adopt, while features like connection pooling and configurable client parameters enhance performance and maintainability. Closing the client properly ensures efficient use of resources, making `httpx` a compelling choice for handling HTTP requests in Python applications.
+`httpx` provides a robust and modern alternative to the `requests` library, with enhancements such as asynchronous
+support and improved client management.
+Its API design makes it easy for existing `requests` users to adopt,
+while features like connection pooling and configurable client parameters enhance performance and maintainability.
+Closing the client properly ensures efficient use of resources,
+making `httpx` a compelling choice for handling HTTP requests in Python applications.

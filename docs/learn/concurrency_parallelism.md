@@ -94,7 +94,7 @@ Here’s a breakdown of the differences between Python threads and traditional t
 | CPU-bound tasks do not benefit from threading due to the GIL. | CPU-bound tasks can fully utilize multi-core CPUs. |
 | Python threads are managed by the OS but limited by the GIL. | OS schedules threads to run independently on multiple cores. |
 
-### Example of Python Threading Limitations
+### Example of Limitations
 
 Let’s look at an example of how the GIL affects Python threading when performing CPU-bound tasks:
 
@@ -257,7 +257,7 @@ You can think of the event loop as a conductor, coordinating when each coroutine
     **Asynchronous Version:**
     
     ```python
-    import aiohttp
+    import httpx
     import asyncio
     
     async def download_page(session, url):
@@ -265,7 +265,7 @@ You can think of the event loop as a conductor, coordinating when each coroutine
            return await response.text()
     
     async def main():
-       async with aiohttp.ClientSession() as session:
+       async with httpx.Client() as session:
            tasks = [download_page(session, url) for url in urls]
            pages = await asyncio.gather(*tasks)
            for page in pages:
@@ -277,12 +277,14 @@ You can think of the event loop as a conductor, coordinating when each coroutine
     In the asynchronous version, multiple pages can be downloaded concurrently, improving the overall performance, 
     especially for I/O-bound tasks. In contrast, `async/await` allows the program to switch between tasks when it hits an I/O operation.
 
-  * **Simplified Syntax**  
-     Without `async/await`, handling concurrency would require more complex techniques, such as using threads or callback-based 
-     approaches. Threads introduce additional complexity with context switching, synchronization, and debugging challenges.
+* **Simplified Syntax**  
+  Without `async/await`, handling concurrency would require more complex techniques, such as using threads or
+  callback-based
+  approaches. Threads introduce additional complexity with context switching, synchronization, and debugging challenges.
 
-     Before, asynchronous programming often involved callbacks, which could lead to deeply nested code, known 
-     as "callback hell." `async/await` provides a linear, more intuitive flow of code while retaining the benefits of concurrency.
+  Before, asynchronous programming often involved callbacks, which could lead to deeply nested code, known
+  as "callback hell." `async/await` provides a linear, more intuitive flow of code while retaining the benefits of
+  concurrency.
 
 * **Lower Memory Usage**  
    `asyncio`-based coroutines are lightweight compared to threads. They consume fewer resources because they don’t 
@@ -290,25 +292,46 @@ You can think of the event loop as a conductor, coordinating when each coroutine
    means that you can handle a large number of concurrent tasks (like thousands of web requests) with significantly 
    less memory overhead.
 
+Here is a table illustrating the differences between `asyncio`, `multithreading`, and `multiprocessing`.
+
+| Aspect                        | asyncio                            | multithreading                        | multiprocessing                     |
+|--------------------------------|--------------------------------------|----------------------------------------|---------------------------------------|
+| Type of Concurrency        | Cooperative (single-threaded)        | Preemptive (multiple threads)          | Preemptive (multiple processes)       |
+| Use Case                   | I/O-bound tasks                      | I/O-bound tasks                        | CPU-bound tasks                       |
+| Parallelism                | No (single-threaded)                 | Limited (due to GIL)                   | Yes (multiple processes)              |
+| GIL (Global Interpreter Lock) | Not affected (no threads)            | Affected (limits CPU-bound tasks)      | Not affected (separate processes)     |
+| Memory Sharing             | Shared memory (single thread)        | Shared memory (between threads)        | No shared memory (separate processes) |
+| Performance (CPU-bound)    | -                                    | - (limited by GIL)                     | + (best for CPU-bound)                |
+| Performance (I/O-bound)    | + (ideal for I/O-bound tasks)        | + (good for I/O-bound tasks)           | - (overhead from process management)  |
+| Overhead                   | Low (single event loop)              | Low (threads are lightweight)          | High (process creation is expensive)  |
+| Communication Mechanism    | Async events, queues, or futures     | Locks, conditions, and queues          | Pipes, queues, shared memory          |
+| Ease of Debugging          | + (simpler due to single-thread)     | - (harder due to thread complexity)    | - (harder due to process separation)  |
+| Fault Tolerance            | - (single point of failure)          | - (crash affects all threads)          | + (crash in one process is isolated)  |
+| Context Switching Cost     | Minimal (no thread switching)        | Moderate (thread switching)            | High (process switching)              |
+| Scalability                | Good for handling many I/O tasks     | Limited by GIL                         | Excellent for scaling CPU-bound tasks |
+| Best For                   | Web servers, networking, I/O-bound tasks | Background tasks, I/O-bound parallelism | Heavy CPU-bound computation tasks     |
+
+     
 ---
 
 ## Conclusion
 
-### `async/await` vs. Multithreading/Multiprocessing
+### Choosing between asyncio and multithreading:
 
-While `async/await` is highly efficient for I/O-bound tasks, it’s essential to understand where it fits compared to other concurrency approaches like multithreading or multiprocessing.
+- `asyncio`:
+    - Best for handling many concurrent I/O-bound tasks that can benefit from non-blocking code. It's more efficient for
+      lightweight concurrency with low overhead.
+    - Easier debugging and management of concurrency, as it operates within a single thread.
 
-- **I/O-bound tasks** (e.g., file I/O, network requests) benefit from `async/await` because these tasks spend a lot of time waiting, and `async/await` allows switching between tasks efficiently during these waits. Multithreading is also used for this purpose, but it has drawbacks, related to GIL.
-  
-- **CPU-bound tasks** (e.g., heavy computations) may still require **multiprocessing** since `async/await` doesn't make parallel CPU execution possible. CPU-bound tasks are better handled by distributing work across multiple processes.
+- `multithreading`:
+    - Suitable for blocking I/O tasks where libraries don't offer async versions, or when you need to integrate
+      synchronous code easily.
+    - Works well when mixing I/O-bound and some CPU-bound tasks, without needing extensive refactoring to make the code
+      asynchronous.
 
-Concurrency is a powerful way to handle multiple tasks simultaneously, making programs more efficient, especially in I/O-heavy environments. Python’s `async/await` keywords, introduced in Python 3.5, offer an elegant and efficient way to manage asynchronous programming by allowing non-blocking I/O and task switching without the complexity of threads or processes.
+### Choosing multiprocessing:
 
-Key advantages of using `async/await` include:
-
-- Efficient handling of I/O-bound tasks.
-- Simpler, cleaner syntax compared to callback-based asynchronous programming.
-- Lower resource usage compared to threads.
-- Improved performance and responsiveness in real-world applications like web servers, crawlers, and file-handling systems.
-
-If your Python applications deal heavily with I/O operations, using `async/await` is a modern, scalable solution to achieve concurrency efficiently without the overhead of threads or processes.
+- Best when dealing with CPU-bound tasks that need to bypass the Global Interpreter Lock (GIL). This approach enables
+  leveraging multiple CPU cores for true parallelism.
+- Ideal for compute-heavy tasks where processes can run independently and benefit from separate memory spaces,
+  minimizing the impact of Python’s GIL.

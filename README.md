@@ -5,7 +5,7 @@
 </h1><br>
 </a>
 
-*Build painless API Requests with minimal implementation*
+*Build painless HTTP Requests with minimal implementation*
 
 [![Python versions](https://img.shields.io/pypi/pyversions/sensei?color=%23F94526)](https://pypi.org/project/sensei/)
 [![PyPi Version](https://img.shields.io/pypi/v/sensei?color=%23F94526)](https://pypi.org/project/sensei/)
