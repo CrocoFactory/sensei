@@ -3,12 +3,13 @@ from __future__ import annotations
 import inspect
 from abc import ABC, abstractmethod
 from typing import Callable, Generic, Any, Awaitable, Union
-from ._endpoint import Endpoint, Args, ResponseModel, CaseConverter
+
 from sensei._base_client import BaseClient
-from sensei.client import Client, AsyncClient
-from sensei.types import IResponse, IRequest, Json
-from ..tools import identical
 from sensei._utils import placeholders
+from sensei.client import Client, AsyncClient
+from sensei.types import IResponse, Json
+from ._endpoint import Endpoint, Args, ResponseModel, CaseConverter
+from ..tools import identical
 
 Preparer = Callable[[Args], Union[Args, Awaitable[Args]]]
 ResponseFinalizer = Callable[[IResponse], Union[ResponseModel, Awaitable[ResponseModel]]]
@@ -32,29 +33,17 @@ class _DecoratedResponse(IResponse):
         self._json_finalizer = json_finalizer
         self._response_case = response_case
 
+    def __getattribute__(self, attr: str) -> Any:
+        if attr not in ('json', '_response', '_json_finalizer', '_response_case'):
+            return getattr(self._response, attr)
+        else:
+            return super().__getattribute__(attr)
+
     def json(self) -> Json:
         case = self._response_case
         json = self._response.json()
         json = {case(k): v for k, v in json.items()}
         return self._json_finalizer(json)
-
-    def raise_for_status(self) -> IResponse:
-        return self._response.raise_for_status()
-
-    def request(self) -> IRequest:
-        return self._response.request
-
-    @property
-    def text(self) -> str:
-        return self._response.text
-
-    @property
-    def status_code(self) -> int:
-        return self._response.status_code
-
-    @property
-    def content(self) -> bytes:
-        return self._response.content
 
 
 class Requester(ABC, Generic[ResponseModel]):

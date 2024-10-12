@@ -1,7 +1,9 @@
 from typing import Any, Callable, Dict, List, Optional, Union
+
+from typing_extensions import Annotated, Doc, deprecated
+
 from . import _params
 from ._compat import Undefined
-from typing_extensions import Annotated, Doc, deprecated
 
 _Unset: Any = Undefined
 
@@ -1340,6 +1342,17 @@ def Form(  # noqa: N802
             """
         ),
     ] = _Unset,
+        embed: Annotated[
+            bool,
+            Doc(
+                """
+                When `embed` is `True`, the parameter will be expected in a JSON body as a
+                key instead of being the JSON body itself.
+    
+                This happens automatically when more than one `Body` parameter is declared.
+                """
+            ),
+        ] = True,
     alias: Annotated[
         Optional[str],
         Doc(
@@ -1549,6 +1562,7 @@ def Form(  # noqa: N802
     return _params.Form(
         default=default,
         default_factory=default_factory,
+        embed=embed,
         media_type=media_type,
         alias=alias,
         alias_priority=alias_priority,

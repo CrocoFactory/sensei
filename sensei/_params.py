@@ -1,9 +1,11 @@
 import warnings
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+
 from pydantic import AnyUrl
 from pydantic.fields import FieldInfo
 from typing_extensions import Annotated, deprecated, TypedDict
+
 from ._compat import Undefined, PYDANTIC_V2, PYDANTIC_VERSION
 
 _Unset: Any = Undefined
@@ -598,6 +600,7 @@ class Form(Body):
         default: Any = Undefined,
         *,
         default_factory: Union[Callable[[], Any], None] = _Unset,
+            embed: bool = True,
         annotation: Optional[Any] = None,
         media_type: str = "application/x-www-form-urlencoded",
         alias: Optional[str] = None,
@@ -644,7 +647,7 @@ class Form(Body):
             default=default,
             default_factory=default_factory,
             annotation=annotation,
-            embed=True,
+            embed=embed,
             media_type=media_type,
             alias=alias,
             alias_priority=alias_priority,

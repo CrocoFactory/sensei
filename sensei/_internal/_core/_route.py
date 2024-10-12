@@ -4,14 +4,13 @@ import inspect
 from abc import ABC, abstractmethod
 from functools import wraps, partial
 from typing import Callable, TypeVar
-from sensei.client import Manager
-from ._endpoint import CaseConverter
-from ._types import IRouter
-from ..tools import HTTPMethod, MethodType, identical
+
 from sensei._base_client import BaseClient
 from ._callable_handler import CallableHandler, AsyncCallableHandler
+from ._endpoint import CaseConverter
 from ._requester import ResponseFinalizer, Preparer, JsonFinalizer
-from sensei.types import IRateLimit
+from ._types import IRouter
+from ..tools import HTTPMethod, MethodType, identical
 
 _Client = TypeVar('_Client', bound=BaseClient)
 

@@ -2,14 +2,17 @@ from __future__ import annotations
 
 import inspect
 from typing import Callable, TypeVar, Generic, Any, get_origin, get_args
+
 from typing_extensions import Self
-from sensei.client import AsyncClient, Client
+
 from sensei._base_client import BaseClient
+from sensei._utils import get_base_url, normalize_url
+from sensei.client import AsyncClient, Client
+from sensei.types import IResponse
 from ._endpoint import Endpoint, ResponseModel, RESPONSE_TYPES, CaseConverter, Args
 from ._requester import Requester, ResponseFinalizer, Preparer, JsonFinalizer
 from ._types import IRouter
 from ..tools import HTTPMethod, args_to_kwargs, MethodType, identical
-from sensei.types import IResponse
 from ..tools.utils import is_coroutine_function
 
 _Client = TypeVar('_Client', bound=BaseClient)
@@ -138,13 +141,8 @@ class _CallableHandler(Generic[_Client]):
         return requester
 
     def _get_request_args(self, client: BaseClient) -> tuple[Requester, dict]:
-        client_host = client.host['-1'] if client.host[-1] == '\\' else client
-        self_host = self._host['-1'] if self._host[-1] == '\\' else self._host
-        if client_host == self_host:
-            raise ValueError('Client host must be equal to default host')
-
-        if client.port != self._router.port:
-            raise ValueError('Client port must be equal to default port')
+        if normalize_url(str(client.base_url)) != normalize_url(get_base_url(self._host, self._router.port)):
+            raise ValueError('Client base url must be equal to Router base url')
 
         requester = self._make_requester(client)
         kwargs = args_to_kwargs(self._func, *self._request_args[0], **self._request_args[1])

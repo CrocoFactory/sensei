@@ -1,6 +1,7 @@
 import inspect
 import re
 from typing import Any, TypeVar, Protocol
+from urllib.parse import urlparse, urlunparse
 
 _T = TypeVar("_T")
 
@@ -99,7 +100,17 @@ def format_str(s: str, values: dict[str, Any], ignore_missed: bool = False) -> s
             return s.format(**values)
 
 
+def normalize_url(url: str) -> str:
+    parsed = urlparse(url)
+
+    path = parsed.path.rstrip('/') if len(parsed.path) == 1 or not parsed.path.endswith('//') else parsed.path
+
+    normalized_url = urlunparse(parsed._replace(path=path))
+    return normalized_url  # type: ignore
+
+
 def get_base_url(host: str, port: int) -> str:
+    host = normalize_url(host)
     if 'port' in placeholders(host):
         api_url = format_str(host, {'port': port})
     elif port is not None:

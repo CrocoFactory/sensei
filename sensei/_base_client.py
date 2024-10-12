@@ -1,9 +1,21 @@
 from __future__ import annotations
 
 from abc import abstractmethod, ABC
+from typing import Protocol
+
+from sensei._descriptors import RateLimitAttr, PortAttr
 from ._utils import get_base_url
 from .types import IRateLimit, IResponse
-from sensei._descriptors import RateLimitAttr, PortAttr
+
+
+class _URL(Protocol):
+    @property
+    def host(self) -> str:
+        pass
+
+    @property
+    def port(self) -> int:
+        pass
 
 
 class _PortAttr(PortAttr):
@@ -28,9 +40,6 @@ class BaseClient(ABC):
         self.rate_limit = rate_limit
         self.port = port
 
-        if host.endswith('/'):
-            host = host[:-1]
-
         self._host = host
 
         base_url = get_base_url(host, port)
@@ -46,5 +55,5 @@ class BaseClient(ABC):
 
     @property
     @abstractmethod
-    def base_url(self) -> str:
+    def base_url(self) -> str | _URL:
         pass

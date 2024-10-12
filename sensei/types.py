@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Protocol, Mapping, Any, Union
+
 from typing_extensions import Self
 
 Json = Union[dict, list[dict]]
@@ -88,30 +90,24 @@ class IResponse(Protocol):
     def __await__(self):
         pass
 
-    @abstractmethod
     def json(self) -> Json:
         pass
 
-    @abstractmethod
     def raise_for_status(self) -> Self:
         pass
 
     @property
-    @abstractmethod
     def request(self) -> IRequest:
         pass
 
     @property
-    @abstractmethod
     def text(self) -> str:
         pass
 
     @property
-    @abstractmethod
     def status_code(self) -> int:
         pass
 
     @property
-    @abstractmethod
     def content(self) -> bytes:
         pass

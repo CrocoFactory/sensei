@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from functools import partial
-from pydantic import BaseModel, Field
-from sensei.types import IResponse, Json
-from sensei._utils import format_str
-from sensei._params import Body, Query, Header, Cookie, Param, File, Form
-from sensei.cases import header_case as to_header_case
 from typing import Any, get_args, Callable, TypeVar, Generic, get_origin
+
+from pydantic import BaseModel, Field
+
+from sensei._params import Body, Query, Header, Cookie, Param, File, Form
+from sensei._utils import format_str
+from sensei.cases import header_case as to_header_case
+from sensei.types import IResponse, Json
 from ..tools import ChainedMap, split_params, make_model, is_safe_method, HTTPMethod, validate_method, identical
 
 CaseConverter = Callable[[str], str]
@@ -46,8 +48,10 @@ class Args(BaseModel):
     url: str
     params: dict[str, Any] = {}
     json_: Json = Field({}, alias="json")
+    data: Any = {}
     headers: dict[str, Any] = {}
     cookies: dict[str, Any] = {}
+    files: dict[str, Any] = {}
 
 
 class Endpoint(Generic[ResponseModel]):
@@ -220,7 +224,7 @@ class Endpoint(Generic[ResponseModel]):
 
         annotation_map = {
             Query: 'params',
-            Body: 'data',
+            Body: 'json',
             Form: 'data',
             File: 'files',
             Cookie: 'cookies',
@@ -230,29 +234,85 @@ class Endpoint(Generic[ResponseModel]):
         type_to_converter = ChainedMap[type[Param], CaseConverter](annotation_map, self._case_converters)
         type_to_params = ChainedMap[type[Param], dict[str, Any]](annotation_map, new_params)
 
+        has_body = False
+        has_file_body = False
+        has_not_embed = False
+        has_embed = False
+
+        media_type = None
+
         for key, value in fields.items():
             types = Body, Cookie, Header, Query, File, Form
             if isinstance(value, types):
                 condition = isinstance(value, Body)
                 new_params_key = 'data'
                 if condition:
+                    multipart = 'multipart/form-data'
+                    form_content = ('multipart/form-data', 'application/x-www-form-urlencoded')
+
+                    not_equal = media_type != value.media_type
+                    not_multipart = multipart not in (media_type, value.media_type)
+                    not_form = value.media_type not in form_content or media_type not in form_content
+
+                    if media_type is not None and (not_equal and (not_multipart or not_form)):
+                        raise ValueError(f'Body parameters cannot have different media types. You try to use '
+                                         f'{value.media_type} and {media_type}')
+
+                    media_type = value.media_type
+
                     media_type_map = {
                         'application/json': 'json',
                         'application/vnd.api+json': 'json',
                         'application/ld+json': 'json',
-                        'multipart/form-data': 'files'
+                        'multipart/form-data': ('files', 'data'),
+                        'application/x-www-form-urlencoded': 'data'
                     }
-                    new_params_key = result if (result := media_type_map.get(value.media_type)) else 'data'
+
+                    if result := media_type_map.get(value.media_type):
+                        new_params_key = result
+
+                        if isinstance(result, tuple):
+                            if isinstance(value, File):
+                                new_params_key = result[0]
+                            else:
+                                new_params_key = result[1]
+                    else:
+                        new_params_key = 'data'
+                        new_params['headers']['Content-Type'] = value.media_type
 
                 param_type = type(value)
 
-                converted = type_to_converter[param_type](key)
+                converter = type_to_converter[param_type]
+                converted = converter(key)
 
                 alias = value.alias
                 result_key = alias if alias else converted
 
                 if condition:
-                    new_params[new_params_key][result_key] = params[key]
+                    if not value.embed:
+                        if has_embed:
+                            raise ValueError('Embed and non-embed variants of body are provided.')
+
+                        if value.media_type == 'multipart/form-data':
+                            if isinstance(value, File):
+                                if has_file_body:
+                                    raise ValueError('Multiple variants of non-embed file body are provided.')
+                                has_file_body = True
+                            else:
+                                has_body = True
+
+                        if has_body:
+                            raise ValueError('Multiple variants of non-embed body are provided.')
+                        else:
+                            has_body = True
+
+                        has_not_embed = True
+                        new_params[new_params_key] = params[key]
+                    else:
+                        if has_not_embed:
+                            raise ValueError('Embed and non-embed variants of body are provided.')
+                        has_embed = True
+                        new_params[new_params_key][result_key] = params[key]
                 else:
                     type_to_params[param_type][result_key] = params[key]
             else:

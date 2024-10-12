@@ -1,8 +1,16 @@
 import datetime
 from abc import ABC, abstractmethod
-from typing import Annotated, Literal, Any, Union
+from typing import Annotated, Literal, Any, Union, List
+
+from pydantic import BaseModel, EmailStr
 from typing_extensions import Self
-from sensei import Query, Path
+
+from sensei import Query, Path, Body
+
+
+class UserCredentials(BaseModel):
+    email: EmailStr
+    password: str
 
 
 class BaseUser(ABC):
@@ -46,6 +54,18 @@ class BaseUser(ABC):
             job: Annotated[str, Query()]
     ) -> bytes:
         ...
+
+    @classmethod
+    @abstractmethod
+    def sign_up(
+            cls,
+            user: Annotated[UserCredentials, Body(embed=True, media_type='application/x-www-form-urlencoded')]
+    ) -> str:
+        ...
+
+    @classmethod
+    @abstractmethod
+    def allowed_http_methods(cls) -> List[str]: ...
 
     @abstractmethod
     def model_dump(

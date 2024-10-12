@@ -1,7 +1,10 @@
+from typing import Annotated
+
 import pytest
 from httpx import HTTPStatusError
 from typing_extensions import Self
-from sensei import APIModel
+
+from sensei import APIModel, Body, Form, File
 
 
 class TestValidation:
@@ -44,3 +47,53 @@ class TestValidation:
 
         with pytest.raises(HTTPStatusError):
             model.get(0)
+
+    def test_body_validation(self, router):
+        @router.model()
+        class _ValidationModel(APIModel):
+            @classmethod
+            @router.post('/users/{id_}')
+            def create(cls, body1: Annotated[dict, Body(embed=False)],
+                       body2: Annotated[dict, Body(embed=False)]) -> Self: ...
+
+            @classmethod
+            @router.post('/users/{id_}')
+            def create2(cls, body1: Annotated[dict, Body(embed=False)],
+                        body2: Annotated[dict, Body(embed=True)]) -> Self: ...
+
+            @classmethod
+            @router.post('/users/{id_}')
+            def create3(cls, body1: Annotated[dict, Body(embed=True)],
+                        body2: Annotated[dict, Body(embed=False)]) -> Self: ...
+
+            @classmethod
+            @router.post('/users/{id_}')
+            def create4(cls, body1: Annotated[dict, Body()], body2: Annotated[dict, Form()]) -> Self: ...
+
+            @classmethod
+            @router.post('/users/{id_}')
+            def create5(cls, body1: Annotated[dict, File(embed=False)],
+                        body2: Annotated[dict, Form(embed=False)]) -> Self: ...
+
+            @classmethod
+            @router.post('/users/{id_}')
+            def create6(cls, body1: Annotated[dict, Form(embed=False)],
+                        body2: Annotated[dict, Form(embed=False)]) -> Self: ...
+
+        with pytest.raises(ValueError):
+            _ValidationModel.create(body1={}, body2={})
+
+        with pytest.raises(ValueError):
+            _ValidationModel.create2(body1={}, body2={})
+
+        with pytest.raises(ValueError):
+            _ValidationModel.create3(body1={}, body2={})
+
+        with pytest.raises(ValueError):
+            _ValidationModel.create4(body1={}, body2={})
+
+        with pytest.raises(ValueError):
+            _ValidationModel.create5(body1={}, body2={})
+
+        with pytest.raises(ValueError):
+            _ValidationModel.create6(body1={}, body2={})

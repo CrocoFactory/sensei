@@ -1,9 +1,11 @@
 import datetime
+
+import jwt
 import pytest
 import respx
-import jwt
 from pydantic_core import ValidationError
-from tests.base_user import BaseUser
+
+from tests.base_user import BaseUser, UserCredentials
 from tests.mock_api import mock_api, SECRET_TOKEN, JWT_ALGORITHM
 
 
@@ -38,7 +40,7 @@ class TestSync:
         user = user_model.get(1)
 
         with respx.mock() as mock:
-            mock_api(mock, base_url)
+            mock_api(mock, base_url, '/token')
             token = user.login()
 
         assert isinstance(token, str)
@@ -57,3 +59,19 @@ class TestSync:
         user = user_model.get(1)
         res = user.change(name="Brandy", job="Data Scientist")
         assert isinstance(res, bytes)
+
+    def test_sign_up(self, user_model, base_url):
+        email = "helloworld@gmail.com"
+
+        with respx.mock() as mock:
+            mock_api(mock, base_url, '/register')
+            token = user_model.sign_up(UserCredentials(email=email, password="mypassword"))
+
+        assert isinstance(token, str)
+
+        payload = jwt.decode(token, SECRET_TOKEN, algorithms=JWT_ALGORITHM)
+        assert payload['sub'] == email
+
+    def test_allowed_methods(self, user_model):
+        methods = sorted(['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'])
+        assert methods == sorted(user_model.allowed_http_methods())
