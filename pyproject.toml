@@ -1,8 +1,7 @@
 [tool.poetry]
 name = 'sensei'
 version = '0.1.0.rc4'
-description = 'The python framework, providing quick way to build API wrappers. Build painless HTTP Requests with
-minimal implementation'
+description = 'The python framework, providing quick way to build API wrappers. Build painless HTTP Requests with minimal implementation'
 authors = ['Alexey  <axbelenkov@gmail.com>']
 license = 'MIT'
 readme = 'README.md'
