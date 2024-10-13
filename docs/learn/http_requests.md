@@ -173,7 +173,9 @@ An **API endpoint** is a specific path where the client can send requests. The e
 - A **route** can often include parameters to identify specific resources, like `/users/123` where `123` is the 
   user’s ID.
 
-When interacting with an API, you’ll combine a method with an endpoint to perform an action. For instance:
+When interacting with an API, you’ll combine a method with an endpoint to perform an action.
+
+For instance:
 - **GET** `/users` – Retrieve a list of users.
 - **GET** `/users/123` – Retrieve information about the user with ID `123`.
 - **POST** `/users` – Create a new user.
@@ -361,21 +363,21 @@ For example:
       }
       ```
 
-    - If you're submitting form data with file uploads, the `Content-Type` should be `multipart/form-data` with a
-      boundary that separates the different parts of the form:
+- If you're submitting form data with file uploads, the `Content-Type` should be `multipart/form-data` with a
+  boundary that separates the different parts of the form:
 
       ```
       POST /upload HTTP/1.1
       Content-Type: multipart/form-data; boundary=boundary
-  
+      
       --boundary
       Content-Disposition: form-data; name="username"
-  
+      
       johndoe
       --boundary
       Content-Disposition: form-data; name="file"; filename="photo.jpg"
       Content-Type: image/jpeg
-  
+      
       [binary data]
       --boundary--
       ```

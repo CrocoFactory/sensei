@@ -304,9 +304,8 @@ You can think of the event loop as a conductor, coordinating when each coroutine
 
 * **Simplified Syntax**  
   Without `async/await`, handling concurrency would require more complex techniques, such as using threads or
-  callback-based
-  approaches. Threads introduce additional complexity with context switching, synchronization, and debugging challenges.
-
+  callback-based approaches.
+  Threads introduce additional complexity with context switching, synchronization, and debugging challenges.
   Before, asynchronous programming often involved callbacks, which could lead to deeply nested code, known
   as "callback hell." `async/await` provides a linear, more intuitive flow of code while retaining the benefits of
   concurrency.
@@ -319,22 +318,22 @@ You can think of the event loop as a conductor, coordinating when each coroutine
 
 Here is a table illustrating the differences between `asyncio`, `multithreading`, and `multiprocessing`.
 
-| Aspect                        | asyncio                            | multithreading                        | multiprocessing                     |
-|--------------------------------|--------------------------------------|----------------------------------------|---------------------------------------|
-| Type of Concurrency        | Cooperative (single-threaded)        | Preemptive (multiple threads)          | Preemptive (multiple processes)       |
-| Use Case                   | I/O-bound tasks                      | I/O-bound tasks                        | CPU-bound tasks                       |
-| Parallelism                | No (single-threaded)                 | Limited (due to GIL)                   | Yes (multiple processes)              |
-| GIL (Global Interpreter Lock) | Not affected (no threads)            | Affected (limits CPU-bound tasks)      | Not affected (separate processes)     |
-| Memory Sharing             | Shared memory (single thread)        | Shared memory (between threads)        | No shared memory (separate processes) |
-| Performance (CPU-bound)    | -                                    | - (limited by GIL)                     | + (best for CPU-bound)                |
-| Performance (I/O-bound)    | + (ideal for I/O-bound tasks)        | + (good for I/O-bound tasks)           | - (overhead from process management)  |
-| Overhead                   | Low (single event loop)              | Low (threads are lightweight)          | High (process creation is expensive)  |
-| Communication Mechanism    | Async events, queues, or futures     | Locks, conditions, and queues          | Pipes, queues, shared memory          |
-| Ease of Debugging          | + (simpler due to single-thread)     | - (harder due to thread complexity)    | - (harder due to process separation)  |
-| Fault Tolerance            | - (single point of failure)          | - (crash affects all threads)          | + (crash in one process is isolated)  |
-| Context Switching Cost     | Minimal (no thread switching)        | Moderate (thread switching)            | High (process switching)              |
-| Scalability                | Good for handling many I/O tasks     | Limited by GIL                         | Excellent for scaling CPU-bound tasks |
-| Best For                   | Web servers, networking, I/O-bound tasks | Background tasks, I/O-bound parallelism | Heavy CPU-bound computation tasks     |
+| Aspect                        | asyncio                                  | multithreading                          | multiprocessing                        |
+|-------------------------------|------------------------------------------|-----------------------------------------|----------------------------------------|
+| Type of Concurrency           | Cooperative (single-threaded)            | Preemptive (multiple threads)           | Preemptive (multiple processes)        |
+| Use Case                      | I/O-bound tasks                          | I/O-bound tasks                         | CPU-bound tasks                        |
+| Parallelism                   | No (single-threaded)                     | Limited (due to GIL)                    | Yes (multiple processes)               |
+| GIL (Global Interpreter Lock) | Not affected (no threads)                | Affected (limits CPU-bound tasks)       | Not affected (separate processes)      |
+| Memory Sharing                | Shared memory (single thread)            | Shared memory (between threads)         | No shared memory (separate processes)  |
+| Performance (CPU-bound)       | No                                       | No (limited by GIL)                     | No (best for CPU-bound)                |
+| Performance (I/O-bound)       | Yes (ideal for I/O-bound tasks)          | Yes (good for I/O-bound tasks)          | No (overhead from process management)  |
+| Overhead                      | Low (single event loop)                  | Low (threads are lightweight)           | High (process creation is expensive)   |
+| Communication Mechanism       | Async events, queues, or futures         | Locks, conditions, and queues           | Pipes, queues, shared memory           |
+| Ease of Debugging             | Yes (simpler due to single-thread)       | No (harder due to thread complexity)    | No (harder due to process separation)  |
+| Fault Tolerance               | No (single point of failure)             | No (crash affects all threads)          | Yes (crash in one process is isolated) |
+| Context Switching Cost        | Minimal (no thread switching)            | Moderate (thread switching)             | High (process switching)               |
+| Scalability                   | Good for handling many I/O tasks         | Limited by GIL                          | Excellent for scaling CPU-bound tasks  |
+| Best For                      | Web servers, networking, I/O-bound tasks | Background tasks, I/O-bound parallelism | Heavy CPU-bound computation tasks      |
 
      
 ---
