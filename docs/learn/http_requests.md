@@ -169,9 +169,8 @@ An **API endpoint** is a specific path where the client can send requests. The e
 
 ![Endpoints example](https://sensei.factorycroco.com/img/http_requests/swagger.png)
 
-- Route `/users` could be an endpoint for a user-related API.
-- A **route** can often include parameters to identify specific resources, like `/users/123` where `123` is the 
-  user’s ID.
+Route `/users` could be an endpoint for a user-related API.
+A **route** can often include parameters to identify specific resources, like `/users/123` where `123` is the user’s ID.
 
 When interacting with an API, you’ll combine a method with an endpoint to perform an action.
 

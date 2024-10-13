@@ -34,6 +34,7 @@ There are key features provided by `sensei`:
 ## Quick Overview
 
 API Wrapper should provide these features for users:
+
 - Provide sync and async code versions
 - Validate data before accessing the API. A better outcome is catching exceptions, thrown due to wrong data, than getting JSON explaining the reason of the error.
 - Handle QPS (Queries per second) limits. 

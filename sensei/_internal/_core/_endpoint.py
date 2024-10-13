@@ -53,6 +53,16 @@ class Args(BaseModel):
     cookies: dict[str, Any] = {}
     files: dict[str, Any] = {}
 
+    def model_dump(self, *args, **kwargs) -> dict[str, Any]:
+        data = super().model_dump(*args, **kwargs)
+        return self._exclude_none(data)
+
+    @classmethod
+    def _exclude_none(cls, data: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(data, dict):
+            return data
+        return {k: cls._exclude_none(v) for k, v in data.items() if v is not None}
+
 
 class Endpoint(Generic[ResponseModel]):
     __slots__ = (
@@ -312,7 +322,8 @@ class Endpoint(Generic[ResponseModel]):
                         if has_not_embed:
                             raise ValueError('Embed and non-embed variants of body are provided.')
                         has_embed = True
-                        new_params[new_params_key][result_key] = params[key]
+                        new_value = {converter(k): v for k, v in params[key].items()}
+                        new_params[new_params_key] = new_value
                 else:
                     type_to_params[param_type][result_key] = params[key]
             else:
