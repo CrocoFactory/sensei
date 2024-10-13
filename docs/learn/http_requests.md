@@ -353,7 +353,7 @@ For example:
       Content-Type: application/json
     
       {
-          "name": "John",
+          "name": "Alex",
           "age": 30
       }
       ```
