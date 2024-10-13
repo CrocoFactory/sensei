@@ -175,7 +175,6 @@ An **API endpoint** is a specific path where the client can send requests. The e
 
 When interacting with an API, you’ll combine a method with an endpoint to perform an action.
 
-For instance:
 - **GET** `/users` – Retrieve a list of users.
 - **GET** `/users/123` – Retrieve information about the user with ID `123`.
 - **POST** `/users` – Create a new user.
@@ -192,7 +191,6 @@ The response is composed of several key components:
 1. **Status Line**: This line includes the HTTP version, a status code, and a reason phrase. The status code indicates
    `the outcome of the request, while the reason phrase provides a textual description.
 
-    - **Example**:
       ```
       HTTP/1.1 200 OK
       ```
@@ -200,7 +198,6 @@ The response is composed of several key components:
 2. **Headers**: HTTP headers provide additional context and metadata about the response. Headers can include information
    about the content type, content length, caching policies, server information, and more.
 
-    - **Example**:
       ```
       Content-Type: application/json
       Content-Length: 1234
@@ -209,7 +206,6 @@ The response is composed of several key components:
 3. **Body**: The body of the response contains the actual content returned by the server. Depending on the request and
    the endpoint, this content can be in various formats, such as HTML, JSON, XML, or plain text.
 
-    - **Example** (JSON response body):
       ```json
       {
           "id": 123,
@@ -318,7 +314,7 @@ Here are some common MIME types you might encounter:
 1. **application/x-www-form-urlencoded**: This is the default encoding for HTML forms. In this format, the form data is
    encoded as key-value pairs, where keys and values are URL-encoded, and each pair is separated by an ampersand (`&`).
 
-    - **Example**: If a form contains two fields, `username` and `password`, the encoded data might look like this:
+   If a form contains two fields, `username` and `password`, the encoded data might look like:
       ```
       username=johndoe&password=secret123
       ```
@@ -328,7 +324,6 @@ Here are some common MIME types you might encounter:
    Each part has its own set of headers, including `Content-Disposition` to indicate the form field name and the
    filename, and optionally `Content-Type` to specify the type of the file.
 
-    - **Example**:
       ```
       --boundary
       Content-Disposition: form-data; name="username"
