@@ -17,7 +17,13 @@ Parallelism refers to the simultaneous execution of multiple tasks or processes.
 
 For example, if you have a multicore processor, parallelism allows two tasks to run on separate cores at the exact same time, such as one core processing a database query while another core processes an image.
 
-### Key Differences Between Concurrency and Parallelism
+### Key Differences
+
+![Comparison](https://sensei.factorycroco.com/img/concurrency_parallelism/comparison.png)
+
+*Illustration from [this article](https://medium.com/@deepshig/concurrency-vs-parallelism-4a99abe9efb8)*
+
+Here is a table showing key differences between concurrency and parallelism
 
 | **Aspect**             | **Concurrency**                                                                 | **Parallelism**                                                              |
 |------------------------|---------------------------------------------------------------------------------|------------------------------------------------------------------------------|
@@ -67,21 +73,29 @@ only one thread executes Python bytecode at any given time.
 
 #### CPU-bound and I/O-bound
 
-* **CPU-bound work** refers to tasks that require intense use of the processor, where the CPU is the main limiting factor 
-    for performance.
-    
-    Examples include mathematical computations, data processing, and running algorithms.
-    
-    Attempt to apply threading suffers from the GIL because only one thread can execute at a time,
-    preventing full utilization of multi-core CPUs.
+Process execution consists of a cycle of CPU execution and I/O wait.
+Process alternate between these two states.
 
-* **I/O-bound work** refers to tasks limited by input/output operations, such as reading from disk, network requests, 
-    or database queries.
+* **CPU-burst**: the amount of time the process performs **CPU-bound work** refers to tasks that require intense use of
+  the processor,
+  where the CPU is the main limiting factor for performance. Examples include mathematical computations, data
+  processing,
+  and running algorithms.
 
-    These tasks spend more time waiting for data to be read or written than using the CPU.
-    This work can benefit from Python threading. While one thread is waiting for I/O operations to complete, the GIL is released, allowing 
-    another thread to execute. Thus, Python’s threading model works well for programs that perform a lot of waiting (like web servers), even if 
-    they don’t achieve true parallelism.
+* **I/O-burst**: the time that a process spends for waiting for a completion of the **I/O-bound work** refers to tasks
+  limited by input/output operations, such as reading from disk, network requests, or database queries.
+
+![Comparison](https://sensei.factorycroco.com/img/concurrency_parallelism/bursts.png)
+
+*Illustration from [this article](https://www.baeldung.com/cs/cpu-io-bound)*
+
+Attempt to apply threading to a **CPU-bound** application suffers from the GIL
+because only one thread can execute at a time, preventing full utilization of multicore CPUs.
+
+While one thread is waiting for I/O operations to complete, the GIL is released, allowing another thread to execute.
+Thus, Python’s threading model works well for programs that perform a lot of I/O waiting (like web servers),
+even if they don’t achieve true parallelism.
+
             
 #### Python Threads vs Traditional threads
 
@@ -144,9 +158,14 @@ While the GIL limits Python’s threading model for CPU-bound tasks, there are s
     ```  
     Using multiprocessing, you can fully utilize multiple CPU cores for CPU-bound tasks since each process operates independently.
 * Other Python Implementations:
-  If the GIL is a significant limitation, you can consider using other Python implementations like Jython (Python for the JVM) or IronPython (Python for .NET), which do not have a GIL and can achieve true parallelism with threads. However, these implementations are less commonly used and have different ecosystems from CPython.
+  If the GIL is a significant limitation, you can consider using other Python implementations like Jython
+  (Python for the JVM) or IronPython (Python for .NET), which do not have a GIL and can achieve true parallelism with
+  threads.
+  However, these implementations are less commonly used and have different ecosystems from CPython.
 * C Extensions:
-  For performance-critical sections of code, you can write C extensions, which can release the GIL during computation. This allows you to take advantage of multi-core processors in Python, but requires writing C code and managing the interaction between Python and C.
+  For performance-critical sections of code, you can write C extensions, which can release the GIL during computation.
+  This allows you to take advantage of multicore processors in Python, but requires writing C code and managing the
+  interaction between Python and C.
 
 ---
 
@@ -220,7 +239,13 @@ coroutine completes, allowing other tasks to be executed during that time.
 
 #### Asyncio Event Loop
 
-At the heart of Python’s asynchronous programming model is the **event loop**. The event loop is responsible for managing the execution of coroutines, handling I/O operations, and scheduling tasks.
+At the heart of Python’s asynchronous programming model is the **event loop**.
+The event loop is responsible for managing the execution of coroutines, handling I/O operations, and scheduling tasks.
+
+![Event Loop](https://sensei.factorycroco.com/img/concurrency_parallelism/event_loop.png)
+
+*Illustration
+from [this article](https://medium.com/pythoniq/master-asyncio-in-python-a-comprehensive-step-by-step-guide-4fc2cfa49925)*
 
 Here's how the event loop works:     
 

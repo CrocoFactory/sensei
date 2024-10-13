@@ -15,6 +15,10 @@ with APIs.
 **HTTP** is a protocol that defines how messages are formatted and transmitted between a client (such as a web browser) 
 and a server. It also determines how servers respond to various requests.
 
+![Client and Server](https://sensei.factorycroco.com/img/http_requests/client_server.png)
+
+*Illustration from [this article](https://www.practical-go-lessons.com/chap-35-build-an-http-client)*
+
 When you interact with an API, you use HTTP to make requests. Each request is an action you want the server to perform. 
 The server then sends a response back, usually in the form of data, a status code, and/or a message.
 
@@ -26,7 +30,7 @@ An HTTP method is a way for a client (such as a web browser) to communicate with
 action on a resource.
 HTTP methods are part of the HTTP protocol, which governs how data is transferred over the web.
 
-### **Safe Methods**
+### Safe Methods
 
 A method is considered **safe** if it does not modify any resources on the server. It should only retrieve or provide
 information without making changes to the server's data or state. Even though the server might perform internal
@@ -34,7 +38,7 @@ operations (such as logging), the state of the resources remains unaffected.
 
 **GET**, **HEAD**, and **OPTIONS** are safe.
 
-### **Idempotent Methods**
+### Idempotent Methods
 
 A method is **idempotent** if making multiple identical requests has the same effect as making a single request.
 In other words, whether you call the method once or multiple times, the result will be the same, without causing
@@ -163,7 +167,9 @@ The route typically includes the path and any parameters or queries that specify
 An **API endpoint** is a specific path where the client can send requests. The endpoint typically includes a 
 **route** (or URL) and is associated with an HTTP method.
 
-- Example: Route `/users` could be an endpoint for a user-related API.
+![Endpoints example](https://sensei.factorycroco.com/img/http_requests/swagger.png)
+
+- Route `/users` could be an endpoint for a user-related API.
 - A **route** can often include parameters to identify specific resources, like `/users/123` where `123` is the 
   user’s ID.
 
@@ -334,44 +340,58 @@ Here are some common MIME types you might encounter:
       --boundary--
       ```
 
-In the above example, `--boundary` is a delimiter that separates the different parts of the form data.
+   In the above example, `--boundary` is a delimiter that separates the different parts of the form data.
 
-### Example of Setting Content-Type
+### Content-Type
 
-When a server sends a response, it often includes a `Content-Type` header to specify the media type of the response
+When sending a request body, specifying the `Content-Type` header is essential to indicate the format of the data being
+transmitted. This helps the server understand how to interpret the incoming data.
+
+For example:
+
+- If you're sending JSON data, you should specify `Content-Type: application/json` in the request header:
+
+      ```
+      POST /api/resource HTTP/1.1
+      Content-Type: application/json
+    
+      {
+          "name": "John",
+          "age": 30
+      }
+      ```
+
+    - If you're submitting form data with file uploads, the `Content-Type` should be `multipart/form-data` with a
+      boundary that separates the different parts of the form:
+
+      ```
+      POST /upload HTTP/1.1
+      Content-Type: multipart/form-data; boundary=boundary
+  
+      --boundary
+      Content-Disposition: form-data; name="username"
+  
+      johndoe
+      --boundary
+      Content-Disposition: form-data; name="file"; filename="photo.jpg"
+      Content-Type: image/jpeg
+  
+      [binary data]
+      --boundary--
+      ```
+
+- For simple form submissions (without file uploads), the `Content-Type` would typically be
+  `application/x-www-form-urlencoded`:
+
+    ```
+    POST /submit HTTP/1.1
+    Content-Type: application/x-www-form-urlencoded
+
+    username=johndoe&password=secret
+    ```
+
+By specifying the correct `Content-Type`, you ensure that the server can correctly process and interpret the request
 body.
-For example, if a server is sending JSON data, it might look like this:
-
-```
-HTTP/1.1 200 OK
-Content-Type: application/json
-
-{
-    "message": "Hello, World!"
-}
-```
-
-When submitting a form that includes file uploads, the `Content-Type` header might look like this:
-
-```
-POST /upload HTTP/1.1
-Content-Type: multipart/form-data; boundary=boundary
-
---boundary
-Content-Disposition: form-data; name="username"
-
-johndoe
---boundary
-Content-Disposition: form-data; name="file"; filename="photo.jpg"
-Content-Type: image/jpeg
-
-[binary data]
---boundary--
-```
-
-Setting the appropriate MIME type is crucial for ensuring that clients interpret the response data correctly.
-For instance, a browser will render HTML content as a web page,
-while JSON data will be parsed as a JavaScript object in client-side applications.
 
 ---
 
@@ -414,7 +434,11 @@ When making HTTP requests, various arguments can be passed to customize the requ
 
 ### Query Parameters
 
-Query parameters are appended to the URL of an HTTP request and are used to send additional information to the server. They typically appear after a question mark (`?`) in the URL and are separated by ampersands (`&`). Query parameters are commonly used for filtering, sorting, or paginating data.
+Query parameters are appended to the URL of an HTTP request and are used to send additional information to the server.
+They typically appear after a question mark (`?`) in the URL and are separated by ampersands (`&`).
+Query parameters are commonly used for filtering, sorting, or paginating data.
+
+![Query Example](https://sensei.factorycroco.com/img/http_requests/query.png)
 
 For example, a URL with query parameters might look like this:
 
@@ -436,6 +460,8 @@ response = requests.get('https://api.example.com/data', params=params)
 Body parameters are used to send data to the server as part of the request body, particularly in POST and PUT requests.
 This data can be sent in various media types, such as JSON, form data,
 or XML. Body parameters are not visible in the URL and are used for operations that create or update resources.
+
+![Body example](https://sensei.factorycroco.com/img/http_requests/body.png)
 
 When sending JSON data, you can use the `json` argument in `requests`:
 
@@ -469,6 +495,8 @@ response = requests.post('https://api.example.com/data', files=files)
 Path parameters are used to specify specific resources within the URL. They are part of the URL path and are typically
 enclosed in curly braces `{}` in the API definition. Path parameters allow you to pass information that determines
 which resource you want to interact with.
+
+![Path example](https://sensei.factorycroco.com/img/http_requests/path.png)
 
 For example, in the following URL, `123` is a path parameter representing a specific resource ID:
 
