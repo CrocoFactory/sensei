@@ -62,7 +62,7 @@ There are several HTTP methods, each with a specific role. Let’s explore the m
   It’s a read-only operation, meaning it doesn’t change any server data.
 
 ```http
-GET /users/123
+GET /users/123 HTTP/1.1
 ```
 
 In this example, the client is requesting information about a user with ID `123`.
@@ -78,7 +78,7 @@ In this example, the client is requesting information about a user with ID `123`
    this data and creates a new resource based on it.
 
 ```http
-POST /users
+POST /users HTTP/1.1
 Content-Type: application/json
 
 {
@@ -99,7 +99,7 @@ In this example, the client is sending a new user’s data to the server, and th
 - **How it works**: This method usually replaces the entire resource with the new data you send.
 
 ```http
-PUT /users/123
+PUT /users/123 HTTP/1.1
 Content-Type: application/json
 
 {
@@ -120,7 +120,7 @@ Here, the client is updating the details of the user with ID `123`.
 - **How it works**: Unlike PUT, PATCH only updates the specific fields provided in the request body.
 
 ```http
-PATCH /users/123
+PATCH /users/123 HTTP/1.1
 Content-Type: application/json
 
 {
@@ -141,7 +141,7 @@ In this example, only the email field of the user with ID `123` is updated.
   available.
 
 ```http
-DELETE /users/123
+DELETE /users/123 HTTP/1.1
 ```
 
 This request will remove the user with ID `123` from the server.
@@ -190,14 +190,14 @@ The response is composed of several key components:
 1. **Status Line**: This line includes the HTTP version, a status code, and a reason phrase. The status code indicates
    `the outcome of the request, while the reason phrase provides a textual description.
 
-      ```
+      ```http
       HTTP/1.1 200 OK
       ```
 
 2. **Headers**: HTTP headers provide additional context and metadata about the response. Headers can include information
    about the content type, content length, caching policies, server information, and more.
 
-      ```
+      ```http
       Content-Type: application/json
       Content-Length: 1234
       ```
@@ -215,7 +215,7 @@ The response is composed of several key components:
 
 The structure of an HTTP response looks like this:
 
-```
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json
 Content-Length: 1234
@@ -323,7 +323,7 @@ Here are some common MIME types you might encounter:
    Each part has its own set of headers, including `Content-Disposition` to indicate the form field name and the
    filename, and optionally `Content-Type` to specify the type of the file.
 
-      ```
+      ```http
       --boundary
       Content-Disposition: form-data; name="username"
  
@@ -347,7 +347,7 @@ For example:
 
 - If you're sending JSON data, you should specify `Content-Type: application/json` in the request header:
 
-      ```
+      ```http
       POST /api/resource HTTP/1.1
       Content-Type: application/json
     
@@ -360,7 +360,7 @@ For example:
 - If you're submitting form data with file uploads, the `Content-Type` should be `multipart/form-data` with a
   boundary that separates the different parts of the form:
 
-      ```
+      ```http
       POST /upload HTTP/1.1
       Content-Type: multipart/form-data; boundary=boundary
       
@@ -379,7 +379,7 @@ For example:
 - For simple form submissions (without file uploads), the `Content-Type` would typically be
   `application/x-www-form-urlencoded`:
 
-    ```
+    ```http
     POST /submit HTTP/1.1
     Content-Type: application/x-www-form-urlencoded
 
@@ -547,7 +547,7 @@ While the `requests` library is a popular choice for making HTTP requests in Pyt
 
 To install `httpx`, you can use pip:
 
-```bash
+```shell
 pip install httpx
 ```
 
