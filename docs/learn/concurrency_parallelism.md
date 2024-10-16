@@ -167,6 +167,12 @@ While the GIL limits Python’s threading model for CPU-bound tasks, there are s
   This allows you to take advantage of multicore processors in Python, but requires writing C code and managing the
   interaction between Python and C.
 
+/// info
+**NumPy (Numerical Python)** is an open source Python library that's widely used in science and engineering.
+It is mostly written in C.
+///
+
+
 ---
 
 ## `async` and `await`
@@ -198,7 +204,7 @@ Asynchronous programming, on the other hand, allows multiple I/O tasks to be in 
 
 ### Asynchronous Programming in Python 
 
-Python introduced the **`asyncio`** module in Python 3.4, and starting from Python 3.5, the **`async`** and **`await`** 
+Python introduced the `asyncio` module in Python 3.4, and starting from Python 3.5, the `async`** and `await`
 keywords were introduced to write asynchronous code in a clean, readable manner. These tools allow developers to 
 implement concurrency using coroutines without the complexities of threads or processes.
 
@@ -306,15 +312,19 @@ You can think of the event loop as a conductor, coordinating when each coroutine
   Without `async/await`, handling concurrency would require more complex techniques, such as using threads or
   callback-based approaches.
   Threads introduce additional complexity with context switching, synchronization, and debugging challenges.
-  Before, asynchronous programming often involved callbacks, which could lead to deeply nested code, known
-  as "callback hell." `async/await` provides a linear, more intuitive flow of code while retaining the benefits of
-  concurrency.
 
 * **Lower Memory Usage**  
    `asyncio`-based coroutines are lightweight compared to threads. They consume fewer resources because they don’t 
    involve OS-level threads, and switching between coroutines is much cheaper than switching between threads. This 
    means that you can handle a large number of concurrent tasks (like thousands of web requests) with significantly 
    less memory overhead.
+
+///info
+Before, in some languages, asynchronous programming often involved callbacks to achive concurrency, which could lead to
+deeply nested code, known
+as "callback hell." `async/await` provides a linear, more intuitive flow of code while retaining the benefits of
+concurrency.
+///
 
 Here is a table illustrating the differences between `asyncio`, `multithreading`, and `multiprocessing`.
 

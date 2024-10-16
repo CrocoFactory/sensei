@@ -15,7 +15,7 @@ with APIs.
 **HTTP** is a protocol that defines how messages are formatted and transmitted between a client (such as a web browser) 
 and a server. It also determines how servers respond to various requests.
 
-![Client and Server](https://sensei.factorycroco.com/img/http_requests/client_server.png)
+![Client and Server](/img/http_requests/client_server.png)
 
 *Illustration from [this article](https://www.practical-go-lessons.com/chap-35-build-an-http-client)*
 
@@ -58,14 +58,16 @@ There are several HTTP methods, each with a specific role. Let’s explore the m
     - Retrieving a list of products from an online store.
     - Accessing a user’s profile information.
 
-- **How it works**: When you send a GET request, you're asking the server to send back the requested resource.
-  It’s a read-only operation, meaning it doesn’t change any server data.
-
 ```http
 GET /users/123 HTTP/1.1
 ```
 
 In this example, the client is requesting information about a user with ID `123`.
+
+/// info | How it works  
+When you send a GET request, you're asking the server to send back the requested resource.  
+It’s a read-only operation, meaning it doesn’t change any server data.  
+///
 
 ### 2. POST
 - **Purpose**: Send data to the server to create a new resource.
@@ -73,9 +75,6 @@ In this example, the client is requesting information about a user with ID `123`
 - **Example**: 
     - Posting a new blog article.
     - Submitting a registration form to create a new user.
-
-- **How it works**: The client sends data to the server, typically in the body of the request. The server processes 
-   this data and creates a new resource based on it.
 
 ```http
 POST /users HTTP/1.1
@@ -89,14 +88,17 @@ Content-Type: application/json
 
 In this example, the client is sending a new user’s data to the server, and the server will create that user in its database.
 
+/// info | How it works  
+The client sends data to the server, typically in the body of the request. The server processes this data and creates a
+new resource based on it.  
+///
+
 ### 3. PUT
 - **Purpose**: Update an existing resource on the server.
 - **Use Case**: When you need to update data, like modifying a user's profile or changing the details of an existing item.
 - **Example**: 
     - Updating a product’s price.
     - Changing user account information.
-
-- **How it works**: This method usually replaces the entire resource with the new data you send.
 
 ```http
 PUT /users/123 HTTP/1.1
@@ -110,14 +112,16 @@ Content-Type: application/json
 
 Here, the client is updating the details of the user with ID `123`.
 
+/// info | How it works  
+This method usually replaces the entire resource with the new data you send.  
+///
+
 ### 4. PATCH
 - **Purpose**: Partially update an existing resource on the server.
 - **Use Case**: When you need to update only specific fields of a resource, like changing just the email address of a user.
 - **Example**: 
     - Changing the stock quantity of an item in a store.
     - Updating a single field of a user's profile without sending all the data.
-
-- **How it works**: Unlike PUT, PATCH only updates the specific fields provided in the request body.
 
 ```http
 PATCH /users/123 HTTP/1.1
@@ -130,6 +134,10 @@ Content-Type: application/json
 
 In this example, only the email field of the user with ID `123` is updated.
 
+/// info | How it works  
+Unlike PUT, PATCH only updates the specific fields provided in the request body.  
+///
+
 ### 5. DELETE
 - **Purpose**: Delete a resource from the server.
 - **Use Case**: When you need to remove data, such as deleting a user account or removing a post.
@@ -137,14 +145,54 @@ In this example, only the email field of the user with ID `123` is updated.
     - Deleting a product from an online store.
     - Removing a user’s account from the system.
 
-- **How it works**: The server deletes the specified resource, and after the operation, the resource is no longer
-  available.
-
 ```http
 DELETE /users/123 HTTP/1.1
 ```
 
-This request will remove the user with ID `123` from the server.
+/// info | How it works  
+The server deletes the specified resource, and after the operation, the resource is no longer available.  
+///
+
+### 6. HEAD
+
+- **Purpose**: Retrieve metadata about a resource without the actual resource data.
+- **Use Case**: When you want to check if a resource exists or gather information like the size or modification date
+  without downloading the entire resource.
+- **Example**:
+    - Checking if a file is available on a server before downloading it.
+    - Verifying if a webpage is accessible without loading the content.
+
+```http
+HEAD /users/123 HTTP/1.1
+```
+
+In this example, the client is requesting metadata (like content type or last modified date) about the user with ID
+`123`, but without fetching the user's full data.
+
+/// info | How it works  
+A HEAD request is similar to GET, but it only retrieves the headers, not the body of the response.  
+///
+
+### 7. OPTIONS
+
+- **Purpose**: Retrieve information about the communication options available for a specific resource or the server as a
+  whole.
+- **Use Case**: When you need to know which HTTP methods (GET, POST, PUT, etc.) are supported by the server or resource.
+- **Example**:
+    - Checking which methods are allowed for a particular endpoint.
+    - Discovering available server capabilities before making further requests.
+
+```http
+OPTIONS /users HTTP/1.1
+```
+
+In this example, the client is asking the server which HTTP methods (e.g., GET, POST, PUT) are available for the
+`/users` resource.
+
+/// info | How it works  
+The client sends an OPTIONS request to a server, and the server responds with the allowed methods or other relevant
+communication options.  
+///
 
 ---
 
@@ -167,7 +215,7 @@ The route typically includes the path and any parameters or queries that specify
 An **API endpoint** is a specific path where the client can send requests. The endpoint typically includes a 
 **route** (or URL) and is associated with an HTTP method.
 
-![Endpoints example](https://sensei.factorycroco.com/img/http_requests/swagger.png)
+![Endpoints example](/img/http_requests/swagger.png)
 
 Route `/users` could be an endpoint for a user-related API.
 A **route** can often include parameters to identify specific resources, like `/users/123` where `123` is the user’s ID.
@@ -313,10 +361,10 @@ Here are some common MIME types you might encounter:
 1. **application/x-www-form-urlencoded**: This is the default encoding for HTML forms. In this format, the form data is
    encoded as key-value pairs, where keys and values are URL-encoded, and each pair is separated by an ampersand (`&`).
 
-   If a form contains two fields, `username` and `password`, the encoded data might look like:
-      ```
-      username=johndoe&password=secret123
-      ```
+       If a form contains two fields, `username` and `password`, the encoded data might look like:
+          ```
+          username=johndoe&password=secret123
+          ```
 
 2. **multipart/form-data**: This encoding type is used when a form includes file uploads. In this format, each form
    field is sent as a separate part of the request body, allowing for binary data (like files) to be transmitted.
@@ -336,7 +384,9 @@ Here are some common MIME types you might encounter:
       --boundary--
       ```
 
+   ///info
    In the above example, `--boundary` is a delimiter that separates the different parts of the form data.
+   ///
 
 ### Content-Type
 
@@ -424,9 +474,13 @@ response = requests.post('https://api.example.com/data', json=data)
 
 This sends a POST request to the specified URL with the provided data formatted as JSON. You can similarly use the `put`, `delete` and another methods for updating or deleting resources.
 
-## Types of Request Arguments
+## Types of Request Parameters
 
-When making HTTP requests, various arguments can be passed to customize the request and convey additional information to the server. These arguments typically fall into several categories: query parameters, body parameters, path parameters, headers, and cookies. Understanding each type helps ensure that your requests are structured correctly for effective communication with APIs.
+When making HTTP requests, various parameters can be passed to customize the request and convey additional information
+to the server.
+These parameters typically fall into several categories: query parameters, body parameters, path parameters, headers,
+and cookies.
+Understanding each type helps ensure that your requests are structured correctly for effective communication with APIs.
 
 ### Query Parameters
 
@@ -434,7 +488,7 @@ Query parameters are appended to the URL of an HTTP request and are used to send
 They typically appear after a question mark (`?`) in the URL and are separated by ampersands (`&`).
 Query parameters are commonly used for filtering, sorting, or paginating data.
 
-![Query Example](https://sensei.factorycroco.com/img/http_requests/query.png)
+![Query Example](/img/http_requests/query.png)
 
 For example, a URL with query parameters might look like this:
 
@@ -457,7 +511,7 @@ Body parameters are used to send data to the server as part of the request body,
 This data can be sent in various media types, such as JSON, form data,
 or XML. Body parameters are not visible in the URL and are used for operations that create or update resources.
 
-![Body example](https://sensei.factorycroco.com/img/http_requests/body.png)
+![Body example](/img/http_requests/body.png)
 
 When sending JSON data, you can use the `json` argument in `requests`:
 
@@ -492,7 +546,7 @@ Path parameters are used to specify specific resources within the URL. They are 
 enclosed in curly braces `{}` in the API definition. Path parameters allow you to pass information that determines
 which resource you want to interact with.
 
-![Path example](https://sensei.factorycroco.com/img/http_requests/path.png)
+![Path example](/img/http_requests/path.png)
 
 For example, in the following URL, `123` is a path parameter representing a specific resource ID:
 
@@ -579,7 +633,24 @@ As you can see, the syntax and structure of making requests are almost identical
 
 ### Understanding the Client
 
-The client in `httpx` is an essential component that manages connection settings and facilitates making multiple requests. You can create a client instance using `httpx.Client()` for synchronous requests or `httpx.AsyncClient()` for asynchronous requests. The client is responsible for maintaining a pool of connections, which improves performance when making several requests to the same server.
+The client in `httpx` is an essential component that manages connection settings and facilitates making multiple
+requests.
+You can create a client instance using `httpx.Client()` for synchronous requests or `httpx.AsyncClient()` for
+asynchronous requests.
+
+Making requests with `Client` is the same as before
+
+```python
+import httpx
+
+client = httpx.Client()
+response = client.get('https://api.example.com/data')
+if response.status_code == 200:
+    data = response.json()
+    print(data)
+
+client.close()
+```
 
 Using a client provides several benefits:
 
@@ -615,16 +686,14 @@ When creating an `httpx.Client`, you can customize it with several parameters:
     client = httpx.Client(cookies=cookies)
     ```
 
-Using these parameters helps you create a more organized and efficient codebase, as you can define shared settings in one place.
-
-### Why You Need to Close the Client
-
+/// warning
 Closing the `httpx.Client` is crucial for proper resource management. When you create a client instance, it opens a connection pool to the specified server(s). If you don't close the client after use, it can lead to several issues:
 
 - **Resource Leakage**: Open connections may linger indefinitely, consuming system resources and leading to potential memory exhaustion or application slowdowns.
 - **Graceful Shutdown**: Closing the client ensures that any pending requests complete correctly and that resources associated with the client are released.
 
-To ensure the client is closed properly, you can use it within a `with` statement, which automatically closes the client when the block is exited:
+To ensure the client is closed properly, you can use it within a `with` statement, which automatically closes the client
+when the block is exited:
 
 ```python
 with httpx.Client() as client:
@@ -634,7 +703,7 @@ with httpx.Client() as client:
         print(data)
 ```
 
-This practice promotes efficient resource management and helps avoid potential issues related to unclosed connections.
+///
 
 ## Conclusion
 

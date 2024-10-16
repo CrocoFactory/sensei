@@ -63,6 +63,8 @@ nav:
   - HTTP Requests: learn/http_requests.md
   - User Guide:
       - Motivation: learn/user_guide/motivation.md
+      - First Steps: learn/user_guide/first_steps.md
+- About: about.md
 
 
 markdown_extensions:
@@ -82,6 +84,7 @@ markdown_extensions:
   pymdownx.inlinehilite:
   pymdownx.keys:
   pymdownx.mark:
+
   pymdownx.superfences:
     custom_fences:
     - name: mermaid

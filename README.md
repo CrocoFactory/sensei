@@ -25,7 +25,7 @@ The Python framework, that provides a quick way to build API wrappers. Use type 
     
 There are key features provided by `sensei`:
 
-- **Fast:** Do not write any code-making request, dedicate responsibility to the function`s interface(signature)
+- **Fast:** Do not write any code-making request, dedicate responsibility to the function's interface(signature)
 - **Short:** Avoid code duplication. 
 - **Sync/Async:** Implement sync and async quickly, without headaches
 - **Robust:** Auto validation data before and after request
@@ -34,9 +34,11 @@ There are key features provided by `sensei`:
 ## Quick Overview
 
 API Wrapper should provide these features for users:
+
 - Provide sync and async code versions
-- Validate data before accessing the API. A better outcome is catching exceptions, thrown due to wrong data, than getting JSON explaining the reason of the error.
-- Handle QPS (Queries per second) limits. 
+- Validate data before accessing the API.
+- Handle RPS (Requests per second) limits.
+- Return relevant response
 
 And as a developer, you want to avoid code duplication and make routine things faster.
 
@@ -85,7 +87,7 @@ class User(BaseModel):
 
     @classmethod
     @router.get('/users/{id_}')
-    def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: ... # Framework knows how to handle response
+    def get(cls, id_: Annotated[int, Path()]) -> Self: ...  # Framework knows how to handle response
     
     @router.patch('/users/{id_}', skip_finalizer=True)
     def update(

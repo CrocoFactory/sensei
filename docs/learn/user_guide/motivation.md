@@ -1,8 +1,46 @@
+If you are already motivated to use the framework, go to
+[First steps](/learn/user_guide/first_steps.html)
+
+## What is API Wrapper?
+
+An API wrapper is a client-side collection of code that simplifies the interaction between a client application and a
+web API.
+The library abstracts the complexity of making HTTP requests, handling responses, and processing data, allowing
+developers
+to easily integrate API functionality without needing to deal with the lower-level details of the API's implementation.
+Usually, you deal with API wrappers as Python libraries. For example, we can take the `python-binance` library wrapping
+the
+API of the cryptocurrency exchange Binance.
+
+```python
+from binance.client import Client
+
+# Create a client with API keys
+client = Client(api_key='your_api_key', api_secret='your_api_secret')
+
+# Get account balance information
+balance = client.get_asset_balance(asset='BTC')
+print(balance)
+
+# Get latest market prices
+prices = client.get_all_tickers()
+print(prices)
+
+# Place a market buy order
+order = client.order_market_buy(
+   symbol='BTCUSDT',
+   quantity=0.01
+)
+print(order)
+```
+
+## Golden Rules
+
 Imagine you are one of the users using your API Wrapper.
 Let's analyze the needs of the users.
 We can list the most preferable features desired to be seen by the users:
 
-## Sync and async code versions.
+### Sync and async code versions.
 
 Since **User A** can create a CPU-bound application making few calls of functions from our
 wrapper, he does not need to integrate app based on parallelism with three lines of async code.
@@ -12,9 +50,18 @@ I/O-bound work, consequently his concurrent application will benefit from these 
 
 But mostly it's hard to implement both versions of the code, following DRY principle.
 Most of the attempts lead to the code duplication or bad code architecture.
+
+///info
+DRY (Don't Repeat Yourself) principle is a software development concept aimed at reducing the repetition of code and
+logic.
+The idea is that every piece of knowledge or logic should be represented in a single place in your codebase, and no
+duplications
+should exist. If you find yourself copying and pasting code, that’s a sign you’re violating DRY.
+///
+
 Let's show duplicated code example
 
-### Synchronous Example
+#### Synchronous Example
 
 ```python
 import httpx
@@ -54,7 +101,7 @@ def get_weather_sync(city: str, units: str = "metric") -> dict[str, Any]:
 print(get_weather_sync("London"))
 ```
 
-### Asynchronous Example
+#### Asynchronous Example
 
 ```python
 import httpx
@@ -98,7 +145,7 @@ async def main():
 asyncio.run(main())
 ```
 
-### Deduplicated version
+#### Deduplicated version
 
 Let's try to implement both versions and apply minimal duplication(deduplication), merging code into shared logic.
 
@@ -182,7 +229,8 @@ asyncio.run(main())
 Voilà, our code is much less duplicated!
 But it's still having line repetitions in `get_weather_sync` and `get_weather_async`, because the synchronous version
 uses
-httpx.Client(), whereas the asynchronous version uses httpx.AsyncClient(). These are different classes in httpx designed
+`httpx.Client()`, whereas the asynchronous version uses `httpx.AsyncClient()`. These are different classes in httpx
+designed
 for synchronous and asynchronous workflows, respectively.
 Consequently, people can say that these repetitions are justified and minimal.
 
@@ -196,7 +244,7 @@ But you cannot ignore code duplication!
 Otherwise, to produce small change, you need to apply the same steps multiple times.
 To async and sync versions. We will come back to the solution of this issue later.
 
-## Client-side validation
+### Client-side validation
 
 Why should you validate data before accessing the API (client-side validation)?
 A better outcome is catching exceptions, thrown due to wrong data, than getting JSON explaining the reason of the error.
@@ -250,7 +298,7 @@ There is a good approach using `pydantic` framework.
 It is intended to perform various validations.
 Let's write two versions of code achieving almost the same results.
 
-### "Vanilla" code:
+#### "Vanilla" code:
 
 ```python
 import httpx
@@ -303,7 +351,7 @@ Don't you find writing such code boring?
 What if `/create-task` route would have more parameters?
 Let's write code, using `pydantic`!
 
-### Pydantic version.
+#### Pydantic version.
 
 ```python
 import httpx
@@ -346,7 +394,7 @@ def create_task(title: str, due_date: int, priority: Priority, description: str 
     return response.json()
 ```
 
-### Comparison versions
+#### Benefits
 
 Let's compare "vanilla" and `pydantic` versions:
 
@@ -361,34 +409,414 @@ Let's compare "vanilla" and `pydantic` versions:
 
 3) The pydantic version looks like shorter than the vanilla version.
 
-### Benefits
-
 Even if the API is well-designed and provide understandable error messages, you should perform **client-side
 validation**. Furthermore, the data validation before request doesn't require a significant resource allocation.
 
 Here are benefits, accessible when applying client-side validation:
 
-#### Prevents unnecessary requests
+##### Prevents unnecessary requests
 
 If you validate data on the client side, you can stop invalid requests from even reaching the server.
 This reduces server load, as fewer incorrect requests are sent, leading to better performance.
 Even if you're not a server owner, you're doing a good job for him.
 
-#### Reduced latency
+##### Reduced latency
 
 Client-side validation allows users to immediately see if they've made an error, improving the user experience by
 avoiding the delay that comes from sending a request to the server and waiting for a response.
 
-#### API Rate Limits
+##### API Rate Limits
 
 Many APIs enforce [rate limits](https://en.wikipedia.org/wiki/Rate_limiting) to control how frequently clients can make
 requests.
 By validating client-side, you reduce the chance of consuming API calls with invalid requests, preventing hitting
 rate limits unnecessarily.
 
-## Handling Rate Limits
+### Handling Rate Limits
 
 When working with APIs, it's essential to be aware of rate limits that dictate how many requests you can make within a
 certain timeframe. Exceeding these limits can result in denied requests, temporary bans, or throttling. Each API has
 its own rate limit policies, which are usually documented in the API documentation. To ensure your users that your
 API wrapper functions smoothly, consider handling rate limits automatically. 
+
+### Get Relevant response
+
+When interacting with APIs, the response structure isn’t always in the format you’d like to use directly.
+Often, APIs return more data than necessary, or they nest the desired data under fields like `data`.
+In these situations, transforming the response is crucial to extract only the useful parts and make the API responses
+cleaner and more predictable for users of your wrapper.
+
+Let’s explore some common cases when transforming the response to achieve relevance is necessary:
+
+#### Unwrap Primary Data
+
+Many APIs wrap the primary response in a field, such as "data", "results", or "payload".
+This is common in REST APIs and GraphQL APIs, where the actual information is nested to allow for metadata, status
+codes,
+or other details to coexist in the response.
+
+Consider this API response:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "status": "success",
+  "data": {
+    "user": {
+      "id": 123,
+      "name": "Alice",
+      "email": "alice@example.com"
+    }
+  }
+}
+```
+
+In this case, the important part of the response is the user object inside the "data" field.
+However, to avoid forced extraction data from nested fields yourself,
+you can transform this response by extracting just the "user" data and returning it directly.
+
+Here’s how we would transform it:
+
+```python
+import httpx
+from typing import Any
+
+client = httpx.Client(base_url='https://domain.com/api')
+
+
+def get_user(id_: int) -> dict[str, Any]:
+   response = client.post(f'/users/{id_}')
+   data = response.json()["data"]
+   return data.get["user"]
+```
+
+This will give you the following transformed response:
+
+```json
+{
+   "id": 123,
+   "name": "Alice",
+   "email": "alice@example.com"
+}
+```
+
+#### Discarding Fields
+
+APIs often return fields that are irrelevant to your wrapper.
+Keeping unnecessary fields can make your data harder to manage, increase the payload size unnecessarily and even confuse
+users.
+In such cases, it’s useful to transform the response by discarding irrelevant fields.
+
+Consider this API response:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+    "status": "success",
+    "data": {
+        "id": 789,
+        "username": "johndoe",
+        "email": "john.doe@example.com",
+        "created_at": "2023-09-15T12:34:56Z",
+        "updated_at": "2023-10-01T14:45:00Z",
+        "is_email_verified": true,
+        "internal_metadata": {
+            "tracking_id": "abc123",
+            "auth_token": "sensitive_token_value",
+            "source": "signup_form"
+        }
+    }
+}
+```
+
+In this case, internal_metadata contains fields that are irrelevant,
+and timestamps such as `created_at` and `updated_at` may not be needed in the client-side logic.
+These fields can be discarded during the transformation process.
+
+```python
+import httpx
+from typing import Any
+
+client = httpx.Client(base_url='https://domain.com/api')
+
+
+def get_user(id_: int) -> dict[str, Any]:
+   response = client.post(f'/users/{id_}')
+   data = response.json()["data"]
+   to_extract = "id", "username", "email", "is_email-verified"
+   return {k: v for k, v in data if k in to_extract}
+```
+
+This will give you the following transformed response:
+
+```json
+{
+   "id": 789,
+   "username": "johndoe",
+   "email": "john.doe@example.com",
+   "is_email-verified": true
+}
+```
+
+#### Renaming Fields
+
+When working with APIs, you might find that the field names in the response are obscure.
+Sometimes, fields need to be renamed for clarity or to meet certain naming conventions.
+
+Consider this API response:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+        
+{
+    "usr_nm": "john_doe",
+    "pwd": "secret_password",
+    "status": "active"
+}
+```
+
+Here, the field names are not only unclear but could lead to misunderstandings:
+
+* usr_nm should be renamed to username for clarity.
+* pwd is a poor name for a password field.
+  It should be renamed to something clear, like password_hash.
+
+* Additionally, the status field might be better understood if it were more descriptive, like account_status.
+
+Let’s transform these poorly named fields into more meaningful ones:
+
+```python
+import httpx
+from typing import Any
+
+client = httpx.Client(base_url='https://domain.com/api')
+
+
+def get_user(id_: int) -> dict[str, Any]:
+   data = client.post(f'/users/{id_}').json()
+
+   refactoring = {
+      'usr_nm': 'username',
+      'pwd': 'password',
+      'status': 'account_status'
+   }
+
+   result = {refactoring[k]: v for k, v in data.items()}
+   return result
+```
+
+This will give you the following transformed response:
+
+```json
+{
+   "username": 789,
+   "password": "secret_password",
+   "account_status": "active"
+}
+```
+
+In addition to renaming fields for clarity,
+it is also common to convert field names from camelCase(or another case) to snake_case to follow Python’s naming
+conventions.
+
+///info
+Case is the convention used to format the letters and separate words in names of variables, functions, classes,
+constants, or other identifiers.
+There are some common cases:
+
+1. **snake_case**  
+   Lowercase letters with underscores between words (e.g., `my_variable_name`).  
+   **Usage:** Common in Python, Ruby, and C for variables, function names.
+
+2. **kebab-case**  
+   Lowercase words separated by hyphens (e.g., `my-variable-name`).  
+   **Usage** Primarily used in URLs (HTML, CSS classes/IDs).
+
+3. **UPPER_CASE**  
+   All uppercase letters with underscores between words (e.g., `CONSTANT_VALUE`).  
+   **Usage:** Constants in C, C++, Python, and Java.
+
+4. **camelCase**  
+   Starts with a lowercase letter, with each subsequent word capitalized (e.g., `myVariableName`).  
+   **Usage:** Common in JavaScript, Java, C#, and object-oriented languages.
+
+5. **PascalCase**  
+   Every word starts with a capital letter, no separators (e.g., `MyVariableName`).  
+   **Usage:** Used in C#, .NET, Java, and TypeScript for class and type names.
+
+6. **Header-Case**  
+   Capitalizes the first letter of each word, separated by hyphens (e.g., `My-Header-Name`).  
+   **Usage:** Often seen in HTTP headers and configuration files.
+
+Each case serves to improve readability and consistency depending on language and context.
+
+///
+
+Here’s how you can include this conversion when handling API responses:
+
+Suppose the API response returns fields like userName, passwordHash, and accountStatus.
+We can automatically convert these camelCase names to snake_case using a utility function.
+
+Consider this API response:
+
+```http
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+    "userName": "john_doe",
+    "password": "secret_password",
+    "accountStatus": "active"
+}
+```
+
+Let's transform the response, converting camelCase to snake_case:
+
+```python
+import re
+import httpx
+from typing import Any
+
+client = httpx.Client(base_url='https://domain.com/api')
+
+
+def snake_case(s: str) -> str:
+   """Convert a string of any case to snake_case. """
+   s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
+   s = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s)
+   s = re.sub(r'\W+', '_', s).lower()
+   s = re.sub(r'_+', '_', s)
+   return s
+
+
+def get_user(id_: int) -> dict[str, Any]:
+   data = client.post(f'/users/{id_}').json()
+
+   result = {snake_case(k): v for k, v in data.items()}
+   return result
+```
+
+This will give you the following transformed response:
+
+```json
+{
+   "username": 789,
+   "password": "secret_password",
+   "account_status": "active"
+}
+```
+
+## Magic
+
+The features just discussed we will call "Golden Rules".
+If you wish to merge this features into one tool, I can make you happy!
+These rules are the foundation of Sensei framework!
+
+Let's go to [the first steps](https://sensei.factorycroco.com/learn/user_guide/first_steps.html) of your learning curve!
+
+### Code Example
+
+```python
+import datetime
+from typing import Annotated, Any, Self
+from pydantic import EmailStr, PositiveInt, AnyHttpUrl
+from sensei import Router, Query, Path, APIModel, Args, pascal_case, format_str, RateLimit
+from httpx import Response
+
+router = Router('https://reqres.in/api', rate_limit=RateLimit(5, 1))
+
+
+@router.model()
+class BaseModel(APIModel):
+   def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
+      return json['data']
+
+   def __prepare_args__(self, args: Args) -> Args:
+      args.headers['X-Token'] = 'secret_token'
+      return args
+
+   def __header_case__(self, s: str) -> str:
+      return pascal_case(s)
+
+
+class User(BaseModel):
+   email: EmailStr
+   id: PositiveInt
+   first_name: str
+   last_name: str
+   avatar: AnyHttpUrl
+
+   @classmethod
+   @router.get('/users')
+   def list(
+           cls,
+           page: Annotated[int, Query()] = 1,
+           per_page: Annotated[int, Query(le=7)] = 3
+   ) -> list[Self]:  # Framework knows how to handle response
+      ...
+
+   @classmethod
+   @router.get('/users/{id_}')
+   def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: ...  # Framework knows how to handle response
+
+   @router.patch('/users/{id_}', skip_finalizer=True)
+   def update(
+           self,
+           name: str,
+           job: str
+   ) -> datetime.datetime:  # Framework does not know how to represent response as datetime object
+      ...
+
+   @update.prepare
+   def _update_in(self, args: Args) -> Args:  # Get id from current object
+      args.url = format_str(args.url, {'id_': self.id})
+      return args
+
+   @update.finalize()
+   def _update_out(self,
+                   response: Response) -> datetime.datetime:  # Specify hook, to handle response instead of framework
+      json_ = response.json()
+      result = datetime.datetime.strptime(json_['updated_at'], "%Y-%m-%dT%H:%M:%S.%fZ")
+      self.first_name = json_['name']
+      return result
+
+   @router.delete('/users/{id_}')
+   def delete(self) -> Self: ...
+
+   @delete.prepare
+   def _delete_in(self, args: Args) -> Args:
+      url = args.url
+      url = format_str(url, {'id_': self.id})
+      args.url = url
+      return args
+
+   @router.post('/token')
+   def login(self) -> str: ...
+
+   @login.prepare
+   def _login_in(self, args: Args) -> Args:
+      args.json_['email'] = self.email
+      return args
+
+   @login.finalize
+   def _login_out(self, response: Response) -> str:
+      return response.json()['token']
+
+   @router.put('/users/{id_}', skip_finalizer=True)
+   def change(
+           self,
+           name: Annotated[str, Query()],
+           job: Annotated[str, Query()]
+   ) -> bytes:
+      ...
+
+   @change.prepare
+   def _change_in(self, args: Args) -> Args:
+      args.url = format_str(args.url, {'id_': self.id})
+      return args
+```
