@@ -15,24 +15,25 @@ API of the cryptocurrency exchange Binance.
 ```python
 from binance.client import Client
 
-# Create a client with API keys
-client = Client(api_key='your_api_key', api_secret='your_api_secret')
+client = Client(api_key='your_api_key', api_secret='your_api_secret')  # (1)!
 
-# Get account balance information
-balance = client.get_asset_balance(asset='BTC')
+balance = client.get_asset_balance(asset='BTC')  # (2)!
 print(balance)
 
-# Get latest market prices
-prices = client.get_all_tickers()
+prices = client.get_all_tickers()  # (3)!
 print(prices)
 
-# Place a market buy order
-order = client.order_market_buy(
+order = client.order_market_buy(  # (4)!
    symbol='BTCUSDT',
    quantity=0.01
 )
 print(order)
 ```
+
+1. Create a client with API keys
+2. Get account balance information
+3. Get latest market prices
+4. Place a market buy order
 
 ## Golden Rules
 
@@ -77,7 +78,7 @@ def validate_params(city: str, units: str) -> None:
 
 
 def transform_response(response: Response) -> dict[str, Any]:
-    # Assume we want to extract specific fields from the response
+   # Assume we want to extract specific fields from the response
     data = response.json()
     return {
         "city": data["name"],
@@ -97,7 +98,6 @@ def get_weather_sync(city: str, units: str = "metric") -> dict[str, Any]:
         return transform_response(response)
 
 
-# Usage:
 print(get_weather_sync("London"))
 ```
 
@@ -137,7 +137,6 @@ async def get_weather_async(city: str, units: str = "metric") -> dict[str, Any]:
         return transform_response(response)
 
 
-# Usage:
 async def main():
     print(await get_weather_async("London"))
 
