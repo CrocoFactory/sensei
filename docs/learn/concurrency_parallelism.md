@@ -19,7 +19,7 @@ For example, if you have a multicore processor, parallelism allows two tasks to 
 
 ### Key Differences
 
-![Comparison](https://sensei.factorycroco.com/img/concurrency_parallelism/comparison.png)
+![Comparison](/img/concurrency_parallelism/comparison.png)
 
 *Illustration from [this article](https://medium.com/@deepshig/concurrency-vs-parallelism-4a99abe9efb8)*
 
@@ -85,7 +85,7 @@ Process alternate between these two states.
 * **I/O-burst**: the time that a process spends for waiting for a completion of the **I/O-bound work** refers to tasks
   limited by input/output operations, such as reading from disk, network requests, or database queries.
 
-![Comparison](https://sensei.factorycroco.com/img/concurrency_parallelism/bursts.png)
+![Comparison](/img/concurrency_parallelism/bursts.png)
 
 *Illustration from [this article](https://www.baeldung.com/cs/cpu-io-bound)*
 
@@ -108,30 +108,31 @@ Here’s a breakdown of the differences between Python threads and traditional t
 | CPU-bound tasks do not benefit from threading due to the GIL. | CPU-bound tasks can fully utilize multi-core CPUs. |
 | Python threads are managed by the OS but limited by the GIL. | OS schedules threads to run independently on multiple cores. |
 
-### Example of Limitations
+!!! example
 
-Let’s look at an example of how the GIL affects Python threading when performing CPU-bound tasks:
-
-```python
-import threading
-
-def cpu_bound_task():
-    result = 0
-    for i in range(10000000):
-        result += i
-    print(f"Result: {result}")
-
-threads = []
-for _ in range(4):
-    t = threading.Thread(target=cpu_bound_task)
-    threads.append(t)
-    t.start()
-
-for t in threads:
-    t.join()
-```
-
-In this case, while one thread is waiting for a response from a server (I/O operation), other threads can run, resulting in better concurrency. The GIL is not a significant bottleneck in I/O-bound operations.
+    Let’s look at an example of how the GIL affects Python threading when performing CPU-bound tasks:
+    
+    ```python
+    import threading
+    
+    def cpu_bound_task():
+        result = 0
+        for i in range(10000000):
+            result += i
+        print(f"Result: {result}")
+    
+    threads = []
+    for _ in range(4):
+        t = threading.Thread(target=cpu_bound_task)
+        threads.append(t)
+        t.start()
+    
+    for t in threads:
+        t.join()
+    ```
+    
+    In this case, while one thread is waiting for a response from a server (I/O operation), other threads can run, 
+    resulting in better concurrency. The GIL is not a significant bottleneck in I/O-bound operations.
 
 ### How to Overcome GIL Limitations
 While the GIL limits Python’s threading model for CPU-bound tasks, there are several ways to work around it:
@@ -248,10 +249,16 @@ coroutine completes, allowing other tasks to be executed during that time.
 At the heart of Python’s asynchronous programming model is the **event loop**.
 The event loop is responsible for managing the execution of coroutines, handling I/O operations, and scheduling tasks.
 
-![Event Loop](https://sensei.factorycroco.com/img/concurrency_parallelism/event_loop.png)
-
-*Illustration
-from [this article](https://medium.com/pythoniq/master-asyncio-in-python-a-comprehensive-step-by-step-guide-4fc2cfa49925)*
+```mermaid
+sequenceDiagram
+    participant Coroutines
+    participant Event Loop
+    participant I/O operation
+    Coroutines ->> Event Loop: Yield Point
+    Event Loop ->> I/O operation: Async Operation
+    I/O operation ->> Event Loop: Callback
+    Event Loop ->> Coroutines: Resume
+```
 
 Here's how the event loop works:     
 

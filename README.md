@@ -15,7 +15,7 @@ The Python framework, that provides a quick way to build API wrappers. Use type 
 
 ---
 
-**Documentation:** [https://sensei.factorycroco.com](https://sensei.factorycroco.com) 
+**Documentation:** [https://sensei.crocofactory.dev](https://sensei.crocofactory.dev)
 
 **Source code:** [https://github.com/CrocoFactory/sensei](https://github.com/CrocoFactory/sensei)
 

@@ -15,9 +15,14 @@ with APIs.
 **HTTP** is a protocol that defines how messages are formatted and transmitted between a client (such as a web browser) 
 and a server. It also determines how servers respond to various requests.
 
-![Client and Server](/img/http_requests/client_server.png)
+``` mermaid
+sequenceDiagram
+    participant Client
+    participant Server
 
-*Illustration from [this article](https://www.practical-go-lessons.com/chap-35-build-an-http-client)*
+    Client->>Server: HTTP Request (e.g., GET, POST)
+    Server-->>Client: HTTP Response (e.g., Data, Status Code)
+```
 
 When you interact with an API, you use HTTP to make requests. Each request is an action you want the server to perform. 
 The server then sends a response back, usually in the form of data, a status code, and/or a message.

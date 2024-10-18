@@ -23,8 +23,8 @@ classifiers = [
 packages = [{ include = 'sensei' }]
 
 [project.urls]
-homepage = "https://sensei.factorycroco.com"
-documentation = "https://sensei.factorycroco.com"
+homepage = "https://sensei.crocofactory.dev"
+documentation = "https://sensei.crocofactory.dev"
 source = "https://github.com/CrocoFactory/sensei"
 download = "https://pypi.org/project/sensei/#files"
 tracker = "https://github.com/CrocoFactory/sensei/issues"

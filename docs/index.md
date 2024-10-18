@@ -15,7 +15,7 @@ The Python framework, that provides a quick way to build API wrappers. Use type 
 
 ---
 
-**Documentation:** [https://sensei.factorycroco.com](https://sensei.factorycroco.com) 
+**Documentation:** [https://sensei.crocofactory.dev](https://sensei.crocofactory.dev)
 
 **Source code:** [https://github.com/CrocoFactory/sensei](https://github.com/CrocoFactory/sensei)
 
@@ -145,7 +145,8 @@ class User(BaseModel):
         return args
 ```
 
-As you can see, the functions` body have no code. You only need to describe the interface(signature) of the API endpoint, that is path, method, 
+As you can see, the functions' body has no code. You only need to describe the interface(signature) of the API endpoint,
+that is path, method,
 body and params, headers, and cookies, and specify its types and return(response) type. In most cases, the framework knows how to
 handle a response to represent it as your return type, but when it cannot, you can use hooks to finalize the response or
 prepare arguments for request. 

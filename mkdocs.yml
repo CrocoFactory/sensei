@@ -1,6 +1,6 @@
 site_name: Sensei
 site_description: The Python framework, providing a quick way to build API wrappers. Use type annotations to build requests with little or no implementation.
-site_url: https://sensei.factorycroco.com
+site_url: https://sensei.crocofactory.dev
 use_directory_urls: false
 
 
@@ -68,6 +68,7 @@ nav:
 
 
 markdown_extensions:
+  admonition:
   abbr:
   attr_list:
   footnotes:
@@ -87,6 +88,9 @@ markdown_extensions:
 
   pymdownx.superfences:
     custom_fences:
+      - name: mermaid
+        class: mermaid
+        format: !!python/name:pymdownx.superfences.fence_code_format
     - name: mermaid
       class: mermaid
       format: !!python/name:pymdownx.superfences.fence_code_format

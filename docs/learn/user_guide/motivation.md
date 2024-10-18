@@ -78,7 +78,6 @@ def validate_params(city: str, units: str) -> None:
 
 
 def transform_response(response: Response) -> dict[str, Any]:
-   # Assume we want to extract specific fields from the response
     data = response.json()
     return {
         "city": data["name"],
@@ -158,16 +157,14 @@ BaseClient = Union[Client, AsyncClient]
 Components = tuple[str, dict[str, Any], dict[str, Any]]
 
 
-# Shared validation logic
-def validate_params(city: str, units: str) -> None:
+def validate_params(city: str, units: str) -> None:  # (1)!
     if not city:
         raise ValueError("City name cannot be empty")
     if units not in {"metric", "imperial"}:
         raise ValueError("Units must be 'metric' or 'imperial'")
 
 
-# Shared response transformation logic
-def transform_response(response: Response) -> dict[str, Any]:
+def transform_response(response: Response) -> dict[str, Any]:  # (2)!
     data = response.json()
     return {
         "city": data["name"],
@@ -176,54 +173,59 @@ def transform_response(response: Response) -> dict[str, Any]:
     }
 
 
-# Shared logic for building the request
-def build_request(client: BaseClient, url: str, params: dict, headers: dict) -> Response:
+def build_request(
+        client: BaseClient,
+        url: str,
+        params: dict,
+        headers: dict
+) -> Response:  # (3)!
     return client.get(url, params=params, headers=headers)
 
 
-# Merged function to get URL, headers, and params
-def get_components(city: str, units: str) -> Components:
+def get_components(city: str, units: str) -> Components:  # (4)!
     url = "https://api.openweathermap.org/data/2.5/weather"
     headers = {"Accept": "application/json"}
     params = {"q": city, "units": units, "appid": "your_api_key"}
     return url, headers, params
 
 
-# Synchronous version
-def get_weather_sync(city: str, units: str = "metric") -> dict[str, Any]:
+def get_weather_sync(city: str, units: str = "metric") -> dict[str, Any]:  # (5)!
     validate_params(city, units)
 
     url, headers, params = get_components(city, units)
 
-    # Synchronous request logic
     with httpx.Client() as client:
         response = build_request(client, url, params, headers)
         return transform_response(response)
 
 
-# Asynchronous version
-async def get_weather_async(city: str, units: str = "metric") -> dict[str, Any]:
+async def get_weather_async(
+        city: str,
+        units: str = "metric"
+) -> dict[str, Any]:  # (6)!
     validate_params(city, units)
 
     url, headers, params = get_components(city, units)
 
-    # Asynchronous request logic
     async with httpx.AsyncClient() as client:
         response = await build_request(client, url, params, headers)
         return transform_response(response)
 
 
-# Usage for sync
 print(get_weather_sync("London"))
 
-
-# Usage for async
 async def main():
     print(await get_weather_async("London"))
 
-
 asyncio.run(main())
 ```
+
+1. Shared validation logic
+2. Shared response transformation logic
+3. Shared logic for building the request
+4. Merged function to get URL, headers, and params
+5. Synchronous request logic
+6. Asynchronous request logic
 
 Voilà, our code is much less duplicated!
 But it's still having line repetitions in `get_weather_sync` and `get_weather_async`, because the synchronous version
@@ -305,10 +307,15 @@ from datetime import datetime
 from typing import Any, Literal, get_args
 
 client = httpx.Client(base_url='https://project-managment/api')
-Priority = Literal['low', 'medium', 'high']  # Define the possible task priorities using a Literal type
+Priority = Literal['low', 'medium', 'high']  # (1)!
 
 
-def create_task(title: str, due_date: int, priority: Priority, description: str = None) -> dict[str, Any]:
+def create_task(
+        title: str,
+        due_date: int,
+        priority: Priority,
+        description: str = None
+) -> dict[str, Any]:
     if not isinstance(title, str):
         raise TypeError('Title must be a string')
 
@@ -318,14 +325,13 @@ def create_task(title: str, due_date: int, priority: Priority, description: str 
     if len(title) > 120:
         raise ValueError('Max title length is 120')
 
-    if not isinstance(due_date, int):  # Due date represented as a timestamp
+    if not isinstance(due_date, int):  # (2)!
         raise ValueError('Due date must be integer')
 
     if datetime.now().timestamp() > due_date:
         raise ValueError('Due date must be in the future')
 
-    # Validate that the provided priority is one of the defined values
-    if priority not in (values := get_args(Priority)):  # Get possible values of the Priority type
+    if priority not in (values := get_args(Priority)):  # (3)!
         raise ValueError(f'Priority must be from {values}')
 
     if not isinstance(description, (str, None)):
@@ -342,9 +348,14 @@ def create_task(title: str, due_date: int, priority: Priority, description: str 
     }
 
     response = client.post(url='/create-task', json=json_)
-    response.raise_for_status()  # Raise an exception for HTTP errors
+    response.raise_for_status()  # (4)!  
     return response.json()
 ```
+
+1. Define the possible task priorities using a Literal type
+2. Due date represented as a timestamp
+3. Validate that the provided priority is one of the defined values, getting possible values of the Priority type
+4. Raise an exception for HTTP errors
 
 Don't you find writing such code boring?
 What if `/create-task` route would have more parameters?
@@ -360,38 +371,44 @@ from pydantic.alias_generators import to_camel
 from pydantic import BaseModel, field_validator, Field, AliasGenerator, ConfigDict
 
 client = httpx.Client(base_url='https://project-managment/api')
-Priority = Literal['low', 'medium', 'high']  # Define the possible task priorities using a Literal type
+Priority = Literal['low', 'medium', 'high']  #(1)!
 
 
-# Define the Task model using Pydantic for data validation and serialization
 class Task(BaseModel):
-    # Configure the model to use camelCase for serialization
-    model_config = ConfigDict(alias_generator=AliasGenerator(serialization_alias=to_camel))
+    model_config = ConfigDict(alias_generator=AliasGenerator(serialization_alias=to_camel))  # (2)!
 
-    title: str = Field(max_length=120)  # Title of the task, limited to 120 characters
-    due_date: int  # Due date represented as a timestamp
+    title: str = Field(max_length=120)  # (3)!
+    due_date: int  # (4)!
     priority: Priority
-    description: Union[str, None] = Field(None, max_length=500)  # Optional description, max 500 characters
+    description: Union[str, None] = Field(None, max_length=500)  #(5)!
 
-    # Validator to ensure the due date is in the future
-    @field_validator('due_date', mode='before')
+    @field_validator('due_date', mode='before')  #(6)!
     def _validate_date(cls, value: int) -> int:
         if datetime.now().timestamp() > value:
-            raise ValueError('Due date must be in the future')  # Raise error if due date is not in the future
-        return value  # Return the validated due date
+            raise ValueError('Due date must be in the future')  #(7)!
+        return value
 
 
 def create_task(title: str, due_date: int, priority: Priority, description: str = None) -> dict[str, Any]:
-    # Create a Task instance with provided parameters
-    data = Task(title=title, due_date=due_date, priority=priority, description=description)
+    data = Task(title=title, due_date=due_date, priority=priority, description=description)  # (8)!
 
-    # Serialize the Task instance to JSON format
-    data = data.model_dump(mode='json')
+    data = data.model_dump(mode='json')  #(9)!
 
     response = client.post(url='/create-task', json=data)
-    response.raise_for_status()  # Raise an exception for HTTP errors
+    response.raise_for_status()  #(10)!
     return response.json()
 ```
+
+1. Define the possible task priorities using a `Literal` type.
+2. Configure the model to use camelCase for serialization.
+3. Title of the task, limited to 120 characters.
+4. Due date represented as a timestamp.
+5. Optional description, max 500 characters.
+6. Validator to ensure the due date is in the future.
+7. Raise an error if due date is not in the future.
+8. Create a `Task` instance with provided parameters.
+9. Serialize the `Task` instance to JSON format.
+10. Raise an exception for HTTP errors.
 
 #### Benefits
 
@@ -716,10 +733,9 @@ The features just discussed we will call "Golden Rules".
 If you wish to merge this features into one tool, I can make you happy!
 These rules are the foundation of Sensei framework!
 
-Let's go to [the first steps](https://sensei.factorycroco.com/learn/user_guide/first_steps.html) of your learning curve!
+Let's go to [the first steps](/learn/user_guide/first_steps.html) of your learning curve!
 
-### Code Example
-
+!!! example
 ```python
 import datetime
 from typing import Annotated, Any, Self
@@ -727,95 +743,109 @@ from pydantic import EmailStr, PositiveInt, AnyHttpUrl
 from sensei import Router, Query, Path, APIModel, Args, pascal_case, format_str, RateLimit
 from httpx import Response
 
-router = Router('https://reqres.in/api', rate_limit=RateLimit(5, 1))
-
-
-@router.model()
-class BaseModel(APIModel):
-   def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
-      return json['data']
-
-   def __prepare_args__(self, args: Args) -> Args:
-      args.headers['X-Token'] = 'secret_token'
-      return args
-
-   def __header_case__(self, s: str) -> str:
-      return pascal_case(s)
-
-
-class User(BaseModel):
-   email: EmailStr
-   id: PositiveInt
-   first_name: str
-   last_name: str
-   avatar: AnyHttpUrl
-
-   @classmethod
-   @router.get('/users')
-   def list(
-           cls,
-           page: Annotated[int, Query()] = 1,
-           per_page: Annotated[int, Query(le=7)] = 3
-   ) -> list[Self]:  # Framework knows how to handle response
-      ...
-
-   @classmethod
-   @router.get('/users/{id_}')
-   def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: ...  # Framework knows how to handle response
-
-   @router.patch('/users/{id_}', skip_finalizer=True)
-   def update(
-           self,
-           name: str,
-           job: str
-   ) -> datetime.datetime:  # Framework does not know how to represent response as datetime object
-      ...
-
-   @update.prepare
-   def _update_in(self, args: Args) -> Args:  # Get id from current object
-      args.url = format_str(args.url, {'id_': self.id})
-      return args
-
-   @update.finalize()
-   def _update_out(self,
-                   response: Response) -> datetime.datetime:  # Specify hook, to handle response instead of framework
-      json_ = response.json()
-      result = datetime.datetime.strptime(json_['updated_at'], "%Y-%m-%dT%H:%M:%S.%fZ")
-      self.first_name = json_['name']
-      return result
-
-   @router.delete('/users/{id_}')
-   def delete(self) -> Self: ...
-
-   @delete.prepare
-   def _delete_in(self, args: Args) -> Args:
-      url = args.url
-      url = format_str(url, {'id_': self.id})
-      args.url = url
-      return args
-
-   @router.post('/token')
-   def login(self) -> str: ...
-
-   @login.prepare
-   def _login_in(self, args: Args) -> Args:
-      args.json_['email'] = self.email
-      return args
-
-   @login.finalize
-   def _login_out(self, response: Response) -> str:
-      return response.json()['token']
-
-   @router.put('/users/{id_}', skip_finalizer=True)
-   def change(
-           self,
-           name: Annotated[str, Query()],
-           job: Annotated[str, Query()]
-   ) -> bytes:
-      ...
-
-   @change.prepare
-   def _change_in(self, args: Args) -> Args:
-      args.url = format_str(args.url, {'id_': self.id})
-      return args
-```
+      router = Router('https://reqres.in/api', rate_limit=RateLimit(5, 1))
+      
+      
+      @router.model()
+      class BaseModel(APIModel):
+         def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
+            return json['data']
+      
+         def __prepare_args__(self, args: Args) -> Args:
+            args.headers['X-Token'] = 'secret_token'
+            return args
+      
+         def __header_case__(self, s: str) -> str:
+            return pascal_case(s)
+      
+      
+      class User(BaseModel):
+         email: EmailStr
+         id: PositiveInt
+         first_name: str
+         last_name: str
+         avatar: AnyHttpUrl
+      
+         @classmethod
+         @router.get('/users')
+         def list(
+                 cls,
+                 page: Annotated[int, Query()] = 1,
+                 per_page: Annotated[int, Query(le=7)] = 3
+         ) -> list[Self]:  # (1)!
+            ...
+      
+         @classmethod
+         @router.get('/users/{id_}')
+         def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self:  # (2)!
+      
+         @router.patch('/users/{id_}', skip_finalizer=True)
+         def update(
+                 self,
+                 name: str,
+                 job: str
+         ) -> datetime.datetime:  # (3)!
+            ...
+      
+         @update.prepare
+         def _update_in(self, args: Args) -> Args:  # (4)!
+            args.url = format_str(args.url, {'id_': self.id})
+            return args
+      
+         @update.finalize()
+         def _update_out(self,
+                         response: Response) -> datetime.datetime:  # (5)!
+            json_ = response.json()
+            result = datetime.datetime.strptime(json_['updated_at'], "%Y-%m-%dT%H:%M:%S.%fZ")
+            self.first_name = json_['name']
+            return result
+      
+         @router.delete('/users/{id_}')
+         def delete(self) -> Self:  # (6)!
+      
+         @delete.prepare
+         def _delete_in(self, args: Args) -> Args:  # (7)!
+            url = args.url
+            url = format_str(url, {'id_': self.id})
+            args.url = url
+            return args
+      
+         @router.post('/token')
+         def login(self) -> str:  # (8)!
+      
+         @login.prepare
+         def _login_in(self, args: Args) -> Args:  # (9)!
+            args.json_['email'] = self.email
+            return args
+      
+         @login.finalize
+         def _login_out(self, response: Response) -> str:  # (10)!
+            return response.json()['token']
+      
+         @router.put('/users/{id_}', skip_finalizer=True)
+         def change(
+                 self,
+                 name: Annotated[str, Query()],
+                 job: Annotated[str, Query()]
+         ) -> bytes:  # (11)!
+            ...
+      
+         @change.prepare
+         def _change_in(self, args: Args) -> Args:  # (12)!
+            args.url = format_str(args.url, {'id_': self.id})
+            return args
+      
+      ```
+      
+      1. Framework knows how to handle response
+      2. Framework knows how to handle response
+      3. Framework does not know how to represent response as datetime object. You need to specify hook.
+      4. Get id from current object
+      5. Specify hook, to handle response instead of framework
+      6. Delete a user
+      7. Prepare request for deleting a user
+      8. User login
+      9. Prepare request for login
+      10. Handle login response
+      11. Change user details
+      12. Prepare request for changing user details

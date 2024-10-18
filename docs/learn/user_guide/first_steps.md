@@ -33,13 +33,13 @@ from typing import Annotated
 from sensei import Router, Path, APIModel
 ```
 
-**Annotated** is imported from Python's `typing` module, allowing us to add metadata (like *param types*) to variables.
+`Annotated` is imported from Python's `typing` module, allowing us to add metadata (like *param types*) to variables.
 
-**Router**, **Path**, and **APIModel** are imported from the Sensei framework.
+`Router`, `Path`, and `APIModel` are imported from the Sensei framework.
 
-- **Router** helps manage API endpoints and routing.
-- **Path** specifies path (route) parameters and defines argument's validation.
-- **APIModel** is used to define models for structuring API responses.
+- `Router` helps manage API endpoints and routing.
+- `Path` specifies path (route) parameters and defines argument's validation.
+- `APIModel` is used to define models for structuring API responses.
 
 ### Step 2: Creating a Router
 
@@ -47,7 +47,7 @@ from sensei import Router, Path, APIModel
 router = Router('https://pokeapi.co/api/v2/')
 ```
 
-A **Router** instance is created, with the base URL of the *PokéAPI* (`https://pokeapi.co/api/v2/`). This will be the
+A `Router` instance is created, with the base URL of the *PokéAPI* (`https://pokeapi.co/api/v2/`). This will be the
 root path for all subsequent API calls.
 
 ### Step 3: Defining the `Pokemon` Model
@@ -60,7 +60,7 @@ class Pokemon(APIModel):
     weight: int
 ```
 
-**Pokemon** is a class that inherits from **APIModel**. This class represents the structure of a Pokémon's data.
+`Pokemon` is a class that inherits from `APIModel`. This class represents the structure of a Pokémon's data.
 The attributes are:
 
 - `name`: a *string*
@@ -89,8 +89,8 @@ If you don't know what are "request", "response" "route", "endpoint", "methods" 
 
 The `{name}` is a *path parameter*, dynamically inserted into the API call.
 
-- `name`: is an argument annotated as a *string* with **Path**, meaning it is a required URL path parameter. Also, in
-  **Path** we defined validation, namely checking whether length of name less or equal then 300. **Path** is placed in
+- `name`: is an argument annotated as a *string* with `Path`, meaning it is a required URL path parameter. Also, in
+  `Path` we defined validation, namely checking whether length of name less or equal then 300. `Path` is placed in
   `Annotated` object as metadata.
 
 /// info
@@ -111,15 +111,16 @@ Instead of `@router.get`, you can use the other operations(HTTP methods):
 * `@router.head`
 * `@router.options`
 
-The function body is omitted because **Sensei** automatically handles the API call and response mapping. This "omitting"
-we will call *Interface-driven function* or *Signature-driven function*, because we do not write any code achieving
-the result. We dedicate this responsibility to some tool, parsing the function's interface(signature). And according to
-it,
-tool handles a call automatically.
+The function body is omitted because **Sensei** automatically handles the API call and response mapping.
+In this case, the function returns a `Pokemon` object, ensuring that the data fetched from the API matches the
+`Pokemon` model. The return type we will call **response type**.
 
-In this case, the function returns a **Pokemon** object, ensuring that the data fetched from the API matches the *
-*Pokemon** model.
-The return type we will also call *response type*.
+/// info
+This "omitting"
+we will call **Interface-driven function** or **Signature-driven function**, because we do not write any code achieving
+the result. We dedicate this responsibility to some tool, parsing the function's interface(signature). And according to
+it, tool handles a call automatically.
+///
 
 ### Step 5: Making the API Call
 
@@ -179,4 +180,112 @@ Only add `async` before `def`!
 /// tip
 If you don't know what is "concurrency", "parallelism" and what does do "async/await" in Python,
 visit [Concurrency/Parallelism](/learn/concurrency_parallelism.html)
+///
+
+## API Model
+
+As mentioned earlier, `APIModel` models use the same principles as `BaseModel` models from `pydantic`.
+Let’s go over the basics!
+
+### Creating
+
+```python
+from sensei import APIModel
+from pydantic import EmailStr, NonNegativeInt
+
+
+class User(APIModel):
+    id: NonNegativeInt
+    username: str
+    email: EmailStr
+    age: int = 18
+    is_active: bool = True
+```
+
+In this `User` model, the fields are:
+
+1. `id`: an integer for the user ID. `NonNegativeInt` ensures that the value >= 0.
+2. `username`: a string for the username.
+3. `email`: validated by the `EmailStr` type from `pydantic`, ensuring a valid email.
+4. `age`: an integer defaulting to 18.
+5. `is_active`: a boolean defaulting to True.
+
+/// tip
+Value validation is not force type validation.
+For example, if you define model with `due_date` and `id` fields of types `datetime` and integer respectively,
+as `id` you can pass numerical string and as date you can pass **ISO-8601**, **UTC** and strings of other formats.
+
+```python
+from sensei import APIModel
+from datetime import datetime
+
+
+class Task(APIModel):
+    id: int
+    due_date: datetime
+
+
+Task(due_date='2024-10-15T15:30:00', id="1")
+```
+
+The result will be
+
+```python
+Task(id=1
+due_date = datetime.datetime(2024, 10, 15, 15, 30))
+```
+
+///
+
+### Serializing
+
+To serialize model, you can use `model_dump` method.
+
+```python
+user = User(id=1, username="johndoe", email="johndoe@example.com", age=30)
+user_data = user.model_dump(mode="json")
+user_data
+```
+
+```json
+{
+  "id": 1,
+  "username": "johndoe",
+  "email": "johndoe@example.com",
+  "age": 30,
+  "is_active": True
+}
+```
+
+/// tip
+If you use response in another request or want to write it to file, you should serialize it with `mode="json"`.
+
+```python
+user_data = user.model_dump(mode="json")
+```
+
+For example, if you have some field with `datetime` object, this mode evaluates this time as string.
+
+```python
+from sensei import APIModel
+from datetime import datetime
+
+
+class Task(APIModel):
+    due_date: datetime
+    ...
+
+
+Task(due_date=datetime(2024, 10, 15, 15, 30)).model_dump(mode="json")
+```
+
+The result will be
+
+```json
+{
+  "date": '2024-10-15T15:30:00',
+  ...
+}
+```
+
 ///
