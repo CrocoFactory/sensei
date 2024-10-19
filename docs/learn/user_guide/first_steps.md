@@ -24,6 +24,11 @@ pokemon = get_pokemon(name="pikachu")
 print(pokemon)
 ```
 
+/// tip
+If you don't know what are "request", "response" "route", "endpoint", "methods" and other HTTP terms, visit
+[HTTP Requests](/learn/http_requests.html)
+///
+
 Let's take this request step by step.
 
 ### Step 1: Importing Dependencies
@@ -33,7 +38,7 @@ from typing import Annotated
 from sensei import Router, Path, APIModel
 ```
 
-`Annotated` is imported from Python's `typing` module, allowing us to add metadata (like *param types*) to variables.
+`Annotated` is imported from Python's `typing` module, allowing us to add metadata (like **Param types**) to variables.
 
 `Router`, `Path`, and `APIModel` are imported from the Sensei framework.
 
@@ -69,7 +74,8 @@ The attributes are:
 - `weight`: an *integer*
 
 /// note | Technical Details
-`APIModel` inherits from `BaseModel` of `pydantic` framework. You can apply the principles of `pydantic` for models
+`APIModel` inherits from `BaseModel` of [`pydantic`](https://docs.pydantic.dev/) framework. You can apply the principles
+of [`pydantic`](https://docs.pydantic.dev/) for models
 in Sensei
 ///
 
@@ -82,17 +88,6 @@ def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon: ...
 
 This function is decorated with `@router.get`, defining it as a GET request for the `/pokemon/{name}` endpoint.
 
-/// tip
-If you don't know what are "request", "response" "route", "endpoint", "methods" and other HTTP terms, visit
-[HTTP Requests](/learn/http_requests.html)
-///
-
-The `{name}` is a *path parameter*, dynamically inserted into the API call.
-
-- `name`: is an argument annotated as a *string* with `Path`, meaning it is a required URL path parameter. Also, in
-  `Path` we defined validation, namely checking whether length of name less or equal then 300. `Path` is placed in
-  `Annotated` object as metadata.
-
 /// info
 **Decorator** is a design pattern that allows you to modify or extend the behavior of functions or methods without
 changing their code directly.
@@ -101,6 +96,12 @@ In Python they are applied by using the `@decorator` syntax just above a
 function definition. In most cases, decorator is some function, taking function and returning modified(decorated)
 function
 ///
+
+The `{name}` is a *path parameter*, dynamically inserted into the API call.
+
+- `name`: is an argument annotated as a *string* with `Path`, meaning it is a required URL path parameter. Also, in
+  `Path` we defined validation, namely checking whether length of name less or equal then 300. `Path` is placed in
+  `Annotated` object as metadata.
 
 Instead of `@router.get`, you can use the other operations(HTTP methods):
 
@@ -111,13 +112,37 @@ Instead of `@router.get`, you can use the other operations(HTTP methods):
 * `@router.head`
 * `@router.options`
 
+The result of these decorator is called **routed function(method)**
+
+/// warning
+Routed functions must not have body.
+This code will not be executed. Instead of body, place `...` statement or `pass` keyword.
+
+With `Ellipsis` (`...`)
+
+```python
+@router.get('/pokemon/{name}')
+def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon:
+    ...
+```
+
+or with `pass`
+
+```python
+@router.get('/pokemon/{name}')
+def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon:
+    pass
+```
+
+///
+
 The function body is omitted because **Sensei** automatically handles the API call and response mapping.
 In this case, the function returns a `Pokemon` object, ensuring that the data fetched from the API matches the
-`Pokemon` model. The return type we will call **response type**.
+`Pokemon` model. The return type we will also call **response type**.
 
 /// info
-This "omitting"
-we will call **Interface-driven function** or **Signature-driven function**, because we do not write any code achieving
+This "omitting" pattern is called **Interface-driven function** or **Signature-driven function**, because we do not
+write any code achieving
 the result. We dedicate this responsibility to some tool, parsing the function's interface(signature). And according to
 it, tool handles a call automatically.
 ///
@@ -133,9 +158,9 @@ Let's consider the algorithm of call:
 
 1) Calling `get_pokemon` function with the argument `name="pikachu"`.
 
-2) Collecting arguments, including its names and types, *param types* (e.g. Path, Query, Body, Cookie, Header),
-   including
-   argument validations placed inside, and return type.
+2) Collecting function's return type and arguments, including its names and types, **Param types**, such as `Path`,
+   `Query`, `Body`,
+   `Cookie`, `Header`, `File`, `Form`, including argument validations placed inside them.
 
 3) Validating input args. In this case `name="pikachu"`
 
@@ -178,13 +203,15 @@ asyncio.run(main())
 Only add `async` before `def`!
 
 /// tip
-If you don't know what is "concurrency", "parallelism" and what does do "async/await" in Python,
+If you don't know what are "concurrency", "parallelism" and what does do "async/await" in Python,
 visit [Concurrency/Parallelism](/learn/concurrency_parallelism.html)
 ///
 
 ## API Model
 
-As mentioned earlier, `APIModel` models use the same principles as `BaseModel` models from `pydantic`.
+As mentioned earlier, `APIModel` models use the same principles as `BaseModel` models from [
+`pydantic`](https://docs.pydantic.dev/).
+To make request with non-scalar input/output values, you definitely need to create models.
 Let’s go over the basics!
 
 ### Creating
@@ -202,6 +229,27 @@ class User(APIModel):
     is_active: bool = True
 ```
 
+Models created using `APIModel` have validation.
+This means if you pass value not matching corresponding field constraints, `ValidationError` will be thrown.
+
+!!! failure "ValidationError"
+```python
+User(id=-1, username="user", email="randomstr", age=18.01, is_active="false")
+```
+
+    4 validation errors for User
+    id
+      Input should be greater than or equal to 0 [type=greater_than_equal, input_value=-1, input_type=int]
+        For further information visit https://errors.pydantic.dev/2.9/v/greater_than_equal
+    email
+      value is not a valid email address: An email address must have an @-sign. [type=value_error, input_value='randomstr', input_type=str]
+    age
+      Input should be a valid integer, got a number with a fractional part [type=int_from_float, input_value=18.01, input_type=float]
+        For further information visit https://errors.pydantic.dev/2.9/v/int_from_float
+    is_active
+      Input should be a valid boolean, unable to interpret input [type=bool_parsing, input_value=-1, input_type=int]
+        For further information visit https://errors.pydantic.dev/2.9/v/bool_parsing
+
 In this `User` model, the fields are:
 
 1. `id`: an integer for the user ID. `NonNegativeInt` ensures that the value >= 0.
@@ -210,10 +258,16 @@ In this `User` model, the fields are:
 4. `age`: an integer defaulting to 18.
 5. `is_active`: a boolean defaulting to True.
 
+
 /// tip
 Value validation is not force type validation.
-For example, if you define model with `due_date` and `id` fields of types `datetime` and integer respectively,
-as `id` you can pass numerical string and as date you can pass **ISO-8601**, **UTC** and strings of other formats.
+For example, if you define model with `id`, `due_date` and `priority` fields of types `int`, `bool`, and `datetime`
+respectively,
+you can pass:
+
+- numerical string as `id`
+- **ISO-8601**, **UTC** or strings of the other date formats as `due_date`
+- `'yes'/'no'`, `'on'/'off'`, `'true'/'false'`, `0/1` etc. as `priority`
 
 ```python
 from sensei import APIModel
@@ -223,16 +277,225 @@ from datetime import datetime
 class Task(APIModel):
     id: int
     due_date: datetime
+    priority: bool
 
 
-Task(due_date='2024-10-15T15:30:00', id="1")
+task = Task(due_date='2024-10-15T15:30:00', id="1", priority="yes")
+print(task)
 ```
 
 The result will be
 
+```text
+Task(id=1 due_date=datetime.datetime(2024, 10, 15, 15, 30) priority=True)
+```
+
+///
+
+### Validating
+
+#### Constrained Types
+
+In addition to built-in validation like `EmailStr` or `NonNegativeInt`,
+you can enforce more specific constraints in your models using **Constrained types**, like `constr` and `conint`.
+
+- `constr`: Enforces restrictions on a string field, like setting a minimum or maximum length,
+  or allowing only certain characters.
+- `conint`: Enforces restrictions on an integer field, such as minimum and maximum value.
+
+For instance, in the `User` model, you can add constraints for the `username`, `id` and `age` fields. Here's an updated
+version
+of the `User` model:
+
 ```python
-Task(id=1
-due_date = datetime.datetime(2024, 10, 15, 15, 30))
+from sensei import APIModel
+from pydantic import EmailStr, conint, constr
+
+
+class User(APIModel):
+    id: conint(ge=0)  # (1)!
+    username: constr(pattern=r'^\w+$')  # (2)!
+    email: EmailStr
+    age: conint(ge=14) = 18  # (3)!
+    is_active: bool = True
+```
+
+1. Ensures id is a non-negative integer
+2. Allows only alphanumeric characters and underscores
+3. Ensures the age is 14 or older
+
+/// info
+There are also many constrained types called by pattern `con<type>`:
+
+- `conset`
+- `conbytes`
+- `conlist`
+- etc...
+
+///
+
+#### Field Types
+
+The same validation rules can also be applied using `Field`. There are two approaches to use it.
+
+/// note | Technical Details
+Sensei's **Param Types**, such as `Path`, `Query`, `Cookie`, `Header`, `Body`, `File` and `Form` are inherited from
+`FieldInfo`,
+produced by `Field` function. All approaches that will be described are applied to **Param types**.  
+///
+
+##### Annotated
+
+Here’s how you can rewrite the same `User` model using `Annotated`:
+
+```python
+from typing import Annotated
+from sensei import APIModel
+from pydantic import EmailStr, Field
+
+
+class User(APIModel):
+    id: Annotated[int, Field(ge=0)]  # (1)!
+    username: Annotated[str, Field(pattern=r'^\w+$')]  # (2)!
+    email: EmailStr
+    age: Annotated[int, Field(18, ge=14)]  # (3)! 
+    is_active: bool = True
+```
+
+1. Same as `conint(ge=0)`
+2. Same as `constr(pattern=r'^\w+$')`
+3. Same as `conint(ge=14)`
+
+Setting a default value of age can be achieved in different ways:
+
+1. Passing default value as argument to `Field`
+
+    ```python
+    age: Annotated[int, Field(18, ge=14)]  
+    ```
+
+2. Or a familiar way
+
+    ```python
+    age: Annotated[int, Field(ge=14)] = 18  
+    ```
+
+##### Directly
+
+For simplicity, you can use `Field()` directly, without `Annotated`.
+
+Here’s how you can rewrite the `User` model:
+
+```python
+from sensei import APIModel
+from pydantic import EmailStr, Field
+
+
+class User(APIModel):
+    id: int = Field(ge=0)  # (1)!
+    username: str = Field(regex=r'^\w+$')  # (2)!
+    email: EmailStr
+    age: int = Field(18, ge=14)  # (3)! 
+    is_active: bool = True
+```
+
+1. Same as `conint(ge=0)`
+2. Same as `constr(pattern=r'^\w+$')`
+3. Same as `conint(ge=14)`
+
+Here setting a default value of age can be achieved in only one way
+
+```python
+age: int = Field(18, ge=14)
+```
+
+/// info
+If you use **Field Types** simultaneously with **Constrained Types**, you should know about validation priority.
+
+1. When use `Field` directly, **Constrained Type** take precedence over `Field`.
+    ```python
+    username: constr(min_length=5) = Field(min_length=10)
+    ```   
+
+2. When use `Field` + `Annotated`, `Field` take precedence over **Constrained Type**.
+    ```python 
+    username: Annotated[constr(min_length=5), Field(min_length=10)]
+    ```
+///
+
+#### Validators
+
+In addition to using Constrained Types and Field for validation,
+you can also define custom validation logic in your model using validators.
+Validators allow you to apply more complex validation rules that cannot be easily expressed using the built-in
+types or field constraints.
+
+Here's an example of how you can validate the email field:
+
+```python
+import re
+from sensei import APIModel
+from typing import Annotated
+from pydantic import Field, field_validator
+
+
+class User(APIModel):
+    id: Annotated[int, Field(ge=0)]
+    username: Annotated[str, Field(pattern=r'^\w+$')]
+    email: str
+    age: Annotated[int, Field(18, ge=14)]
+    is_active: bool = True
+
+    @field_validator('email')
+    def validate_email(cls, value):
+        pattern = r'^[\w\.-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$'
+        if not re.match(pattern, value):
+            raise ValueError(f"Email '{value}' does not match the required pattern.")
+
+        return value
+```
+
+Validator is defined through the `@field_validator` decorator from `pydantic`.
+You can pass one or more field names to `@field_validator`, to determine what fields will use this validator, or `'*'`
+to apply
+validator for every field. The decorator is applied to a class method,
+which takes the value of a field as an argument and returns the validated (or transformed) value. This method can also
+raise a `ValueError` or `TypeError` to signal a validation failure.
+
+/// tip
+In situations, when you use `@field_validator` along with other validators, like built-in `Field`, you may need to
+set execution order of your custom validator. There is `mode` argument, to customize it.
+
+- `mode="before"` - validator is executed before the `pydantic` internal parsing.
+- `mode="after"` - validator is executed after the `pydantic` internal parsing.
+- `mode="plain"` - validator terminates other validators, no further validators are called
+- `mode="wrap"` - validator can run code before the `pydantic` internal parsing and after.
+
+Here is an example how to use comma-separated tags, that in result will be represented as `list[str]`
+
+```python
+from sensei import APIModel
+from typing import Annotated
+from pydantic import Field, field_validator
+
+
+class Video(APIModel):
+    tags: Annotated[list[str], Field(min_length=1)]
+    ...
+
+    @field_validator('tags', mode="before")
+    def _split_str(cls, value):
+        if isinstance(value, str):
+            return value.split(',')
+        else:
+            return value
+
+
+print(Video(tags='trend,unreal,good'))
+```
+
+```text
+Video(tags=['trend', 'unreal', 'good'])
 ```
 
 ///
@@ -244,7 +507,7 @@ To serialize model, you can use `model_dump` method.
 ```python
 user = User(id=1, username="johndoe", email="johndoe@example.com", age=30)
 user_data = user.model_dump(mode="json")
-user_data
+print(user_data)
 ```
 
 ```json
@@ -264,7 +527,7 @@ If you use response in another request or want to write it to file, you should s
 user_data = user.model_dump(mode="json")
 ```
 
-For example, if you have some field with `datetime` object, this mode evaluates this time as string.
+For example, if you have some field with `datetime` object, this mode evaluates this time as a string.
 
 ```python
 from sensei import APIModel
@@ -276,16 +539,48 @@ class Task(APIModel):
     ...
 
 
-Task(due_date=datetime(2024, 10, 15, 15, 30)).model_dump(mode="json")
+task = Task(due_date=datetime(2024, 10, 15, 15, 30)).model_dump(mode="json")
+print(task)
 ```
-
-The result will be
-
 ```json
 {
   "date": '2024-10-15T15:30:00',
   ...
 }
 ```
-
 ///
+
+## Recap
+
+Sensei abstracts away much of the manual work, letting developers focus on function signatures while the framework
+handles the API logic and data validation.
+
+The example of [First Request](#first-request) demonstrates a simple and robust HTTP request using the Sensei framework.
+Here's the key breakdown of the process:
+
+### 1. Importing Dependencies:
+
+- `Router` manages API endpoints and routing.
+- `Path` specifies and validates route parameters.
+- `APIModel` defines models for structuring API responses (similar to `pydantic.BaseModel`).
+
+### 2. Creating the Router:
+
+The `Router` is initialized with the base URL of the *PokéAPI*. All subsequent requests will use this as the base path.
+
+### 3. Defining the Model:
+
+The `Pokemon` class represents the data structure for a Pokémon, with fields like `name`, `id`, `height`, and `weight`.
+It inherits from `APIModel`, which provides validation and serialization.
+
+### 4. Creating the Endpoint:
+
+The `get_pokemon` function is a routed function decorated with `@router.get`, defining a GET request for
+`/pokemon/{name}`.
+This uses `Annotated` to ensure that `name` is a string and adheres to the validation rule (max length of 300).
+
+### 5. Making the Request:
+
+By calling `get_pokemon(name="pikachu")`, Sensei automatically handles validation, makes the HTTP request,
+and maps the API response into the `Pokemon` model. The code omits the function body since Sensei handles call through
+the function's signature.

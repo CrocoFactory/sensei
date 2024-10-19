@@ -275,45 +275,46 @@ You can think of the event loop as a conductor, coordinating when each coroutine
     In traditional synchronous programming, tasks would block the main thread while waiting for I/O operations to complete, 
     resulting in inefficiency. With `async/await`, your program can handle I/O-bound tasks concurrently, making better 
     use of resources.
-    
-    For example, consider a program that needs to download multiple web pages:
-    
-    **Synchronous Version:**
-    
-    ```python
-    import requests
-    
-    def download_page(url):
-       response = requests.get(url)
-       return response.text
-    
-    for url in urls:
-       page = download_page(url)
-       print(f"Downloaded {len(page)} characters")
-    ```
-  
-    **Asynchronous Version:**
-    
-    ```python
-    import httpx
-    import asyncio
-    
-    async def download_page(session, url):
-       async with session.get(url) as response:
-           return await response.text()
-    
-    async def main():
-       async with httpx.Client() as session:
-           tasks = [download_page(session, url) for url in urls]
-           pages = await asyncio.gather(*tasks)
-           for page in pages:
-               print(f"Downloaded {len(page)} characters")
-    
-    asyncio.run(main())
-    ```
-    
-    In the asynchronous version, multiple pages can be downloaded concurrently, improving the overall performance, 
-    especially for I/O-bound tasks. In contrast, `async/await` allows the program to switch between tasks when it hits an I/O operation.
+
+  !!! example
+  Consider a program that needs to download multiple web pages:
+
+        **Synchronous Version:**
+        
+        ```python
+        import requests
+        
+        def download_page(url):
+           response = requests.get(url)
+           return response.text
+        
+        for url in urls:
+           page = download_page(url)
+           print(f"Downloaded {len(page)} characters")
+        ```
+      
+        **Asynchronous Version:**
+        
+        ```python
+        import httpx
+        import asyncio
+        
+        async def download_page(session, url):
+           async with session.get(url) as response:
+               return await response.text()
+        
+        async def main():
+           async with httpx.Client() as session:
+               tasks = [download_page(session, url) for url in urls]
+               pages = await asyncio.gather(*tasks)
+               for page in pages:
+                   print(f"Downloaded {len(page)} characters")
+        
+        asyncio.run(main())
+        ```
+        
+        In the asynchronous version, multiple pages can be downloaded concurrently, improving the overall performance, 
+        especially for I/O-bound tasks. In contrast, `async/await` allows the program to switch between tasks when it hits an I/O operation.
 
 * **Simplified Syntax**  
   Without `async/await`, handling concurrency would require more complex techniques, such as using threads or

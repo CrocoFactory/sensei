@@ -1,0 +1,7 @@
+.admonition.failure {
+    color: #F75464;
+}
+
+.admonition.failure p:not(.admonition-title) {
+    white-space: pre-wrap;
+}

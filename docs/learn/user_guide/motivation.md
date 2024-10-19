@@ -8,32 +8,33 @@ web API.
 The library abstracts the complexity of making HTTP requests, handling responses, and processing data, allowing
 developers
 to easily integrate API functionality without needing to deal with the lower-level details of the API's implementation.
-Usually, you deal with API wrappers as Python libraries. For example, we can take the `python-binance` library wrapping
-the
-API of the cryptocurrency exchange Binance.
+Usually, you deal with API wrappers as Python libraries.
 
-```python
-from binance.client import Client
+!!! example
+`python-binance` library wrapping the API of the cryptocurrency exchange Binance.
 
-client = Client(api_key='your_api_key', api_secret='your_api_secret')  # (1)!
-
-balance = client.get_asset_balance(asset='BTC')  # (2)!
-print(balance)
-
-prices = client.get_all_tickers()  # (3)!
-print(prices)
-
-order = client.order_market_buy(  # (4)!
-   symbol='BTCUSDT',
-   quantity=0.01
-)
-print(order)
-```
-
-1. Create a client with API keys
-2. Get account balance information
-3. Get latest market prices
-4. Place a market buy order
+      ```python
+      from binance.client import Client
+      
+      client = Client(api_key='your_api_key', api_secret='your_api_secret')  # (1)!
+      
+      balance = client.get_asset_balance(asset='BTC')  # (2)!
+      print(balance)
+      
+      prices = client.get_all_tickers()  # (3)!
+      print(prices)
+      
+      order = client.order_market_buy(  # (4)!
+         symbol='BTCUSDT',
+         quantity=0.01
+      )
+      print(order)
+      ```
+      
+      1. Create a client with API keys
+      2. Get account balance information
+      3. Get latest market prices
+      4. Place a market buy order
 
 ## Golden Rules
 
@@ -414,7 +415,7 @@ def create_task(title: str, due_date: int, priority: Priority, description: str 
 
 Let's compare "vanilla" and `pydantic` versions:
 
-1) The vanilla version requiring throwing an exception in every template situation.
+1) The vanilla version requiring throwing an exception in every boilerplate situation.
    The pydantic version only requires throwing an exception when due date is invalid.
    In other cases it validates all automatically, according to type hints and such params as `max_length`.
 

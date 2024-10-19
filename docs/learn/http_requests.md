@@ -493,22 +493,24 @@ Query parameters are appended to the URL of an HTTP request and are used to send
 They typically appear after a question mark (`?`) in the URL and are separated by ampersands (`&`).
 Query parameters are commonly used for filtering, sorting, or paginating data.
 
+!!! example
 ![Query Example](/img/http_requests/query.png)
 
-For example, a URL with query parameters might look like this:
+    URL with query parameters might look like this:
+    
+    ```
+    https://api.example.com/users?page=2&per_page=5
+    ```
 
-```
-https://api.example.com/data?search=keyword&page=2&limit=10
-```
 
-In Python's `requests` module, you can pass query parameters as a dictionary using the `params` argument:
-
-```python
-import requests
-
-params = {'search': 'keyword', 'page': 2, 'limit': 10}
-response = requests.get('https://api.example.com/data', params=params)
-```
+    In Python's `requests` module, you can pass query parameters as a dictionary using the `params` argument:
+    
+    ```python
+    import requests
+    
+    params = {'page': 2, 'per_page': 5}
+    response = requests.get('https://api.example.com/users', params=params)
+    ```
 
 ### Body Parameters
 
@@ -516,18 +518,7 @@ Body parameters are used to send data to the server as part of the request body,
 This data can be sent in various media types, such as JSON, form data,
 or XML. Body parameters are not visible in the URL and are used for operations that create or update resources.
 
-![Body example](/img/http_requests/body.png)
-
-When sending JSON data, you can use the `json` argument in `requests`:
-
-```python
-import requests
-
-data = {'key': 'value', 'another_key': 'another_value'}
-response = requests.post('https://api.example.com/data', json=data)
-```
-
-For form data, you can use the `data` argument:
+In Python, for form data or non-JSON data, like XML, you can use the `data` argument:
 
 ```python
 import requests
@@ -545,28 +536,41 @@ files = {'file': open('mynotes.txt')}
 response = requests.post('https://api.example.com/data', files=files)
 ```
 
+!!! example
+![Body example](/img/http_requests/body.png)
+
+    When sending JSON data, you can use the `json` argument in `requests`:
+    
+    ```python
+    import requests
+    
+    data = {'username': 'bob2003', 'password': 'secret_password', 'email': 'bob2003@gmail.com'}
+    response = requests.post('https://api.example.com/register', json=data)
+    ```
+
 ### Path Parameters
 
 Path parameters are used to specify specific resources within the URL. They are part of the URL path and are typically
 enclosed in curly braces `{}` in the API definition. Path parameters allow you to pass information that determines
 which resource you want to interact with.
 
+!!! example
 ![Path example](/img/http_requests/path.png)
 
-For example, in the following URL, `123` is a path parameter representing a specific resource ID:
-
-```
-https://api.example.com/data/123
-```
-
-In `requests`, you can format the URL string to include path parameters:
-
-```python
-import requests
-
-resource_id = 123
-response = requests.get(f'https://api.example.com/data/{resource_id}')
-```
+    For example, in the following URL, `123` is a path parameter representing a specific user ID:
+    
+    ```
+    https://api.example.com/users/123
+    ```
+    
+    In `requests`, you can format the URL string to include path parameters:
+    
+    ```python
+    import requests
+    
+    user_id = 123
+    response = requests.get(f'https://api.example.com/users/{user_id}')
+    ```
 
 ### Headers
 
@@ -574,14 +578,15 @@ Headers are key-value pairs sent along with the request that provide additional 
 Headers can include information such as content type, authorization tokens, user agents, and more.
 They are essential for ensuring the server correctly processes the request.
 
+!!! example
 You can pass headers in `requests` using the `headers` argument:
 
-```python
-import requests
-
-headers = {'Authorization': 'Bearer YOUR_TOKEN', 'Content-Type': 'application/json'}
-response = requests.get('https://api.example.com/data', headers=headers)
-```
+    ```python
+    import requests
+    
+    headers = {'Authorization': 'Bearer YOUR_TOKEN', 'Content-Type': 'application/json'}
+    response = requests.get('https://api.example.com/data', headers=headers)
+    ```
 
 ### Cookies
 
@@ -589,14 +594,15 @@ Cookies are small pieces of data stored on the client side and sent along with H
 They are often used for session management, tracking user preferences, or maintaining state between requests.
 When the server sets a cookie, it can be sent back with subsequent requests to maintain the session or other data.
 
+!!! example
 In `requests`, you can manage cookies by passing them in the `cookies` argument:
 
-```python
-import requests
-
-cookies = {'session_id': 'your_session_id'}
-response = requests.get('https://api.example.com/data', cookies=cookies)
-```
+    ```python
+    import requests
+    
+    cookies = {'session_id': 'your_session_id'}
+    response = requests.get('https://api.example.com/data', cookies=cookies)
+    ```
                     
 ## Better Solution for HTTP Requests: Introducing `httpx`
 
