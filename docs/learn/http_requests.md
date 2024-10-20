@@ -494,7 +494,7 @@ They typically appear after a question mark (`?`) in the URL and are separated b
 Query parameters are commonly used for filtering, sorting, or paginating data.
 
 !!! example
-![Query Example](/img/http_requests/query.png)
+    ![Query Example](/img/http_requests/query.png)
 
     URL with query parameters might look like this:
     
@@ -537,7 +537,7 @@ response = requests.post('https://api.example.com/data', files=files)
 ```
 
 !!! example
-![Body example](/img/http_requests/body.png)
+    ![Body example](/img/http_requests/body.png)
 
     When sending JSON data, you can use the `json` argument in `requests`:
     
@@ -555,7 +555,7 @@ enclosed in curly braces `{}` in the API definition. This is related to placehol
 used to represent a value that will be provided or substituted later.
 
 !!! example
-![Path example](/img/http_requests/path.png)
+    ![Path example](/img/http_requests/path.png)
 
     For example, {id} is path parameter (placeholder). In the following URL, `123` is a path parameter
     representing a specific user ID:
@@ -580,7 +580,7 @@ Headers can include information such as content type, authorization tokens, user
 They are essential for ensuring the server correctly processes the request.
 
 !!! example
-You can pass headers in `requests` using the `headers` argument:
+    You can pass headers in `requests` using the `headers` argument:
 
     ```python
     import requests
@@ -596,7 +596,7 @@ They are often used for session management, tracking user preferences, or mainta
 When the server sets a cookie, it can be sent back with subsequent requests to maintain the session or other data.
 
 !!! example
-In `requests`, you can manage cookies by passing them in the `cookies` argument:
+    In `requests`, you can manage cookies by passing them in the `cookies` argument:
 
     ```python
     import requests
