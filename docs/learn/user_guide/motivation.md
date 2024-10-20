@@ -11,7 +11,7 @@ to easily integrate API functionality without needing to deal with the lower-lev
 Usually, you deal with API wrappers as Python libraries.
 
 !!! example
-`python-binance` library wrapping the API of the cryptocurrency exchange Binance.
+      `python-binance` library wrapping the API of the cryptocurrency exchange Binance.
 
       ```python
       from binance.client import Client
