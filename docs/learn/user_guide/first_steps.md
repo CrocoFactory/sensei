@@ -139,7 +139,8 @@ def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon:
 
 The function body is omitted because **Sensei** automatically handles the API call and response mapping.
 In this case, the function returns a `Pokemon` object, ensuring that the data fetched from the API matches the
-`Pokemon` model. The return type we will also call **response type**.
+`Pokemon` model. The return type we will also
+call [response type](/learn/user_guide/params_response.html#response-types).
 
 /// info
 This "omitting" pattern is called **Interface-driven function** or **Signature-driven function**, because we do not

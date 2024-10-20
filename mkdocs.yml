@@ -63,7 +63,8 @@ nav:
     - User Guide:
       - Motivation: learn/user_guide/motivation.md
       - First Steps: learn/user_guide/first_steps.md
-      - Param/Response types: learn/user_guide/params_response.md
+      - Params/Response: learn/user_guide/params_response.md
+      - Preparers/Finalizers: learn/user_guide/preparers_finalizers.md
   - About: about.md
 
 

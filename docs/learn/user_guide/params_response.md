@@ -259,4 +259,89 @@ def verify_user(cls, session_id: Annotated[str, Cookie()]) -> bool:
 
 ## Response Types
 
-Response Types
+Response type is the return type of routed function(method). There is a category of response types, that doesn't require
+[Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html), that we will learn in the future.
+That means these types are handled automatically. This category includes:
+
+### `str`
+
+`str` response type refers to the text representation of a response. If this type is present, the `text` attribute
+of `Response` object is returned.
+
+!!! example
+When you need to get `html` code of a page, you can use `str`.
+
+    ```python
+    @router.get('/index.html')
+    def get_page() -> str: ...
+
+    get_page()
+    ```
+
+    ```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Main page</title>
+    </head>
+    <body>
+        <h1>Hello, World!</h1>
+        <a href="https://example.com">Visite</a>
+    </body>
+    </html>
+    ```
+
+### `bytes`
+
+`bytes` response types refers to raw binary representation of a response. If this type is present, the `content`
+attribute
+of `Response` object is returned.
+
+!!! example
+When you need to query the binary file, you can use `bytes`.
+
+    ```python
+    from PIL import Image
+    from io import BytesIO
+
+    @router.get('/ai_image')
+    def generate_image(style: str, resolution: Resolution) -> bytes: ...
+    
+    image_bytes = generate_image("cartoon", Resolution(1200, 400))
+    image = Image.open(BytesIO(image_bytes))
+    ```
+
+### `dict`
+
+`dict` response type refers to the JSON representation of a response. If this type is present, the result of `json()`
+method of `Response` object is returned.
+
+Instead of `dict` you can provide `dict[KT, VT]`, where `KT` is key type and `VT` is value type.
+
+/// tip
+Use `dict` response type only when validations for specific fields are redundant or useless
+
+```python
+@router.get('/status')
+def get_status() -> dict[str, Union[str, bool]]: ...
+
+
+get_status()
+```
+
+```json
+{
+  "version": "1.0.0",
+  "available": true
+}
+
+```
+
+In this example, adding validations for `version` and `available` field could be redundant. Espesially, if this function
+is
+used as helper.
+///
+
+### `list[dict]`
