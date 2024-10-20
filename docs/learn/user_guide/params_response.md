@@ -226,7 +226,7 @@ file with non-UTF8 characters, Sensei cannot finish serialization and will throw
     ```python 
     @router.post('/upload')
     def upload_image(image: Annotated[bytes, Body(media_type='multipart/form-data')]) -> str:
-    ...
+        ...
 
     with open('/path/to/image', 'rb') as f:
         image = f.read()
