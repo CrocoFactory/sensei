@@ -269,7 +269,7 @@ That means these types are handled automatically. This category includes:
 of `Response` object is returned.
 
 !!! example
-When you need to get `html` code of a page, you can use `str`.
+    When you need to get `html` code of a page, you can use `str`.
 
     ```python
     @router.get('/index.html')
@@ -300,7 +300,7 @@ attribute
 of `Response` object is returned.
 
 !!! example
-When you need to query the binary file, you can use `bytes`.
+    When you need to query the binary file, you can use `bytes`.
 
     ```python
     from PIL import Image
