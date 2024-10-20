@@ -235,9 +235,9 @@ Models created using `APIModel` have validation.
 This means if you pass value not matching corresponding field constraints, `ValidationError` will be thrown.
 
 !!! failure "ValidationError"
-```python
-User(id=-1, username="user", email="randomstr", age=18.01, is_active=-1)
-```
+    ```python
+    User(id=-1, username="user", email="randomstr", age=18.01, is_active=-1)
+    ```
 
     4 validation errors for User
     id
