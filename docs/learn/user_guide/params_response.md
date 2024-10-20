@@ -109,11 +109,11 @@ def create_user(cls, user: Annotated[User, Body()]) -> User:
 If the content of your request body is not default (e.g JSON), you can change its media-type
 
 !!! example
-   ```python
-   @router.post('/create_user')
-   def create_user(cls, user: Annotated[User, Body(media_type='application/xml')]) -> User:
-       ...
-   ```
+    ```python
+    @router.post('/create_user')
+    def create_user(cls, user: Annotated[User, Body(media_type='application/xml')]) -> User:
+        ...
+    ```
 
 #### Embed/Non-embed
 
