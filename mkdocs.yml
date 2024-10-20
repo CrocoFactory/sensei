@@ -55,16 +55,16 @@ repo_url: https://github.com/CrocoFactory/sensei
 
 nav:
   - Sensei: index.md
-- Learn:
-  - learn/learn.md
-  - Type Hints: learn/type_hints.md
-  - Concurrency/Parallelism: learn/concurrency_parallelism.md
-  - HTTP Requests: learn/http_requests.md
-  - User Guide:
+  - Learn:
+    - learn/learn.md
+    - Type Hints: learn/type_hints.md
+    - Concurrency/Parallelism: learn/concurrency_parallelism.md
+    - HTTP Requests: learn/http_requests.md
+    - User Guide:
       - Motivation: learn/user_guide/motivation.md
       - First Steps: learn/user_guide/first_steps.md
       - Param/Response types: learn/user_guide/params_response.md
-- About: about.md
+  - About: about.md
 
 
 markdown_extensions:
