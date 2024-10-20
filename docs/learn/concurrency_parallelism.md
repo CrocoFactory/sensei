@@ -277,7 +277,7 @@ You can think of the event loop as a conductor, coordinating when each coroutine
     use of resources.
 
   !!! example
-  Consider a program that needs to download multiple web pages:
+        Consider a program that needs to download multiple web pages:
 
         **Synchronous Version:**
         
