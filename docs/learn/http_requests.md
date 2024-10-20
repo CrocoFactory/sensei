@@ -514,9 +514,9 @@ Query parameters are commonly used for filtering, sorting, or paginating data.
 
 ### Body Parameters
 
-Body parameters are used to send data to the server as part of the request body, particularly in POST and PUT requests.
-This data can be sent in various media types, such as JSON, form data,
-or XML. Body parameters are not visible in the URL and are used for operations that create or update resources.
+Body parameters are used to send data to the server as part of the request body, particularly in POST, PATCH
+and PUT requests. This data can be sent in various media types, such as JSON, form data, or XML.
+Body parameters are not visible in the URL and are used for operations that create or update resources.
 
 In Python, for form data or non-JSON data, like XML, you can use the `data` argument:
 
@@ -551,13 +551,14 @@ response = requests.post('https://api.example.com/data', files=files)
 ### Path Parameters
 
 Path parameters are used to specify specific resources within the URL. They are part of the URL path and are typically
-enclosed in curly braces `{}` in the API definition. Path parameters allow you to pass information that determines
-which resource you want to interact with.
+enclosed in curly braces `{}` in the API definition. This is related to placeholders. Placeholder is a temporary symbol
+used to represent a value that will be provided or substituted later.
 
 !!! example
 ![Path example](/img/http_requests/path.png)
 
-    For example, in the following URL, `123` is a path parameter representing a specific user ID:
+    For example, {id} is path parameter (placeholder). In the following URL, `123` is a path parameter
+    representing a specific user ID:
     
     ```
     https://api.example.com/users/123

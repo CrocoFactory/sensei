@@ -10,8 +10,9 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/sensei?color=%23F94526)](https://pypi.org/project/sensei/)
 [![PyPi Version](https://img.shields.io/pypi/v/sensei?color=%23F94526)](https://pypi.org/project/sensei/)
 [![Coverage](https://raw.githubusercontent.com/CrocoFactory/sensei/main/badges/coverage.svg)](https://pypi.org/project/sensei/)
-           
-The Python framework, that provides a quick way to build API wrappers. Use type hints, to build requests, with little or no implementation
+
+The Python framework that provides a quick way to build robust HTTP requests. Use type hints, to build requests, with
+little or no implementation
 
 ---
 

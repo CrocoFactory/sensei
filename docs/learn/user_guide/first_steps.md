@@ -38,7 +38,8 @@ from typing import Annotated
 from sensei import Router, Path, APIModel
 ```
 
-`Annotated` is imported from Python's `typing` module, allowing us to add metadata (like **Param types**) to variables.
+`Annotated` is imported from Python's `typing` module, allowing us to add metadata (like
+[Param Types](/learn/user_guide/params_response.html#param-types)) to variables.
 
 `Router`, `Path`, and `APIModel` are imported from the Sensei framework.
 
@@ -79,7 +80,7 @@ of [`pydantic`](https://docs.pydantic.dev/) for models
 in Sensei
 ///
 
-### Step 4: Defining the `get_pokemon` Endpoint
+### Step 4: Defining the Routed Function
 
 ```python
 @router.get('/pokemon/{name}')
@@ -112,7 +113,7 @@ Instead of `@router.get`, you can use the other operations(HTTP methods):
 * `@router.head`
 * `@router.options`
 
-The result of these decorator is called **routed function(method)**
+The result of these decorators is called **routed function(method)**
 
 /// warning
 Routed functions must not have body.
@@ -158,9 +159,10 @@ Let's consider the algorithm of call:
 
 1) Calling `get_pokemon` function with the argument `name="pikachu"`.
 
-2) Collecting function's return type and arguments, including its names and types, **Param types**, such as `Path`,
-   `Query`, `Body`,
-   `Cookie`, `Header`, `File`, `Form`, including argument validations placed inside them.
+2) Collecting function's return type and arguments, including its names and
+   types, [Param Types](/learn/user_guide/params_response.html#param-types),
+   such as `Path`, `Query`, `Body`, `Cookie`, `Header`, `File`, `Form`, including argument validations placed inside
+   them.
 
 3) Validating input args. In this case `name="pikachu"`
 
@@ -234,7 +236,7 @@ This means if you pass value not matching corresponding field constraints, `Vali
 
 !!! failure "ValidationError"
 ```python
-User(id=-1, username="user", email="randomstr", age=18.01, is_active="false")
+User(id=-1, username="user", email="randomstr", age=18.01, is_active=-1)
 ```
 
     4 validation errors for User
@@ -339,9 +341,11 @@ There are also many constrained types called by pattern `con<type>`:
 The same validation rules can also be applied using `Field`. There are two approaches to use it.
 
 /// note | Technical Details
-Sensei's **Param Types**, such as `Path`, `Query`, `Cookie`, `Header`, `Body`, `File` and `Form` are inherited from
+Sensei's [Param Types](/learn/user_guide/params_response.html#param-types), such as `Path`, `Query`, `Cookie`, `Header`,
+`Body`, `File` and `Form` are inherited from
 `FieldInfo`,
-produced by `Field` function. All approaches that will be described are applied to **Param types**.  
+produced by `Field` function. All approaches that will be described are applied
+to [Param Types](/learn/user_guide/params_response.html#param-types).  
 ///
 
 ##### Annotated
@@ -550,6 +554,88 @@ print(task)
 ```
 ///
 
+### Routed Methods
+
+You can create a model that performs both validation and making request. This is `OOP-style` of making requests with
+Sensei.
+
+```python
+from typing import Annotated
+from typing_extensions import Self
+from sensei import APIModel, Router, Path
+from pydantic import NonNegativeInt
+
+router = Router('https://api.example.com/')
+
+@router.model()  # (1)!  
+class User(APIModel):
+    @classmethod
+    @router.get('/users/{id_}')
+    def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: ... # (2)!
+```
+
+1. Binding `Router` to the model
+2. This is called [routed method](/learn/user_guide/first_steps.html#step-4-defining-the-routed-function)
+
+The algorithm is the following:
+
+1. Create a `Router` instance
+    ```python
+    router = Router('https://api.example.com/')
+    ```    
+
+2. Bind router to a model.
+    ```python
+    @router.model()  
+    class User(APIModel):
+    ```   
+
+3. Define endpoints through [routed methods](/learn/user_guide/first_steps.html#step-4-defining-the-routed-function)
+    ```python
+    @classmethod
+    @router.get('/users/{id_}')
+    def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: ... 
+    ```    
+
+As result, `User.get` returns `User` object:
+
+```python
+user = User.get(1)
+print(user.email)
+```
+
+```text
+george.bluth@gmail.com
+```
+
+`OOP-style` is good practice to organize endpoints in one class when they related to one model.
+
+/// warning
+You must not decorate a method as routed in a class not inherited from `APIModel`.
+This make impossible to use **Finalizers/Preparers** that we will learn in the future and can lead to issues in the
+other
+situations.
+
+For instance, there is a common error to use `BaseModel` for the same purpose as `APIModel`:
+
+```python
+from pydantic import BaseModel
+from typing import Annotated
+from typing_extensions import Self
+from sensei import Router, Path
+from pydantic import NonNegativeInt
+
+router = Router('https://api.example.com/')
+
+@router.model() 
+class User(BaseModel):
+    @classmethod
+    @router.get('/users/{id_}')
+    def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: ... 
+```
+
+///
+
 ## Recap
 
 Sensei abstracts away much of the manual work, letting developers focus on function signatures while the framework
@@ -575,8 +661,9 @@ It inherits from `APIModel`, which provides validation and serialization.
 
 ### 4. Creating the Endpoint:
 
-The `get_pokemon` function is a routed function decorated with `@router.get`, defining a GET request for
-`/pokemon/{name}`.
+The `get_pokemon` function is
+a [routed function](/learn/user_guide/first_steps.html#step-4-defining-the-routed-function)
+decorated with `@router.get`, defining a GET request for`/pokemon/{name}`.
 This uses `Annotated` to ensure that `name` is a string and adheres to the validation rule (max length of 300).
 
 ### 5. Making the Request:
