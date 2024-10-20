@@ -276,7 +276,7 @@ You can think of the event loop as a conductor, coordinating when each coroutine
     resulting in inefficiency. With `async/await`, your program can handle I/O-bound tasks concurrently, making better 
     use of resources.
 
-  !!! example
+    !!! example
         Consider a program that needs to download multiple web pages:
 
         **Synchronous Version:**
