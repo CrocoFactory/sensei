@@ -11,18 +11,18 @@ Sensei's Param Types are inherited from `FieldInfo`, produced by `Field` functio
 that was described for [Field Types](/learn/user_guide/first_steps.html#field-types).
 
 !!! example
-Here is a function that creates user and returns JWT token, corresponding to the user.
-```python
-@router.post('/users')
-def create_user(
-    id: Annotated[int, Body(ge=0)],
-    username: Annotated[str, Body(pattern=r'^\w+$')],
-    email: Annotated[EmailStr, Body()],
-    age: Annotated[int, Body(ge=14)] = 18,
-    is_active: Annotated[bool, Body()] = True,
-) -> str:
-    pass
-```
+    Here is a function that creates user and returns JWT token, corresponding to the user.
+    ```python
+    @router.post('/users')
+    def create_user(
+        id: Annotated[int, Body(ge=0)],
+        username: Annotated[str, Body(pattern=r'^\w+$')],
+        email: Annotated[EmailStr, Body()],
+        age: Annotated[int, Body(ge=14)] = 18,
+        is_active: Annotated[bool, Body()] = True,
+    ) -> str:
+       pass
+    ```
 
 Let's create some models and show examples, using them.
 
@@ -90,7 +90,7 @@ Methods that usually include query parameters:
 - DELETE
 - HEAD
 - OPTIONS
-  ///
+///
 
 ### Body
 
@@ -109,11 +109,11 @@ def create_user(cls, user: Annotated[User, Body()]) -> User:
 If the content of your request body is not default (e.g JSON), you can change its media-type
 
 !!! example
-```python
-@router.post('/create_user')
-def create_user(cls, user: Annotated[User, Body(media_type='application/xml')]) -> User:
-    ...
-```
+   ```python
+   @router.post('/create_user')
+   def create_user(cls, user: Annotated[User, Body(media_type='application/xml')]) -> User:
+       ...
+   ```
 
 #### Embed/Non-embed
 
@@ -184,7 +184,7 @@ Methods that usually include request body:
 - POST
 - PUT
 - PATCH
-  ///
+///
 
 ### Form
 
@@ -223,10 +223,10 @@ Let's assume you use `Body(media_type='multipart/form-data')` instead of `File`.
 file with non-UTF8 characters, Sensei cannot finish serialization and will throw the `UnicodeDecodeError`.
 
 !!! failure "UnicodeDecodeError"
-```python
-@router.post('/upload')
-def upload_image(image: Annotated[bytes, Body(media_type='multipart/form-data')]) -> str:
-...
+    ```python 
+    @router.post('/upload')
+    def upload_image(image: Annotated[bytes, Body(media_type='multipart/form-data')]) -> str:
+    ...
 
     with open('/path/to/image', 'rb') as f:
         image = f.read()
