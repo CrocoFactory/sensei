@@ -262,6 +262,19 @@ def verify_user(cls, session_id: Annotated[str, Cookie()]) -> bool:
 Response type is the return type of routed function(method). There is a category of response types, that doesn't require
 [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html), that we will learn in the future.
 That means these types are handled automatically. This category includes:
+        
+### `None`
+
+If this type is present or function has no return type , `None` is returned.
+
+!!! example
+    You can use `None`, when function doesn't return relevant response or doesn't return it at all. 
+    For instance, endpoints with `DELETE` method often don't return a response.
+
+    ```python
+    @router.delete('/users')
+    def delete_user() -> None: ...
+    ```
 
 ### `str`
 
@@ -315,13 +328,17 @@ of `Response` object is returned.
 
 ### `dict`
 
-`dict` response type refers to the JSON representation of a response. If this type is present, the result of `json()`
-method of `Response` object is returned.
+`dict` response type refers to the JSON representation of a response. 
+In particular, it refers to JSON as a `dict`. Don't confuse with [`list[dict]`](/learn/user_guide/params_response.html#listdict). 
+If this type is present, the result of `json()` method of `Response` object is returned.
 
 Instead of `dict` you can provide `dict[KT, VT]`, where `KT` is key type and `VT` is value type.
 
 /// tip
-Use `dict` response type only when validations for specific fields are redundant or useless
+Use `dict` response type only when response validation is redundant or useless
+      
+In this example, adding validations for `version` and `available` field could be redundant. Especially, if this function
+is used as helper.
 
 ```python
 @router.get('/status')
@@ -336,12 +353,257 @@ get_status()
   "version": "1.0.0",
   "available": true
 }
-
 ```
 
-In this example, adding validations for `version` and `available` field could be redundant. Espesially, if this function
-is
-used as helper.
 ///
 
 ### `list[dict]`
+
+`list[dict]` response type also refers to the JSON representation of a response, but it refers to JSON as a `list[dict]`. 
+If this type is present, the result of `json()` method of `Response` object is returned.
+
+Instead of `list[dict]` you can provide `list[dict[KT, VT]]`, where `KT` is key type and `VT` is value type.
+
+/// tip
+Most probably, you will not find a situation, where JSON is represented as `list`. 
+But a list can be wrapped in a field, such as "data". 
+You can use this type in combination with `__finalize_json__` hook, that we will cover in 
+[Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html). 
+
+This response type also should be used when response validation is redundant or useless.
+   
+In this example, if we need this model only as output in this function and don't need the same model as input in other, 
+you can use `list[dict]`
+
+```python
+@router.get('/users')
+def get_users() -> list[dict[str, Union[str, int]]]: ...
+```
+///
+
+### `<BaseModel>`
+`<BaseModel>` response type refers to unpacking JSON representation of a response to the constructor of a 
+subclass of `BaseModel` from `pydantic`. This means: 
+
+1) If response is represented as a dictionary, like that:
+        ```json
+        {"name":  "alex", "id":  1, "city":  "Manchester"}
+        ```
+
+2) You can make this model:
+       ```python
+       class User(APIModel):
+           id: NonNegativeInt
+           name: str
+           city: str
+       ```
+
+3) And unpack `{"name":  "alex", "id":  1, "city":  "Manchester"}` to `User`. As a result you will have `User` object. 
+       ```python
+       User(id=1, name='alex', city='Manchester')
+       ```
+
+The algorithm above is what Sensei does, when you provide `<BaseModel>` response type. 
+                            
+/// info
+Here `<BaseModel>` is a placeholder, that should be substituted by class name of model, inherited from `BaseModel`.  
+///        
+
+This response type is better than `dict`, because validations of `BaseModel` are
+performed.
+
+
+!!! example
+    Here is example was shown in [First Steps](/learn/user_guide/first_steps.html#first-request)
+    ```python
+    class Pokemon(APIModel):
+        name: str
+        id: int
+        height: int
+        weight: int
+    
+    @router.get('/pokemon/{name}')
+    def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon: 
+        ...
+    ```
+
+### `list[<BaseModel>]`
+`list[BaseModel]` response type refers to **sequential** unpacking JSON representation of a response to the constructor of a 
+subclass of `BaseModel` from `pydantic`. That means: 
+
+1) If response represented as a list of dictionaries of the same structure, like that:  
+        ```json
+        [{"name":  "alex", "id":  1, "city":  "Manchester"}, {"name":  "bob", "id":  2, "city":  "London"}, ...]
+        ```
+           
+2) You can make this model:
+        ```python
+        class User(APIModel):
+            id: NonNegativeInt
+            name: str
+            city: str
+        ```
+
+3) And unpack `{"name":  "alex", "id":  1, "city":  "Manchester"}` to `User`, `{"name":  "bob", "id":  2, "city":  "London"}`
+       to `User`, etc. As a result you will have list of `User` objects. 
+       ```python
+       [User(id=1, name='alex', city='Manchester'), User(id=2, name='bob', city='London'), ...]
+       ```
+
+The algorithm above is what Sensei returns, when you provide `list[<BaseModel>]` response type.
+
+
+/// info
+Here `<BaseModel>` is a placeholder, that should be substituted by class name of model, inherited from `BaseModel`.  
+///  
+
+This response type is better than `list[dict]`, because validations of `BaseModel` are
+performed.
+       
+/// tip
+Most probably, you will not find a situation, where JSON is represented as `list`. 
+But a list can be wrapped in a field, such as "data". 
+You can use this type in combination with `__finalize_json__` hook, that we will cover in 
+[Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html).
+
+```python
+@router.get('/users')
+def get_users() -> list[User]: ...
+```
+///
+
+### `Self`
+`Self` response type is used only in, but it's used only in [routed methods](/learn/user_guide/first_steps.html#routed-methods)
+of classes (see `OOP-style`), specifically in class method(`@classmethod`) and instance methods(`self`). To use `Self`, 
+you need to import it.
+          
+In python 3.8
+```python
+from typing_extensions import Self
+```
+
+In python >=3.9
+```python
+from typing import Self
+```
+
+Let's explain two use cases:
+
+#### Class Method
+`Self` in class method refers to the same as [`<BaseModel>`](/learn/user_guide/params_response.html#basemodel). 
+The current class in which the method is declared is taken as the model
+    
+!!! example
+    ```python
+    @router.model()  
+    class User(APIModel):
+        @classmethod
+        @router.get('/users/{id_}')
+        def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: 
+            ...
+    ```
+
+#### Instance Method
+`Self` in instance method refers to the current object from which the method was called. This object is returned.
+
+!!! example
+    You can use it in `PUT` and `PATCH` methods that update data related to the current model. It's a common approach, 
+    to return the object for which the update was called.
+
+    In this example we use [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html) 
+
+    ```python
+    class User(APIModel):
+        ...
+        @router.patch('/users/{id_}')
+        def update(
+                self,
+                name: str,
+                job: str
+        ) -> Self:
+            ...
+    
+        @update.prepare
+        def _update_in(self, args: Args) -> Args:
+            args.url = format_str(args.url, {'id_': self.id})
+            return args
+    
+        @update.finalize()
+        def _update_out(self, response: Response) -> Self:
+            json_ = response.json()
+            self.first_name = json_['name']
+            return self
+    ```
+
+#### Forward Reference
+In python 3.8 `Self` is not included into `typing` module, but is included into `typing_extensions`. If for some reason you can't use `Self`, you can achieve
+the same functionality using **Forward References**.
+
+/// info
+[Forward reference](https://peps.python.org/pep-0484/#forward-references) is way to resolve issue, when a type hint contains names that have not been defined yet. 
+Basically, it is a string literal, that can express definition, to be resolved later. 
+
+For example, the following code, namely constructor definition, does not work:
+
+```python
+class Tree:
+    def __init__(self, left: Tree, right: Tree):
+        self.left = left
+        self.right = right
+```
+
+To address this, we write:
+
+```python
+class Tree:
+    def __init__(self, left: 'Tree', right: 'Tree'):
+        self.left = left
+        self.right = right
+```
+///
+       
+For instance, this code:
+
+```python
+@router.model()  
+class User(APIModel):
+    @classmethod
+    @router.get('/users/{id_}')
+    def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: 
+        ...
+```
+
+Can also be written as:
+
+```python
+@router.model()  
+class User(APIModel):
+    @classmethod
+    @router.get('/users/{id_}')
+    def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> "User": 
+        ...
+```
+         
+### `list[Self]`
+`list[Self]` it's a mix of [`list[<BaseMode>]`](/learn/user_guide/params_response.html#listbasemodel) 
+and [`Self`](/learn/user_guide/params_response.html#self). It refers to **sequential** unpacking JSON representation 
+of a response to the constructor of a current `BaseModel` class from which the method was called. 
+But unlike [`Self`](/learn/user_guide/params_response.html#self), it can be used only in class methods.
+
+!!! example
+    This code 
+    ```python
+    @router.get('/users')
+    def get_users() -> list[User]: ...
+    ```
+
+    Can be rewritten as
+    ```python
+    class User(APIModel)
+        @router.get('/users')
+        def list() -> list[Self]: ...
+    ```    
+
+#### Forward References 
+You can use [Forward References](/learn/user_guide/params_response.html#forward-reference) as well as for 
+[`Self`](/learn/user_guide/params_response.html#self)

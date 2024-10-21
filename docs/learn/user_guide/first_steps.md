@@ -289,8 +289,8 @@ print(task)
 
 The result will be
 
-```text
-Task(id=1 due_date=datetime.datetime(2024, 10, 15, 15, 30) priority=True)
+```python
+Task(id=1, due_date=datetime.datetime(2024, 10, 15, 15, 30), priority=True)
 ```
 
 ///
@@ -499,7 +499,7 @@ class Video(APIModel):
 print(Video(tags='trend,unreal,good'))
 ```
 
-```text
+```python
 Video(tags=['trend', 'unreal', 'good'])
 ```
 
@@ -613,9 +613,8 @@ george.bluth@gmail.com
 
 /// warning
 You must not decorate a method as routed in a class not inherited from `APIModel`.
-This make impossible to use **Finalizers/Preparers** that we will learn in the future and can lead to issues in the
-other
-situations.
+This make impossible to use [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html), that we will learn in 
+the future, and can lead to issues in the other situations.
 
 For instance, there is a common error to use `BaseModel` for the same purpose as `APIModel`:
 
