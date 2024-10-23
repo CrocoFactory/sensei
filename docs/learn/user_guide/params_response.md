@@ -243,9 +243,19 @@ This function downloads a file while authenticating the user with a token from h
 
 ```python
 @router.get('/download')
-def download_file(cls, auth_token: Annotated[str, Header()]) -> bytes:
+def download_file(cls, x_token: Annotated[str, Header()]) -> bytes:
     ...
 ```
+
+/// info
+When your endpoint relies on custom headers, that are not supported by default in HTTP, you should call it with prefix `X-`.
+For instance, we want to define header containing request signature, that is encoded metadata, such as current time, 
+your username, etc. You should call it like that:
+
+```text
+X-Signature
+```
+///
 
 ### Cookie:
 
@@ -259,9 +269,9 @@ def verify_user(cls, session_id: Annotated[str, Cookie()]) -> bool:
 
 ## Response Types
 
-Response type is the return type of routed function(method). There is a category of response types, that doesn't require
-[Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html), that we will learn in the future.
-That means these types are handled automatically. This category includes:
+Response type is the return type of [routed function(method)](/learn/user_guide/first_steps.html#routed-function). 
+There is a category of response types, that doesn't require [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html), 
+that we will learn in the future. That means these types are handled automatically. This category includes:
         
 ### `None`
 
@@ -273,7 +283,8 @@ If this type is present or function has no return type , `None` is returned.
 
     ```python
     @router.delete('/users')
-    def delete_user() -> None: ...
+    def delete_user() -> None: 
+        ...
     ```
 
 ### `str`
@@ -286,7 +297,8 @@ of `Response` object is returned.
 
     ```python
     @router.get('/index.html')
-    def get_page() -> str: ...
+    def get_page() -> str: 
+        ...
 
     get_page()
     ```
@@ -320,7 +332,8 @@ of `Response` object is returned.
     from io import BytesIO
 
     @router.get('/ai_image')
-    def generate_image(style: str, resolution: Resolution) -> bytes: ...
+    def generate_image(style: str, resolution: Resolution) -> bytes: 
+        ...
     
     image_bytes = generate_image("cartoon", Resolution(1200, 400))
     image = Image.open(BytesIO(image_bytes))
@@ -377,7 +390,8 @@ you can use `list[dict]`
 
 ```python
 @router.get('/users')
-def get_users() -> list[dict[str, Union[str, int]]]: ...
+def get_users() -> list[dict[str, Union[str, int]]]: 
+    ...
 ```
 ///
 
@@ -468,7 +482,8 @@ You can use this type in combination with `__finalize_json__` hook, that we will
 
 ```python
 @router.get('/users')
-def get_users() -> list[User]: ...
+def get_users() -> list[User]: 
+    ...
 ```
 ///
 
@@ -585,25 +600,180 @@ class User(APIModel):
 ```
          
 ### `list[Self]`
-`list[Self]` it's a mix of [`list[<BaseMode>]`](/learn/user_guide/params_response.html#listbasemodel) 
+`list[Self]` it's a mix of [`list[<BaseModel>]`](/learn/user_guide/params_response.html#listbasemodel) 
 and [`Self`](/learn/user_guide/params_response.html#self). It refers to **sequential** unpacking JSON representation 
 of a response to the constructor of a current `BaseModel` class from which the method was called. 
 But unlike [`Self`](/learn/user_guide/params_response.html#self), it can be used only in class methods.
+
+You can use [Forward References](/learn/user_guide/params_response.html#forward-reference) as well as for 
+[`Self`](/learn/user_guide/params_response.html#self)
 
 !!! example
     This code 
     ```python
     @router.get('/users')
-    def get_users() -> list[User]: ...
+    def get_users() -> list[User]: 
+        ...
     ```
 
     Can be rewritten as
     ```python
     class User(APIModel)
         @router.get('/users')
-        def list() -> list[Self]: ...
+        def list() -> list[Self]: 
+            ...
     ```    
 
-#### Forward References 
-You can use [Forward References](/learn/user_guide/params_response.html#forward-reference) as well as for 
-[`Self`](/learn/user_guide/params_response.html#self)
+    Or as
+    ```python
+    class User(APIModel)
+        @router.get('/users')
+        def list() -> list["User"]: 
+            ...
+    ```
+  
+## Alias
+In some situations, we need to follow multiple naming conventions at the same time.
+For instance, it's a common approach to convert fields of some structure from camelCase (or another case) to snake_case 
+to follow Python’s naming conventions.
+
+When you call [routed function(method)](/learn/user_guide/first_steps.html#routed-function),
+Sensei collects argument names and add the corresponding key to request arguments.  
+
+Assume, we have to make the following request:
+
+```http
+POST /users HTTP/1.1
+Content-Type: application/json
+
+{
+    "firstName": "John Doe",
+    "birthCity": "Manchester",
+    ...
+}
+```
+
+Since argument's name corresponds to key in request arguments, you need to write this code:
+
+```python
+@router.post('/users')
+def create_user(firstName: str, birthCity: str) -> User:
+    ...
+```
+
+But this code violates python naming conventions. For instance, PyCharm warns you that "Argument name should be lowercase."
+According to the conventions, arguments in Python should be of the snake case. To resolve this issue, you can use 
+[Case Converters](/learn/user_guide/params_response.html#case-converters).
+
+### Case Converters
+
+**Case Converter** is a function that takes string of one case and converts it to string of another case and similar structure.
+
+!!! example
+    This function converts string to "snake_case"
+
+    ```python
+    def snake_case(s: str) -> str:
+        s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
+        s = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s)
+        s = re.sub(r'\W+', '_', s).lower()
+        s = re.sub(r'_+', '_', s)
+        return s
+    ```
+
+Sensei has few built-in case converters: 
+  
+* snake_case
+* camel_case
+* pascal_case
+* constant_case
+* kebab_case
+* header_case
+
+They are all `closed` relative to each other. This means if
+we take any case converter of provided, we can use it with any other supported case (case related to one of built-in 
+case converter).
+
+For instance, `snake_case("myString") == my_string`, `snake_case("MY_STRING") == my_string`, etc...
+
+/// info
+There is an explanation for **closure** property of case converters for math-lovers. 
+
+^^Definition^^ *Let C = {f~1~, f~2~, ..., f~n~}*, is the set of case converters, *f~i~ : D~i~ -> E~i~.*  
+*If ∀ k, m ∈ {1, ..., n}* and *∀ str ∈  D~k~* condition *f~k~(str) ∈ D~m~* is met *=> {f~1~, f~2~, ..., f~n~}* **closed** 
+relative to each other.
+
+^^Corollary^^ *D~k~ = E~k~ = D~m~ = E~m~ = D ∀ k, m ∈ {1, ..., n} => {f~1~, f~2~, ..., f~n~}* **closed** relative to 
+each other.
+                      
+Let's introduce an auxiliary function - *rcase(str) = random_case~C~(str)*. 
+This is the function, that choose random case from C, and converts string `str` to chosen case. 
+Here is illustration of this closure property.
+
+``` mermaid
+graph LR
+  A[str] -->|passed to function| B{"rcase(str)"};
+  B --> |converts to| C[result];
+  C --> |can be used as arg again| A;
+  A ---->D[final result];
+```
+///
+             
+**Case Converters** can be used for converting case of request parameters and keys of JSON response. Let's explain
+these two use cases:
+
+#### Params
+
+**Case Converters** can set individual converting for specific param types. 
+There are two approaches to apply converting.
+ 
+##### Router
+You can pass case converters as arguments to `Router` constructor.
+
+`<param_type>` corresponds to the `<param_type>_case` argument in `Router` constructor, where `<param_type>` is
+`path`, `query`, etc.
+
+```python
+from sensei import Router, snake_case, kebab_case
+
+router = Router(
+    'https://api.example.com',
+    query_case=snake_case,
+    cookie_case=kebab_case
+)
+```
+
+/// info
+Default value of `header_case` is `header_case` converter
+
+```python
+from sensei.cases import header_case as to_header_case
+
+class Router(IRouter):
+    def __init__(
+        ...
+        header_case: CaseConverter = to_header_case,    
+    ):
+```
+
+Because headers are called this way:
+
+- X-Token
+- Content-Type
+- etc...
+///
+      
+##### Route Decorator
+
+You can pass case converters as arguments to [route decorator](/learn/user_guide/first_steps.html#routed-function).
+These converters have higher priority, than converters passed to `Router`. 
+
+```python
+from sensei import Router, snake_case, kebab_case
+
+router = Router(
+    'https://api.example.com',
+    query_case=snake_case,
+    cookie_case=kebab_case
+)
+```

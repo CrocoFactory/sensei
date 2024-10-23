@@ -95,8 +95,8 @@ It inherits from `APIModel`, which provides validation and serialization.
 
 #### 4. Creating the Endpoint:
 
-The `get_pokemon` function is a routed function decorated with `@router.get`, defining a GET request for
-`/pokemon/{name}`.
+The `get_pokemon` function is a [routed function](/learn/user_guide/first_steps.html#routed-function) decorated with 
+`@router.get`, defining a GET request for `/pokemon/{name}`.
 This uses `Annotated` to ensure that `name` is a string and adheres to the validation rule (max length of 300).
 
 #### 5. Making the Request:

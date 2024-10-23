@@ -638,8 +638,8 @@ This will give you the following transformed response:
 ```
 
 In addition to renaming fields for clarity,
-it is also common to convert field names from camelCase(or another case) to snake_case to follow Python’s naming
-conventions.
+it is also common a common approach to convert field names from camelCase(or another case) to snake_case to follow 
+Python’s naming conventions.
 
 ///info
 Case is the convention used to format the letters and separate words in names of variables, functions, classes,

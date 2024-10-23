@@ -17,7 +17,8 @@ class Pokemon(APIModel):
 
 
 @router.get('/pokemon/{name}')
-def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon: ...
+def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon: 
+    ...
 
 
 pokemon = get_pokemon(name="pikachu")
@@ -84,7 +85,8 @@ in Sensei
 
 ```python
 @router.get('/pokemon/{name}')
-def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon: ...
+def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon: 
+    ...
 ```
 
 This function is decorated with `@router.get`, defining it as a GET request for the `/pokemon/{name}` endpoint.
@@ -103,8 +105,10 @@ The `{name}` is a *path parameter*, dynamically inserted into the API call.
 - `name`: is an argument annotated as a *string* with `Path`, meaning it is a required URL path parameter. Also, in
   `Path` we defined validation, namely checking whether length of name less or equal then 300. `Path` is placed in
   `Annotated` object as metadata.
+        
+#### Routed Function
 
-Instead of `@router.get`, you can use the other operations(HTTP methods):
+Instead of `@router.get`, you can use the other operations (HTTP methods):
 
 * `@router.post`
 * `@router.put`
@@ -113,7 +117,8 @@ Instead of `@router.get`, you can use the other operations(HTTP methods):
 * `@router.head`
 * `@router.options`
 
-The result of these decorators is called **routed function(method)**
+These decorators are called **route decorators** and the result of these decorators is called 
+**routed function(method)**
 
 /// warning
 Routed functions must not have body.
@@ -572,11 +577,12 @@ router = Router('https://api.example.com/')
 class User(APIModel):
     @classmethod
     @router.get('/users/{id_}')
-    def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: ... # (2)!
+    def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: 
+        ... # (2)!
 ```
 
 1. Binding `Router` to the model
-2. This is called [routed method](/learn/user_guide/first_steps.html#step-4-defining-the-routed-function)
+2. This is called [routed method](/learn/user_guide/first_steps.html#routed-function)
 
 The algorithm is the following:
 
@@ -591,7 +597,7 @@ The algorithm is the following:
     class User(APIModel):
     ```   
 
-3. Define endpoints through [routed methods](/learn/user_guide/first_steps.html#step-4-defining-the-routed-function)
+3. Define endpoints through [routed methods](/learn/user_guide/first_steps.html#routed-function)
     ```python
     @classmethod
     @router.get('/users/{id_}')
@@ -631,7 +637,8 @@ router = Router('https://api.example.com/')
 class User(BaseModel):
     @classmethod
     @router.get('/users/{id_}')
-    def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: ... 
+    def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: 
+        ... 
 ```
 
 ///
@@ -661,8 +668,7 @@ It inherits from `APIModel`, which provides validation and serialization.
 
 ### 4. Creating the Endpoint:
 
-The `get_pokemon` function is
-a [routed function](/learn/user_guide/first_steps.html#step-4-defining-the-routed-function)
+The `get_pokemon` function is a [routed function](/learn/user_guide/first_steps.html#routed-function)
 decorated with `@router.get`, defining a GET request for`/pokemon/{name}`.
 This uses `Annotated` to ensure that `name` is a string and adheres to the validation rule (max length of 300).
 
