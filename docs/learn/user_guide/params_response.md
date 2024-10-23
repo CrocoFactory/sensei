@@ -632,7 +632,7 @@ You can use [Forward References](/learn/user_guide/params_response.html#forward-
             ...
     ```
   
-## Alias
+## Making Aliases
 In some situations, we need to follow multiple naming conventions at the same time.
 For instance, it's a common approach to convert fields of some structure from camelCase (or another case) to snake_case 
 to follow Python’s naming conventions.
@@ -653,7 +653,8 @@ Content-Type: application/json
 }
 ```
 
-Since argument's name corresponds to key in request arguments, you need to write this code:
+Since argument's name corresponds to key in [routed function's](/learn/user_guide/first_steps.html#routed-function) 
+request arguments, you need to write this code:
 
 ```python
 @router.post('/users')
@@ -662,7 +663,7 @@ def create_user(firstName: str, birthCity: str) -> User:
 ```
 
 But this code violates python naming conventions. For instance, PyCharm warns you that "Argument name should be lowercase."
-According to the conventions, arguments in Python should be of the snake case. To resolve this issue, you can use 
+Because according to the conventions, arguments in Python should be of the snake case. To resolve this issue, you can use 
 [Case Converters](/learn/user_guide/params_response.html#case-converters).
 
 ### Case Converters
@@ -722,26 +723,31 @@ graph LR
 **Case Converters** can be used for converting case of request parameters and keys of JSON response. Let's explain
 these two use cases:
 
-#### Params
-
-**Case Converters** can set individual converting for specific param types. 
-There are two approaches to apply converting.
- 
-##### Router
+#### Router
 You can pass case converters as arguments to `Router` constructor.
 
 `<param_type>` corresponds to the `<param_type>_case` argument in `Router` constructor, where `<param_type>` is
-`path`, `query`, etc.
-
+`path`, `query`, etc. And there is `response_case` that corresponds to the conversion of response fields of 
+the **first nesting level**.
+      
 ```python
-from sensei import Router, snake_case, kebab_case
+from sensei import Router, camel_case, snake_case
 
 router = Router(
     'https://api.example.com',
-    query_case=snake_case,
-    cookie_case=kebab_case
+    body_case=camel_case,
+    response_case=snake_case
 )
+
+@router.post('/users', query_case=)
+def create_user(first_name: str, birth_city: str, ...) -> User: 
+    ...
 ```
+
+In arguments the example above converts `first_name` to `firstName`, `birth_city` to `birthCity`, etc. 
+
+In JSON response the example performs the reverse process, that is converts 
+`firstName` to `first_name`, `birthCity` to `birth_city`, etc. 
 
 /// info
 Default value of `header_case` is `header_case` converter
@@ -763,17 +769,30 @@ Because headers are called this way:
 - etc...
 ///
       
-##### Route Decorator
+#### Route Decorator
 
 You can pass case converters as arguments to [route decorator](/learn/user_guide/first_steps.html#routed-function).
 These converters have higher priority, than converters passed to `Router`. 
 
-```python
-from sensei import Router, snake_case, kebab_case
+Arguments, responsible for applying converters, have the same names as `Router` constructor.
+        
+!!! tip
+    If API is bad-designed and follows different name conventions at the same time, you can use it. For instance,
+    all endpoints accepts request body with keys of kebab-case, but one "rogue" endpoint accepts keys with keys of
+    camelCase. 
 
-router = Router(
-    'https://api.example.com',
-    query_case=snake_case,
-    cookie_case=kebab_case
-)
-```
+    ```python
+    from sensei import Router, kebab_case, camel_case
+    
+    router = Router(
+        'https://api.example.com',
+        body_case=kebab_case
+    )
+    
+    @router.post('/users', body_case=camel_case)
+    def create_user(first_name: str, birth_city: str, ...) -> User: 
+        ...
+    ```
+    
+### `AliasGenerator`
+Alias
