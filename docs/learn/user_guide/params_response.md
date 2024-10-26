@@ -279,7 +279,7 @@ If this type is present or function has no return type , `None` is returned.
 
 !!! example
     You can use `None`, when function doesn't return relevant response or doesn't return it at all. 
-    For instance, endpoints with `DELETE` method often don't return a response.
+    For instance, endpoints with `DELETE` method often don't return the response.
 
     ```python
     @router.delete('/users')
@@ -289,7 +289,7 @@ If this type is present or function has no return type , `None` is returned.
 
 ### `str`
 
-`str` response type refers to the text representation of a response. If this type is present, the `text` attribute
+`str` response type refers to the text representation of the response. If this type is present, the `text` attribute
 of `Response` object is returned.
 
 !!! example
@@ -320,7 +320,7 @@ of `Response` object is returned.
 
 ### `bytes`
 
-`bytes` response types refers to raw binary representation of a response. If this type is present, the `content`
+`bytes` response types refers to raw binary representation of the response. If this type is present, the `content`
 attribute
 of `Response` object is returned.
 
@@ -341,14 +341,18 @@ of `Response` object is returned.
 
 ### `dict`
 
-`dict` response type refers to the JSON representation of a response. 
+`dict` response type refers to the JSON representation of the response. 
 In particular, it refers to JSON as a `dict`. Don't confuse with [`list[dict]`](/learn/user_guide/params_response.html#listdict). 
-If this type is present, the result of `json()` method of `Response` object is returned.
+
+If this type is present and method is not OPTIONS or HEAD, the result of `json()` method of `Response` object is returned.
+Otherwise, if method is OPTIONS or HEAD, the attribute `headers` of `Response` object is returned. This is the only one response
+type that can be used for automatic header extraction.
 
 Instead of `dict` you can provide `dict[KT, VT]`, where `KT` is key type and `VT` is value type.
 
 /// tip
-Use `dict` response type only when response validation is redundant or useless
+Use `dict` response type only when your want to get headers,
+using 'HEAD' or 'OPTIONS' method, or response validation is redundant or useless
       
 In this example, adding validations for `version` and `available` field could be redundant. Especially, if this function
 is used as helper.
@@ -356,7 +360,6 @@ is used as helper.
 ```python
 @router.get('/status')
 def get_status() -> dict[str, Union[str, bool]]: ...
-
 
 get_status()
 ```
@@ -366,13 +369,22 @@ get_status()
   "version": "1.0.0",
   "available": true
 }
+
+```
+
+Or if this endpoint provides useful headers, we can get it using `dict` response type.
+```python
+@router.head('/status')
+def get_status() -> dict[str, Any]: ...
+
+get_status()
 ```
 
 ///
 
 ### `list[dict]`
 
-`list[dict]` response type also refers to the JSON representation of a response, but it refers to JSON as a `list[dict]`. 
+`list[dict]` response type also refers to the JSON representation of the response, but it refers to JSON as a `list[dict]`. 
 If this type is present, the result of `json()` method of `Response` object is returned.
 
 Instead of `list[dict]` you can provide `list[dict[KT, VT]]`, where `KT` is key type and `VT` is value type.
@@ -396,7 +408,7 @@ def get_users() -> list[dict[str, Union[str, int]]]:
 ///
 
 ### `<BaseModel>`
-`<BaseModel>` response type refers to unpacking JSON representation of a response to the constructor of a 
+`<BaseModel>` response type refers to unpacking JSON representation of the response to the constructor of a 
 subclass of `BaseModel` from `pydantic`. This means: 
 
 1) If response is represented as a dictionary, like that:
@@ -424,7 +436,7 @@ Here `<BaseModel>` is a placeholder, that should be substituted by class name of
 ///        
 
 This response type is better than `dict`, because validations of `BaseModel` are
-performed.
+performed. But unlike `dict`, this type can't be used for automatic header extraction.
 
 
 !!! example
@@ -442,7 +454,7 @@ performed.
     ```
 
 ### `list[<BaseModel>]`
-`list[BaseModel]` response type refers to **sequential** unpacking JSON representation of a response to the constructor of a 
+`list[BaseModel]` response type refers to **sequential** unpacking JSON representation of the response to the constructor of a 
 subclass of `BaseModel` from `pydantic`. That means: 
 
 1) If response represented as a list of dictionaries of the same structure, like that:  
@@ -502,7 +514,7 @@ In python >=3.9
 from typing import Self
 ```
 
-Let's explain two use cases:
+Let's explore two use cases:
 
 #### Class Method
 `Self` in class method refers to the same as [`<BaseModel>`](/learn/user_guide/params_response.html#basemodel). 
@@ -602,7 +614,7 @@ class User(APIModel):
 ### `list[Self]`
 `list[Self]` it's a mix of [`list[<BaseModel>]`](/learn/user_guide/params_response.html#listbasemodel) 
 and [`Self`](/learn/user_guide/params_response.html#self). It refers to **sequential** unpacking JSON representation 
-of a response to the constructor of a current `BaseModel` class from which the method was called. 
+of the response to the constructor of a current `BaseModel` class from which the method was called. 
 But unlike [`Self`](/learn/user_guide/params_response.html#self), it can be used only in class methods.
 
 You can use [Forward References](/learn/user_guide/params_response.html#forward-reference) as well as for 
@@ -631,168 +643,23 @@ You can use [Forward References](/learn/user_guide/params_response.html#forward-
         def list() -> list["User"]: 
             ...
     ```
-  
-## Making Aliases
-In some situations, we need to follow multiple naming conventions at the same time.
-For instance, it's a common approach to convert fields of some structure from camelCase (or another case) to snake_case 
-to follow Python’s naming conventions.
+     
+## Recap
 
-When you call [routed function(method)](/learn/user_guide/first_steps.html#routed-function),
-Sensei collects argument names and add the corresponding key to request arguments.  
+In Sensei, defining [Param Types](#param-types) and [Response Types](#response-types) enables structured request and response handling, 
+promoting flexibility, code clarity, and effective validation. Here's a brief overview:
 
-Assume, we have to make the following request:
+1. [Param Types](#param-types) are used to specify the origin of parameters in HTTP requests (`Path`, `Query`, `Cookie`, `Header`, 
+     `Body`, `File`, `Form`). They provide a consistent way to validate request:
+     - `Path` is for URL path params, `Query` for URL queries, and `Body` for JSON data in requests.
+     - `File` and `Form` types cater to form-data, with `File` designed for binary files.
+     - `Header` and `Cookie` handle HTTP headers and cookies, respectively.
 
-```http
-POST /users HTTP/1.1
-Content-Type: application/json
-
-{
-    "firstName": "John Doe",
-    "birthCity": "Manchester",
-    ...
-}
-```
-
-Since argument's name corresponds to key in [routed function's](/learn/user_guide/first_steps.html#routed-function) 
-request arguments, you need to write this code:
-
-```python
-@router.post('/users')
-def create_user(firstName: str, birthCity: str) -> User:
-    ...
-```
-
-But this code violates python naming conventions. For instance, PyCharm warns you that "Argument name should be lowercase."
-Because according to the conventions, arguments in Python should be of the snake case. To resolve this issue, you can use 
-[Case Converters](/learn/user_guide/params_response.html#case-converters).
-
-### Case Converters
-
-**Case Converter** is a function that takes string of one case and converts it to string of another case and similar structure.
-
-!!! example
-    This function converts string to "snake_case"
-
-    ```python
-    def snake_case(s: str) -> str:
-        s = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', s)
-        s = re.sub('([a-z0-9])([A-Z])', r'\1_\2', s)
-        s = re.sub(r'\W+', '_', s).lower()
-        s = re.sub(r'_+', '_', s)
-        return s
-    ```
-
-Sensei has few built-in case converters: 
-  
-* snake_case
-* camel_case
-* pascal_case
-* constant_case
-* kebab_case
-* header_case
-
-They are all `closed` relative to each other. This means if
-we take any case converter of provided, we can use it with any other supported case (case related to one of built-in 
-case converter).
-
-For instance, `snake_case("myString") == my_string`, `snake_case("MY_STRING") == my_string`, etc...
-
-/// info
-There is an explanation for **closure** property of case converters for math-lovers. 
-
-^^Definition^^ *Let C = {f~1~, f~2~, ..., f~n~}*, is the set of case converters, *f~i~ : D~i~ -> E~i~.*  
-*If ∀ k, m ∈ {1, ..., n}* and *∀ str ∈  D~k~* condition *f~k~(str) ∈ D~m~* is met *=> {f~1~, f~2~, ..., f~n~}* **closed** 
-relative to each other.
-
-^^Corollary^^ *D~k~ = E~k~ = D~m~ = E~m~ = D ∀ k, m ∈ {1, ..., n} => {f~1~, f~2~, ..., f~n~}* **closed** relative to 
-each other.
-                      
-Let's introduce an auxiliary function - *rcase(str) = random_case~C~(str)*. 
-This is the function, that choose random case from C, and converts string `str` to chosen case. 
-Here is illustration of this closure property.
-
-``` mermaid
-graph LR
-  A[str] -->|passed to function| B{"rcase(str)"};
-  B --> |converts to| C[result];
-  C --> |can be used as arg again| A;
-  A ---->D[final result];
-```
-///
-             
-**Case Converters** can be used for converting case of request parameters and keys of JSON response. Let's explain
-these two use cases:
-
-#### Router
-You can pass case converters as arguments to `Router` constructor.
-
-`<param_type>` corresponds to the `<param_type>_case` argument in `Router` constructor, where `<param_type>` is
-`path`, `query`, etc. And there is `response_case` that corresponds to the conversion of response fields of 
-the **first nesting level**.
-      
-```python
-from sensei import Router, camel_case, snake_case
-
-router = Router(
-    'https://api.example.com',
-    body_case=camel_case,
-    response_case=snake_case
-)
-
-@router.post('/users', query_case=)
-def create_user(first_name: str, birth_city: str, ...) -> User: 
-    ...
-```
-
-In arguments the example above converts `first_name` to `firstName`, `birth_city` to `birthCity`, etc. 
-
-In JSON response the example performs the reverse process, that is converts 
-`firstName` to `first_name`, `birthCity` to `birth_city`, etc. 
-
-/// info
-Default value of `header_case` is `header_case` converter
-
-```python
-from sensei.cases import header_case as to_header_case
-
-class Router(IRouter):
-    def __init__(
-        ...
-        header_case: CaseConverter = to_header_case,    
-    ):
-```
-
-Because headers are called this way:
-
-- X-Token
-- Content-Type
-- etc...
-///
-      
-#### Route Decorator
-
-You can pass case converters as arguments to [route decorator](/learn/user_guide/first_steps.html#routed-function).
-These converters have higher priority, than converters passed to `Router`. 
-
-Arguments, responsible for applying converters, have the same names as `Router` constructor.
-        
-!!! tip
-    If API is bad-designed and follows different name conventions at the same time, you can use it. For instance,
-    all endpoints accepts request body with keys of kebab-case, but one "rogue" endpoint accepts keys with keys of
-    camelCase. 
-
-    ```python
-    from sensei import Router, kebab_case, camel_case
-    
-    router = Router(
-        'https://api.example.com',
-        body_case=kebab_case
-    )
-    
-    @router.post('/users', body_case=camel_case)
-    def create_user(first_name: str, birth_city: str, ...) -> User: 
-        ...
-    ```
-    
-### `AliasGenerator`
-Alias
+2. [Response Types](#response-types) define the structure of responses and support automated JSON parsing and response validation:
+     - Basic types like `str`, `bytes`, `None`, and `dict` provide flexible output for text, binary data, or basic JSON.
+     - Structured response types using `BaseModel` ensure data validation, with `Self` and `list[Self]` enhancing 
+       functionality in OOP-style.
+   
+Using these types, Sensei promotes readability and robustness in handling HTTP request/response patterns. 
+Additionally, automated validations streamline error handling, while options like `Self` and `list[Self]` 
+provide scalability for complex models and responses, keeping code DRY and maintainable.

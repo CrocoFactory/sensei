@@ -64,6 +64,7 @@ nav:
       - Motivation: learn/user_guide/motivation.md
       - First Steps: learn/user_guide/first_steps.md
       - Params/Response: learn/user_guide/params_response.md
+      - Making Aliases: learn/user_guide/making_aliases.md
       - Preparers/Finalizers: learn/user_guide/preparers_finalizers.md
   - About: about.md
 

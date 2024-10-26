@@ -131,7 +131,7 @@ Here’s a breakdown of the differences between Python threads and traditional t
         t.join()
     ```
     
-    In this case, while one thread is waiting for a response from a server (I/O operation), other threads can run, 
+    In this case, while one thread is waiting for the response from a server (I/O operation), other threads can run, 
     resulting in better concurrency. The GIL is not a significant bottleneck in I/O-bound operations.
 
 ### How to Overcome GIL Limitations

@@ -54,7 +54,7 @@ But mostly it's hard to implement both versions of the code, following DRY princ
 Most of the attempts lead to the code duplication or bad code architecture.
 
 ///info
-DRY (Don't Repeat Yourself) principle is a software development concept aimed at reducing the repetition of code and
+[DRY (Don't Repeat Yourself)](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) principle is a software development concept aimed at reducing the repetition of code and
 logic.
 The idea is that every piece of knowledge or logic should be represented in a single place in your codebase, and no
 duplications
@@ -440,7 +440,7 @@ Even if you're not a server owner, you're doing a good job for him.
 ##### Reduced latency
 
 Client-side validation allows users to immediately see if they've made an error, improving the user experience by
-avoiding the delay that comes from sending a request to the server and waiting for a response.
+avoiding the delay that comes from sending a request to the server and waiting for the response.
 
 ##### API Rate Limits
 
@@ -637,6 +637,8 @@ This will give you the following transformed response:
 }
 ```
 
+##### Converting Case         
+
 In addition to renaming fields for clarity,
 it is also common a common approach to convert field names from camelCase(or another case) to snake_case to follow 
 Python’s naming conventions.
@@ -654,7 +656,7 @@ There are some common cases:
    Lowercase words separated by hyphens (e.g., `my-variable-name`).  
    **Usage** Primarily used in URLs (HTML, CSS classes/IDs).
 
-3. **UPPER_CASE**  
+3. **CONSTANT_CASE** or **UPPER_CASE**  
    All uppercase letters with underscores between words (e.g., `CONSTANT_VALUE`).  
    **Usage:** Constants in C, C++, Python, and Java.
 
@@ -671,7 +673,6 @@ There are some common cases:
    **Usage:** Often seen in HTTP headers and configuration files.
 
 Each case serves to improve readability and consistency depending on language and context.
-
 ///
 
 Here’s how you can include this conversion when handling API responses:

@@ -25,7 +25,7 @@ sequenceDiagram
 ```
 
 When you interact with an API, you use HTTP to make requests. Each request is an action you want the server to perform. 
-The server then sends a response back, usually in the form of data, a status code, and/or a message.
+The server then sends the response back, usually in the form of data, a status code, and/or a message.
 
 ---
 
@@ -231,6 +231,11 @@ When interacting with an API, you’ll combine a method with an endpoint to perf
 - **GET** `/users/123` – Retrieve information about the user with ID `123`.
 - **POST** `/users` – Create a new user.
 - **DELETE** `/users/123` – Delete the user with ID `123`.
+
+/// info
+HEAD and OPTIONS methods are not explicitly declared in API specification. You can use HEAD, when interacting with any
+GET endpoint and OPTIONS, when interacting with any other endpoints.
+///
 
 ---
 
@@ -677,7 +682,7 @@ When creating an `httpx.Client`, you can customize it with several parameters:
     client = httpx.Client(base_url='https://api.example.com')
     ```
 
-- **`timeout`**: Defines how long the client should wait for a response before timing out. You can set both connect and read timeouts.
+- **`timeout`**: Defines how long the client should wait for the response before timing out. You can set both connect and read timeouts.
 
     ```python
     timeout = httpx.Timeout(connect=5.0, read=10.0)
