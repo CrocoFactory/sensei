@@ -1,17 +1,23 @@
-import sys
 import inspect
-from functools import wraps
-from pydantic import BaseModel
+import sys
 from collections import OrderedDict
-from sensei._utils import placeholders
-from typing import Any, get_args, Callable, TypeVar
-from .types import HTTPMethod, MethodType
+from functools import wraps
+from typing import Any, get_args, Callable, TypeVar, Optional, Protocol
+
+from pydantic import BaseModel, ConfigDict
 from pydantic._internal._model_construction import ModelMetaclass
+
+from sensei._utils import placeholders
+from .types import HTTPMethod, MethodType
 
 _T = TypeVar("_T")
 
 
-def make_model(model_name: str, model_args: dict[str, Any]) -> type[BaseModel]:
+def make_model(
+        model_name: str,
+        model_args: dict[str, Any],
+        model_config: Optional[ConfigDict] = None,
+) -> type[BaseModel]:
     annotations = {}
     defaults = {}
     for key, arg in model_args.items():
@@ -22,15 +28,20 @@ def make_model(model_name: str, model_args: dict[str, Any]) -> type[BaseModel]:
         else:
             annotations[key] = arg
 
+    namespace = {
+        '__module__': sys.modules[__name__],
+        '__qualname__': model_name,
+        '__annotations__': annotations,
+        **defaults
+    }
+
+    if model_config:
+        namespace['model_config'] = model_config
+
     model: type[BaseModel] = ModelMetaclass(  # type: ignore
         model_name,
         (BaseModel,),
-        {
-            '__module__': sys.modules[__name__],
-            '__qualname__': model_name,
-            '__annotations__': annotations,
-            **defaults
-        }
+        namespace
     )
     return model
 
@@ -47,8 +58,8 @@ def split_params(url: str, params: dict[str, Any]) -> tuple[dict[str, Any], dict
     return params, path_params
 
 
-def is_safe_method(method: HTTPMethod) -> bool:
-    if method in {'GET', 'TRACE', 'OPTIONS', 'HEAD'}:
+def accept_body(method: HTTPMethod) -> bool:
+    if method not in {'DELETE', 'GET', 'TRACE', 'OPTIONS', 'HEAD'}:
         return True
     else:
         return False
@@ -105,3 +116,42 @@ def identical(value: _T) -> _T:
 def is_coroutine_function(func: Callable) -> bool:
     return (inspect.iscoroutinefunction(func) or
             (hasattr(func, '__wrapped__') and inspect.iscoroutinefunction(func.__wrapped__)))
+
+
+class _NamedObj(Protocol):
+    __name__ = ...
+
+
+def is_classmethod(obj: Any) -> bool:
+    return isinstance(obj, classmethod)
+
+
+def is_staticmethod(obj: Any) -> bool:
+    return isinstance(obj, staticmethod)
+
+
+def is_instancemethod(obj: Any) -> bool:
+    return inspect.isfunction(obj)
+
+
+def is_selfmethod(obj: Any) -> bool:
+    return is_classmethod(obj) or is_instancemethod(obj)
+
+
+def is_method(obj: Any) -> bool:
+    return is_selfmethod(obj) or is_staticmethod(obj)
+
+
+def is_routed_method(obj: Any) -> bool:
+    cond = False
+    if is_method(obj):
+        func = obj.__func__
+        cond = getattr(func, '__routed__',  None) is True
+    return cond
+
+
+def bind_attributes(obj: _T, *named_objects: tuple[_NamedObj]) -> _T:
+    for named_obj in named_objects:
+        setattr(obj, named_obj.__name__, named_obj)
+
+    return obj

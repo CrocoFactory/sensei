@@ -124,13 +124,17 @@ def sync_maker() -> Callable[[Router, type[APIModel]], type[BaseUser]]:
             def sign_up(
                     cls,
                     user: Annotated[UserCredentials, Body(embed=False, media_type='application/x-www-form-urlencoded')]
-            ) -> bool:
+            ) -> str:
                 ...
 
             @classmethod
             @sign_up.finalize
             def _sign_up_out(cls, response: Response) -> str:
                 return response.json()['token']
+
+            @classmethod
+            @router.head('/users')
+            def user_headers(cls) -> dict[str, Any]: ...
 
             @classmethod
             @router.options('/users')
@@ -230,13 +234,17 @@ def async_maker() -> Callable[[Router, type[APIModel]], type[BaseUser]]:
             async def sign_up(
                     cls,
                     user: Annotated[UserCredentials, Body(embed=False, media_type='application/x-www-form-urlencoded')]
-            ) -> bool:
+            ) -> str:
                 ...
 
             @classmethod
             @sign_up.finalize
             async def _sign_up_out(cls, response: Response) -> str:
                 return response.json()['token']
+
+            @classmethod
+            @router.head('/users')
+            async def user_headers(cls) -> dict[str, Any]: ...
 
             @classmethod
             @router.options('/users')

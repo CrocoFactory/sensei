@@ -7,7 +7,7 @@ from typing import Callable, TypeVar
 
 from sensei._base_client import BaseClient
 from ._callable_handler import CallableHandler, AsyncCallableHandler
-from ._endpoint import CaseConverter
+from ._case_converters import CaseConverters
 from ._requester import ResponseFinalizer, Preparer, JsonFinalizer
 from ._types import IRouter
 from ..tools import HTTPMethod, MethodType, identical
@@ -40,7 +40,7 @@ class Route(ABC):
             *,
             func: Callable,
             host: str,
-            case_converters: dict[str, CaseConverter],
+            case_converters: CaseConverters,
             json_finalizer: JsonFinalizer = identical,
             pre_preparer: Preparer = identical,
     ):
@@ -63,7 +63,7 @@ class Route(ABC):
             *,
             func: Callable,
             host: str,
-            case_converters: dict[str, CaseConverter],
+            case_converters: CaseConverters,
             json_finalizer: JsonFinalizer | None = None,
             pre_preparer: Preparer = identical,
     ):
@@ -125,8 +125,8 @@ class Route(ABC):
         """
         Args:
             func (ResponseFinalizer | None):
-                Response finalizer, used to modify final response, primarily when response type of "routed"
-                function is not from declared. Executed after router`s __finalize_json__
+                Response finalizer, used to modify final response, primarily when the response type of routed
+                function is not from category of automatically handled types. Executed after router's __finalize_json__
 
         Returns:
             ResponseFinalizer: Wrapped function, used to finalize response
@@ -144,8 +144,8 @@ class Route(ABC):
         """
         Args:
             func (Preparer | None):
-                Args preparer, used to prepare the args for request before it. Final value also must be `Args` instance.
-                Executed after router`s __prepare_args__
+                Args preparer, used to prepare the args for request before it. The final value also must be `Args` instance.
+                Executed after router's __prepare_args__
 
         Returns:
             Preparer: Wrapped function, used to prepare the args for request before it

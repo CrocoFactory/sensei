@@ -65,6 +65,10 @@ class BaseUser(ABC):
 
     @classmethod
     @abstractmethod
+    def user_headers(cls) -> dict[str, Any]: ...
+
+    @classmethod
+    @abstractmethod
     def allowed_http_methods(cls) -> List[str]: ...
 
     @abstractmethod

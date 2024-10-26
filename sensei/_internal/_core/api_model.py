@@ -1,11 +1,15 @@
 import functools
 from typing import Any
+
 from pydantic import BaseModel
 from pydantic._internal._model_construction import ModelMetaclass
-from ._internal import RoutedMethod, Hook, Args
-from ._utils import bind_attributes
-from ._utils import is_staticmethod, is_classmethod, is_selfmethod
-from .types import Json
+
+from sensei.types import Json
+from ._endpoint import Args
+from ._hook import Hook
+from ._types import RoutedMethod
+from ..tools import is_routed_method
+from ..tools import is_staticmethod, is_classmethod, is_selfmethod, bind_attributes
 
 
 class _Namespace(dict):
@@ -21,7 +25,8 @@ class _Namespace(dict):
 
     def __setitem__(self, key: Any, value: Any):
         if is_staticmethod(value) or is_classmethod(value):
-            self._decorate_method(value)
+            if is_routed_method(value):
+                self._decorate_method(value)
         elif key in Hook.values() and is_selfmethod(value):
             value = functools.partial(value, None)
 
@@ -86,7 +91,7 @@ class APIModel(BaseModel, metaclass=_ModelMeta):
             json (Json): The original JSON response.
 
         Returns:
-            dict[str, Any]: The finalized JSON response.
+            Json: The finalized JSON response.
         """
         return json
 

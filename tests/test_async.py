@@ -80,6 +80,11 @@ class TestAsync:
         assert payload['sub'] == email
 
     @pytest.mark.asyncio
+    async def test_user_headers(self, user_model):
+        headers = await user_model.user_headers()  # type: ignore
+        assert isinstance(headers, dict)
+
+    @pytest.mark.asyncio
     async def test_allowed_methods(self, user_model):
         methods = sorted(['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'])
         assert methods == sorted(await user_model.allowed_http_methods())  # type: ignore

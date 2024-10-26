@@ -72,6 +72,10 @@ class TestSync:
         payload = jwt.decode(token, SECRET_TOKEN, algorithms=JWT_ALGORITHM)
         assert payload['sub'] == email
 
+    def test_user_headers(self, user_model):
+        headers = user_model.user_headers()
+        assert isinstance(headers, dict)
+
     def test_allowed_methods(self, user_model):
         methods = sorted(['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'])
         assert methods == sorted(user_model.allowed_http_methods())

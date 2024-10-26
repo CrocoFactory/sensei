@@ -1,7 +1,8 @@
 from typing import Annotated
 
 import pytest
-from httpx import HTTPStatusError
+from httpx import HTTPStatusError, Response
+from pydantic import ValidationError
 from typing_extensions import Self
 
 from sensei import APIModel, Body, Form, File
@@ -97,3 +98,14 @@ class TestValidation:
 
         with pytest.raises(ValueError):
             _ValidationModel.create6(body1={}, body2={})
+
+    def test_response_validation(self, router):
+        @router.get('/users')
+        def get_users() -> str: ...
+
+        @get_users.finalize()
+        def _finalize_users(response: Response) -> int: 
+            return 1
+
+        with pytest.raises(ValidationError):
+            get_users()

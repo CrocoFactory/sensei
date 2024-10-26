@@ -1,249 +1,87 @@
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, List, Optional, Union
 
-from typing_extensions import Annotated, Doc, deprecated
-
-from . import _params
-from ._compat import Undefined
+from ._internal import (Path as _params_Path, Query as _params_Query, Cookie as _params_Cookie,
+                        Header as _params_Header, Body as _params_Body, File as _params_File,
+                        Form as _params_Form, Undefined)
 
 _Unset: Any = Undefined
 
 
-def Path(  # noqa: N802
-    default: Annotated[
-        Any,
-        Doc(
-            """
+def Path(
+        default: Any = ...,
+        *,
+        default_factory: Union[Callable[[], Any], None] = _Unset,
+        alias: Optional[str] = None,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        gt: Optional[float] = None,
+        ge: Optional[float] = None,
+        lt: Optional[float] = None,
+        le: Optional[float] = None,
+        min_length: Optional[int] = None,
+        max_length: Optional[int] = None,
+        pattern: Optional[str] = None,
+        discriminator: Union[str, None] = None,
+        strict: Union[bool, None] = _Unset,
+        multiple_of: Union[float, None] = _Unset,
+        allow_inf_nan: Union[bool, None] = _Unset,
+        max_digits: Union[int, None] = _Unset,
+        decimal_places: Union[int, None] = _Unset,
+        examples: Optional[List[Any]] = None,
+        **extra: Any,
+) -> _params_Path:
+    """
+    Declare a path parameter for a path operation.
+
+    Args:
+        default (Any):
             Default value if the parameter field is not set.
+        default_factory (Union[Callable[[], Any], None]):
+            Callable to generate the default value.
+        alias (Optional[str]):
+            Alternative name for the parameter field, used for data extraction,
+            useful when parameter name conflicts with reserved words.
+        title (Optional[str]):
+            Human-readable title for the parameter.
+        description (Optional[str]):
+            Human-readable description for the parameter.
+        gt (Optional[float]):
+            Specifies that the value must be greater than this value, applicable only to numbers.
+        ge (Optional[float]):
+            Specifies that the value must be greater than or equal to this value, applicable only to numbers.
+        lt (Optional[float]):
+            Specifies that the value must be less than this value, applicable only to numbers.
+        le (Optional[float]):
+            Specifies that the value must be less than or equal to this value, applicable only to numbers.
+        min_length (Optional[int]):
+            Minimum length for string values.
+        max_length (Optional[int]):
+            Maximum length for string values.
+        pattern (Optional[str]):
+            Regular expression pattern for string values.
+        discriminator (Union[str, None]):
+            Field name for discriminating the type in a tagged union.
+        strict (Union[bool, None]):
+            Enables strict validation if set to `True`.
+        multiple_of (Union[float, None]):
+            Specifies that the value must be a multiple of this value, applicable only to numbers.
+        allow_inf_nan (Union[bool, None]):
+            Allows values `inf`, `-inf`, and `nan`, applicable only to numbers.
+        max_digits (Union[int, None]):
+            Maximum number of digits allowed for numeric values.
+        decimal_places (Union[int, None]):
+            Maximum number of decimal places allowed for numeric values.
+        examples (Optional[List[Any]]):
+            Example values for the parameter.
+        **extra (Any):
+            Extra fields for JSON Schema. This argument is deprecated in favor of `json_schema_extra`.
 
-            This doesn't affect `Path` parameters as the value is always required.
-            The parameter is available only for compatibility.
-            """
-        ),
-    ] = ...,
-    *,
-    default_factory: Annotated[
-        Union[Callable[[], Any], None],
-        Doc(
-            """
-            A callable to generate the default value.
-
-            This doesn't affect `Path` parameters as the value is always required.
-            The parameter is available only for compatibility.
-            """
-        ),
-    ] = _Unset,
-    alias: Annotated[
-        Optional[str],
-        Doc(
-            """
-            An alternative name for the parameter field.
-
-            This will be used to extract the data and for the generated OpenAPI.
-            It is particularly useful when you can't use the name you want because it
-            is a Python reserved keyword or similar.
-            """
-        ),
-    ] = None,
-    alias_priority: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Priority of the alias. This affects whether an alias generator is used.
-            """
-        ),
-    ] = _Unset,
-    title: Annotated[
-        Optional[str],
-        Doc(
-            """
-            Human-readable title.
-            """
-        ),
-    ] = None,
-    description: Annotated[
-        Optional[str],
-        Doc(
-            """
-            Human-readable description.
-            """
-        ),
-    ] = None,
-    gt: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Greater than. If set, value must be greater than this. Only applicable to
-            numbers.
-            """
-        ),
-    ] = None,
-    ge: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Greater than or equal. If set, value must be greater than or equal to
-            this. Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    lt: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Less than. If set, value must be less than this. Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    le: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Less than or equal. If set, value must be less than or equal to this.
-            Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    min_length: Annotated[
-        Optional[int],
-        Doc(
-            """
-            Minimum length for strings.
-            """
-        ),
-    ] = None,
-    max_length: Annotated[
-        Optional[int],
-        Doc(
-            """
-            Maximum length for strings.
-            """
-        ),
-    ] = None,
-    pattern: Annotated[
-        Optional[str],
-        Doc(
-            """
-            RegEx pattern for strings.
-            """
-        ),
-    ] = None,
-    regex: Annotated[
-        Optional[str],
-        Doc(
-            """
-            RegEx pattern for strings.
-            """
-        ),
-        deprecated(
-            "Deprecated in Pydantic v2, use `pattern` instead."
-        ),
-    ] = None,
-    discriminator: Annotated[
-        Union[str, None],
-        Doc(
-            """
-            Parameter field name for discriminating the type in a tagged union.
-            """
-        ),
-    ] = None,
-    strict: Annotated[
-        Union[bool, None],
-        Doc(
-            """
-            If `True`, strict validation is applied to the field.
-            """
-        ),
-    ] = _Unset,
-    multiple_of: Annotated[
-        Union[float, None],
-        Doc(
-            """
-            Value must be a multiple of this. Only applicable to numbers.
-            """
-        ),
-    ] = _Unset,
-    allow_inf_nan: Annotated[
-        Union[bool, None],
-        Doc(
-            """
-            Allow `inf`, `-inf`, `nan`. Only applicable to numbers.
-            """
-        ),
-    ] = _Unset,
-    max_digits: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Maximum number of allow digits for strings.
-            """
-        ),
-    ] = _Unset,
-    decimal_places: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Maximum number of decimal places allowed for numbers.
-            """
-        ),
-    ] = _Unset,
-    examples: Annotated[
-        Optional[List[Any]],
-        Doc(
-            """
-            Example values for this field.
-            """
-        ),
-    ] = None,
-    deprecated: Annotated[
-        Union[deprecated, str, bool, None],
-        Doc(
-            """
-            Mark this parameter field as deprecated.
-
-            It will affect the generated OpenAPI (e.g. visible at `/docs`).
-            """
-        ),
-    ] = None,
-    include_in_schema: Annotated[
-        bool,
-        Doc(
-            """
-            To include (or not) this parameter field in the generated OpenAPI.
-            You probably don't need it, but it's available.
-
-            This affects the generated OpenAPI (e.g. visible at `/docs`).
-            """
-        ),
-    ] = True,
-    json_schema_extra: Annotated[
-        Union[Dict[str, Any], None],
-        Doc(
-            """
-            Any additional JSON schema data.
-            """
-        ),
-    ] = None,
-    **extra: Annotated[
-        Any,
-        Doc(
-            """
-            Include extra fields used by the JSON Schema.
-            """
-        ),
-        deprecated(
-            """
-            The `extra` kwargs is deprecated. Use `json_schema_extra` instead.
-            """
-        ),
-    ],
-) -> _params.Path:
+    Returns:
+        _params_Path: path parameter for a *path operation*.
     """
-    Declare a path parameter for a *path operation*.
-    """
-    return _params.Path(
+    return _params_Path(
         default=default,
         default_factory=default_factory,
-        alias_priority=alias_priority,
         alias=alias,
         title=title,
         description=description,
@@ -254,7 +92,6 @@ def Path(  # noqa: N802
         min_length=min_length,
         max_length=max_length,
         pattern=pattern,
-        regex=regex,
         discriminator=discriminator,
         strict=strict,
         multiple_of=multiple_of,
@@ -263,243 +100,85 @@ def Path(  # noqa: N802
         decimal_places=decimal_places,
         example=_Unset,
         examples=examples,
-        deprecated=deprecated,
-        include_in_schema=include_in_schema,
-        json_schema_extra=json_schema_extra,
         **extra,
     )
 
 
-def Query(  # noqa: N802
-    default: Annotated[
-        Any,
-        Doc(
-            """
+def Query(
+        default: Any = Undefined,
+        *,
+        default_factory: Union[Callable[[], Any], None] = _Unset,
+        alias: Optional[str] = None,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        gt: Optional[float] = None,
+        ge: Optional[float] = None,
+        lt: Optional[float] = None,
+        le: Optional[float] = None,
+        min_length: Optional[int] = None,
+        max_length: Optional[int] = None,
+        pattern: Optional[str] = None,
+        discriminator: Union[str, None] = None,
+        strict: Union[bool, None] = _Unset,
+        multiple_of: Union[float, None] = _Unset,
+        allow_inf_nan: Union[bool, None] = _Unset,
+        max_digits: Union[int, None] = _Unset,
+        decimal_places: Union[int, None] = _Unset,
+        examples: Optional[List[Any]] = None,
+        **extra: Any,
+) -> _params_Query:
+    """
+    Declare a query parameter for a path operation.
+
+    Args:
+        default (Any):
             Default value if the parameter field is not set.
-            """
-        ),
-    ] = Undefined,
-    *,
-    default_factory: Annotated[
-        Union[Callable[[], Any], None],
-        Doc(
-            """
-            A callable to generate the default value.
+        default_factory (Union[Callable[[], Any], None]):
+            Callable to generate the default value.
+        alias (Optional[str]):
+            Alternative name for the parameter field, used when parameter name
+            conflicts with reserved words.
+        title (Optional[str]):
+            Human-readable title for the parameter.
+        description (Optional[str]):
+            Human-readable description for the parameter.
+        gt (Optional[float]):
+            Specifies that the value must be greater than this value, applicable only to numbers.
+        ge (Optional[float]):
+            Specifies that the value must be greater than or equal to this value, applicable only to numbers.
+        lt (Optional[float]):
+            Specifies that the value must be less than this value, applicable only to numbers.
+        le (Optional[float]):
+            Specifies that the value must be less than or equal to this value, applicable only to numbers.
+        min_length (Optional[int]):
+            Minimum length for string values.
+        max_length (Optional[int]):
+            Maximum length for string values.
+        pattern (Optional[str]):
+            Regular expression pattern for string values.
+        discriminator (Union[str, None]):
+            Field name for discriminating the type in a tagged union.
+        strict (Union[bool, None]):
+            Enables strict validation if set to `True`.
+        multiple_of (Union[float, None]):
+            Specifies that the value must be a multiple of this value, applicable only to numbers.
+        allow_inf_nan (Union[bool, None]):
+            Allows values `inf`, `-inf`, and `nan`, applicable only to numbers.
+        max_digits (Union[int, None]):
+            Maximum number of digits allowed for numeric values.
+        decimal_places (Union[int, None]):
+            Maximum number of decimal places allowed for numeric values.
+        examples (Optional[List[Any]]):
+            Example values for the parameter.
+        **extra (Any):
+            Extra fields for JSON Schema.
 
-            This doesn't affect `Path` parameters as the value is always required.
-            The parameter is available only for compatibility.
-            """
-        ),
-    ] = _Unset,
-    alias: Annotated[
-        Optional[str],
-        Doc(
-            """
-            An alternative name for the parameter field.
-
-            This will be used to extract the data and for the generated OpenAPI.
-            It is particularly useful when you can't use the name you want because it
-            is a Python reserved keyword or similar.
-            """
-        ),
-    ] = None,
-    alias_priority: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Priority of the alias. This affects whether an alias generator is used.
-            """
-        ),
-    ] = _Unset,
-    title: Annotated[
-        Optional[str],
-        Doc(
-            """
-            Human-readable title.
-            """
-        ),
-    ] = None,
-    description: Annotated[
-        Optional[str],
-        Doc(
-            """
-            Human-readable description.
-            """
-        ),
-    ] = None,
-    gt: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Greater than. If set, value must be greater than this. Only applicable to
-            numbers.
-            """
-        ),
-    ] = None,
-    ge: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Greater than or equal. If set, value must be greater than or equal to
-            this. Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    lt: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Less than. If set, value must be less than this. Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    le: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Less than or equal. If set, value must be less than or equal to this.
-            Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    min_length: Annotated[
-        Optional[int],
-        Doc(
-            """
-            Minimum length for strings.
-            """
-        ),
-    ] = None,
-    max_length: Annotated[
-        Optional[int],
-        Doc(
-            """
-            Maximum length for strings.
-            """
-        ),
-    ] = None,
-    pattern: Annotated[
-        Optional[str],
-        Doc(
-            """
-            RegEx pattern for strings.
-            """
-        ),
-    ] = None,
-    regex: Annotated[
-        Optional[str],
-        Doc(
-            """
-            RegEx pattern for strings.
-            """
-        ),
-        deprecated(
-            "Deprecated in Pydantic v2, use `pattern` instead."
-        ),
-    ] = None,
-    discriminator: Annotated[
-        Union[str, None],
-        Doc(
-            """
-            Parameter field name for discriminating the type in a tagged union.
-            """
-        ),
-    ] = None,
-    strict: Annotated[
-        Union[bool, None],
-        Doc(
-            """
-            If `True`, strict validation is applied to the field.
-            """
-        ),
-    ] = _Unset,
-    multiple_of: Annotated[
-        Union[float, None],
-        Doc(
-            """
-            Value must be a multiple of this. Only applicable to numbers.
-            """
-        ),
-    ] = _Unset,
-    allow_inf_nan: Annotated[
-        Union[bool, None],
-        Doc(
-            """
-            Allow `inf`, `-inf`, `nan`. Only applicable to numbers.
-            """
-        ),
-    ] = _Unset,
-    max_digits: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Maximum number of allow digits for strings.
-            """
-        ),
-    ] = _Unset,
-    decimal_places: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Maximum number of decimal places allowed for numbers.
-            """
-        ),
-    ] = _Unset,
-    examples: Annotated[
-        Optional[List[Any]],
-        Doc(
-            """
-            Example values for this field.
-            """
-        ),
-    ] = None,
-    deprecated: Annotated[
-        Union[deprecated, str, bool, None],
-        Doc(
-            """
-            Mark this parameter field as deprecated.
-
-            It will affect the generated OpenAPI (e.g. visible at `/docs`).
-            """
-        ),
-    ] = None,
-    include_in_schema: Annotated[
-        bool,
-        Doc(
-            """
-            To include (or not) this parameter field in the generated OpenAPI.
-            You probably don't need it, but it's available.
-
-            This affects the generated OpenAPI (e.g. visible at `/docs`).
-            """
-        ),
-    ] = True,
-    json_schema_extra: Annotated[
-        Union[Dict[str, Any], None],
-        Doc(
-            """
-            Any additional JSON schema data.
-            """
-        ),
-    ] = None,
-    **extra: Annotated[
-        Any,
-        Doc(
-            """
-            Include extra fields used by the JSON Schema.
-            """
-        ),
-        deprecated(
-            """
-            The `extra` kwargs is deprecated. Use `json_schema_extra` instead.
-            """
-        ),
-    ],
-) -> _params.Query:
-    return _params.Query(
+    Returns:
+        _params_Query: query parameter for a *path operation*.
+    """
+    return _params_Query(
         default=default,
         default_factory=default_factory,
-        alias_priority=alias_priority,
         alias=alias,
         title=title,
         description=description,
@@ -510,7 +189,6 @@ def Query(  # noqa: N802
         min_length=min_length,
         max_length=max_length,
         pattern=pattern,
-        regex=regex,
         discriminator=discriminator,
         strict=strict,
         multiple_of=multiple_of,
@@ -518,507 +196,88 @@ def Query(  # noqa: N802
         max_digits=max_digits,
         decimal_places=decimal_places,
         examples=examples,
-        deprecated=deprecated,
-        include_in_schema=include_in_schema,
-        json_schema_extra=json_schema_extra,
         **extra,
     )
 
 
-def Header(  # noqa: N802
-    default: Annotated[
-        Any,
-        Doc(
-            """
+def Header(
+        default: Any = Undefined,
+        *,
+        default_factory: Union[Callable[[], Any], None] = _Unset,
+        alias: Optional[str] = None,
+        convert_underscores: bool = True,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        gt: Optional[float] = None,
+        ge: Optional[float] = None,
+        lt: Optional[float] = None,
+        le: Optional[float] = None,
+        min_length: Optional[int] = None,
+        max_length: Optional[int] = None,
+        pattern: Optional[str] = None,
+        discriminator: Union[str, None] = None,
+        strict: Union[bool, None] = _Unset,
+        multiple_of: Union[float, None] = _Unset,
+        allow_inf_nan: Union[bool, None] = _Unset,
+        max_digits: Union[int, None] = _Unset,
+        decimal_places: Union[int, None] = _Unset,
+        examples: Optional[List[Any]] = None,
+        **extra: Any,
+) -> _params_Header:
+    """
+    Declare a header parameter for a path operation.
+
+    Args:
+        default (Any):
             Default value if the parameter field is not set.
-            """
-        ),
-    ] = Undefined,
-    *,
-    default_factory: Annotated[
-        Union[Callable[[], Any], None],
-        Doc(
-            """
-            A callable to generate the default value.
+        default_factory (Union[Callable[[], Any], None]):
+            Callable to generate the default value.
+        alias (Optional[str]):
+            Alternative name for the parameter field, used when parameter name
+            conflicts with reserved words.
+        convert_underscores (bool):
+            Automatically converts underscores to hyphens in the parameter name.
+        title (Optional[str]):
+            Human-readable title for the parameter.
+        description (Optional[str]):
+            Human-readable description for the parameter.
+        gt (Optional[float]):
+            Specifies that the value must be greater than this value, applicable only to numbers.
+        ge (Optional[float]):
+            Specifies that the value must be greater than or equal to this value, applicable only to numbers.
+        lt (Optional[float]):
+            Specifies that the value must be less than this value, applicable only to numbers.
+        le (Optional[float]):
+            Specifies that the value must be less than or equal to this value, applicable only to numbers.
+        min_length (Optional[int]):
+            Minimum length for string values.
+        max_length (Optional[int]):
+            Maximum length for string values.
+        pattern (Optional[str]):
+            Regular expression pattern for string values.
+        discriminator (Union[str, None]):
+            Field name for discriminating the type in a tagged union.
+        strict (Union[bool, None]):
+            Enables strict validation if set to `True`.
+        multiple_of (Union[float, None]):
+            Specifies that the value must be a multiple of this value, applicable only to numbers.
+        allow_inf_nan (Union[bool, None]):
+            Allows values `inf`, `-inf`, and `nan`, applicable only to numbers.
+        max_digits (Union[int, None]):
+            Maximum number of digits allowed for numeric values.
+        decimal_places (Union[int, None]):
+            Maximum number of decimal places allowed for numeric values.
+        examples (Optional[List[Any]]):
+            Example values for the parameter.
+        **extra (Any):
+            Extra fields for JSON Schema.
 
-            This doesn't affect `Path` parameters as the value is always required.
-            The parameter is available only for compatibility.
-            """
-        ),
-    ] = _Unset,
-    alias: Annotated[
-        Optional[str],
-        Doc(
-            """
-            An alternative name for the parameter field.
-
-            This will be used to extract the data and for the generated OpenAPI.
-            It is particularly useful when you can't use the name you want because it
-            is a Python reserved keyword or similar.
-            """
-        ),
-    ] = None,
-    alias_priority: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Priority of the alias. This affects whether an alias generator is used.
-            """
-        ),
-    ] = _Unset,
-    convert_underscores: Annotated[
-        bool,
-        Doc(
-            """
-            Automatically convert underscores to hyphens in the parameter field name.
-            """
-        ),
-    ] = True,
-    title: Annotated[
-        Optional[str],
-        Doc(
-            """
-            Human-readable title.
-            """
-        ),
-    ] = None,
-    description: Annotated[
-        Optional[str],
-        Doc(
-            """
-            Human-readable description.
-            """
-        ),
-    ] = None,
-    gt: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Greater than. If set, value must be greater than this. Only applicable to
-            numbers.
-            """
-        ),
-    ] = None,
-    ge: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Greater than or equal. If set, value must be greater than or equal to
-            this. Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    lt: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Less than. If set, value must be less than this. Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    le: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Less than or equal. If set, value must be less than or equal to this.
-            Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    min_length: Annotated[
-        Optional[int],
-        Doc(
-            """
-            Minimum length for strings.
-            """
-        ),
-    ] = None,
-    max_length: Annotated[
-        Optional[int],
-        Doc(
-            """
-            Maximum length for strings.
-            """
-        ),
-    ] = None,
-    pattern: Annotated[
-        Optional[str],
-        Doc(
-            """
-            RegEx pattern for strings.
-            """
-        ),
-    ] = None,
-    regex: Annotated[
-        Optional[str],
-        Doc(
-            """
-            RegEx pattern for strings.
-            """
-        ),
-        deprecated(
-            "Deprecated in Pydantic v2, use `pattern` instead."
-        ),
-    ] = None,
-    discriminator: Annotated[
-        Union[str, None],
-        Doc(
-            """
-            Parameter field name for discriminating the type in a tagged union.
-            """
-        ),
-    ] = None,
-    strict: Annotated[
-        Union[bool, None],
-        Doc(
-            """
-            If `True`, strict validation is applied to the field.
-            """
-        ),
-    ] = _Unset,
-    multiple_of: Annotated[
-        Union[float, None],
-        Doc(
-            """
-            Value must be a multiple of this. Only applicable to numbers.
-            """
-        ),
-    ] = _Unset,
-    allow_inf_nan: Annotated[
-        Union[bool, None],
-        Doc(
-            """
-            Allow `inf`, `-inf`, `nan`. Only applicable to numbers.
-            """
-        ),
-    ] = _Unset,
-    max_digits: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Maximum number of allow digits for strings.
-            """
-        ),
-    ] = _Unset,
-    decimal_places: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Maximum number of decimal places allowed for numbers.
-            """
-        ),
-    ] = _Unset,
-    examples: Annotated[
-        Optional[List[Any]],
-        Doc(
-            """
-            Example values for this field.
-            """
-        ),
-    ] = None,
-    deprecated: Annotated[
-        Union[deprecated, str, bool, None],
-        Doc(
-            """
-            Mark this parameter field as deprecated.
-
-            It will affect the generated OpenAPI (e.g. visible at `/docs`).
-            """
-        ),
-    ] = None,
-    include_in_schema: Annotated[
-        bool,
-        Doc(
-            """
-            To include (or not) this parameter field in the generated OpenAPI.
-            You probably don't need it, but it's available.
-
-            This affects the generated OpenAPI (e.g. visible at `/docs`).
-            """
-        ),
-    ] = True,
-    json_schema_extra: Annotated[
-        Union[Dict[str, Any], None],
-        Doc(
-            """
-            Any additional JSON schema data.
-            """
-        ),
-    ] = None,
-    **extra: Annotated[
-        Any,
-        Doc(
-            """
-            Include extra fields used by the JSON Schema.
-            """
-        ),
-        deprecated(
-            """
-            The `extra` kwargs is deprecated. Use `json_schema_extra` instead.
-            """
-        ),
-    ],
-) -> _params.Header:
-    return _params.Header(
+    Returns:
+        _params_Header: header parameter for a *path operation*.
+    """
+    return _params_Header(
         default=default,
         default_factory=default_factory,
-        alias_priority=alias_priority,
-        alias=alias,
-        convert_underscores=convert_underscores,
-        title=title,
-        description=description,
-        gt=gt,
-        ge=ge,
-        lt=lt,
-        le=le,
-        min_length=min_length,
-        max_length=max_length,
-        pattern=pattern,
-        regex=regex,
-        discriminator=discriminator,
-        strict=strict,
-        multiple_of=multiple_of,
-        allow_inf_nan=allow_inf_nan,
-        max_digits=max_digits,
-        decimal_places=decimal_places,
-        examples=examples,
-        deprecated=deprecated,
-        include_in_schema=include_in_schema,
-        json_schema_extra=json_schema_extra,
-        **extra,
-    )
-
-
-def Cookie(  # noqa: N802
-    default: Annotated[
-        Any,
-        Doc(
-            """
-            Default value if the parameter field is not set.
-            """
-        ),
-    ] = Undefined,
-    *,
-    default_factory: Annotated[
-        Union[Callable[[], Any], None],
-        Doc(
-            """
-            A callable to generate the default value.
-
-            This doesn't affect `Path` parameters as the value is always required.
-            The parameter is available only for compatibility.
-            """
-        ),
-    ] = _Unset,
-    alias: Annotated[
-        Optional[str],
-        Doc(
-            """
-            An alternative name for the parameter field.
-
-            This will be used to extract the data and for the generated OpenAPI.
-            It is particularly useful when you can't use the name you want because it
-            is a Python reserved keyword or similar.
-            """
-        ),
-    ] = None,
-    alias_priority: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Priority of the alias. This affects whether an alias generator is used.
-            """
-        ),
-    ] = _Unset,
-    title: Annotated[
-        Optional[str],
-        Doc(
-            """
-            Human-readable title.
-            """
-        ),
-    ] = None,
-    description: Annotated[
-        Optional[str],
-        Doc(
-            """
-            Human-readable description.
-            """
-        ),
-    ] = None,
-    gt: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Greater than. If set, value must be greater than this. Only applicable to
-            numbers.
-            """
-        ),
-    ] = None,
-    ge: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Greater than or equal. If set, value must be greater than or equal to
-            this. Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    lt: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Less than. If set, value must be less than this. Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    le: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Less than or equal. If set, value must be less than or equal to this.
-            Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    min_length: Annotated[
-        Optional[int],
-        Doc(
-            """
-            Minimum length for strings.
-            """
-        ),
-    ] = None,
-    max_length: Annotated[
-        Optional[int],
-        Doc(
-            """
-            Maximum length for strings.
-            """
-        ),
-    ] = None,
-    pattern: Annotated[
-        Optional[str],
-        Doc(
-            """
-            RegEx pattern for strings.
-            """
-        ),
-    ] = None,
-    regex: Annotated[
-        Optional[str],
-        Doc(
-            """
-            RegEx pattern for strings.
-            """
-        ),
-        deprecated(
-            "Deprecated in Pydantic v2, use `pattern` instead."
-        ),
-    ] = None,
-    discriminator: Annotated[
-        Union[str, None],
-        Doc(
-            """
-            Parameter field name for discriminating the type in a tagged union.
-            """
-        ),
-    ] = None,
-    strict: Annotated[
-        Union[bool, None],
-        Doc(
-            """
-            If `True`, strict validation is applied to the field.
-            """
-        ),
-    ] = _Unset,
-    multiple_of: Annotated[
-        Union[float, None],
-        Doc(
-            """
-            Value must be a multiple of this. Only applicable to numbers.
-            """
-        ),
-    ] = _Unset,
-    allow_inf_nan: Annotated[
-        Union[bool, None],
-        Doc(
-            """
-            Allow `inf`, `-inf`, `nan`. Only applicable to numbers.
-            """
-        ),
-    ] = _Unset,
-    max_digits: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Maximum number of allow digits for strings.
-            """
-        ),
-    ] = _Unset,
-    decimal_places: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Maximum number of decimal places allowed for numbers.
-            """
-        ),
-    ] = _Unset,
-    examples: Annotated[
-        Optional[List[Any]],
-        Doc(
-            """
-            Example values for this field.
-            """
-        ),
-    ] = None,
-    deprecated: Annotated[
-        Union[deprecated, str, bool, None],
-        Doc(
-            """
-            Mark this parameter field as deprecated.
-
-            It will affect the generated OpenAPI (e.g. visible at `/docs`).
-            """
-        ),
-    ] = None,
-    include_in_schema: Annotated[
-        bool,
-        Doc(
-            """
-            To include (or not) this parameter field in the generated OpenAPI.
-            You probably don't need it, but it's available.
-
-            This affects the generated OpenAPI (e.g. visible at `/docs`).
-            """
-        ),
-    ] = True,
-    json_schema_extra: Annotated[
-        Union[Dict[str, Any], None],
-        Doc(
-            """
-            Any additional JSON schema data.
-            """
-        ),
-    ] = None,
-    **extra: Annotated[
-        Any,
-        Doc(
-            """
-            Include extra fields used by the JSON Schema.
-            """
-        ),
-        deprecated(
-            """
-            The `extra` kwargs is deprecated. Use `json_schema_extra` instead.
-            """
-        ),
-    ],
-) -> _params.Cookie:
-    return _params.Cookie(
-        default=default,
-        default_factory=default_factory,
-        alias_priority=alias_priority,
         alias=alias,
         title=title,
         description=description,
@@ -1029,7 +288,6 @@ def Cookie(  # noqa: N802
         min_length=min_length,
         max_length=max_length,
         pattern=pattern,
-        regex=regex,
         discriminator=discriminator,
         strict=strict,
         multiple_of=multiple_of,
@@ -1037,265 +295,190 @@ def Cookie(  # noqa: N802
         max_digits=max_digits,
         decimal_places=decimal_places,
         examples=examples,
-        deprecated=deprecated,
-        include_in_schema=include_in_schema,
-        json_schema_extra=json_schema_extra,
         **extra,
     )
 
 
-def Body(  # noqa: N802
-    default: Annotated[
-        Any,
-        Doc(
-            """
+def Cookie(
+        default: Any = Undefined,
+        *,
+        default_factory: Union[Callable[[], Any], None] = _Unset,
+        alias: Optional[str] = None,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        gt: Optional[float] = None,
+        ge: Optional[float] = None,
+        lt: Optional[float] = None,
+        le: Optional[float] = None,
+        min_length: Optional[int] = None,
+        max_length: Optional[int] = None,
+        pattern: Optional[str] = None,
+        discriminator: Union[str, None] = None,
+        strict: Union[bool, None] = _Unset,
+        multiple_of: Union[float, None] = _Unset,
+        allow_inf_nan: Union[bool, None] = _Unset,
+        max_digits: Union[int, None] = _Unset,
+        decimal_places: Union[int, None] = _Unset,
+        examples: Optional[List[Any]] = None,
+        **extra: Any,
+) -> _params_Cookie:
+    """
+    Declare a cookie parameter for a path operation.
+
+    Args:
+        default (Any):
             Default value if the parameter field is not set.
-            """
-        ),
-    ] = Undefined,
-    *,
-    default_factory: Annotated[
-        Union[Callable[[], Any], None],
-        Doc(
-            """
-            A callable to generate the default value.
+        default_factory (Union[Callable[[], Any], None]):
+            Callable to generate the default value.
+        alias (Optional[str]):
+            Alternative name for the parameter field, used when parameter name
+            conflicts with reserved words.
+        title (Optional[str]):
+            Human-readable title for the parameter.
+        description (Optional[str]):
+            Human-readable description for the parameter.
+        gt (Optional[float]):
+            Specifies that the value must be greater than this value, applicable only to numbers.
+        ge (Optional[float]):
+            Specifies that the value must be greater than or equal to this value, applicable only to numbers.
+        lt (Optional[float]):
+            Specifies that the value must be less than this value, applicable only to numbers.
+        le (Optional[float]):
+            Specifies that the value must be less than or equal to this value, applicable only to numbers.
+        min_length (Optional[int]):
+            Minimum length for string values.
+        max_length (Optional[int]):
+            Maximum length for string values.
+        pattern (Optional[str]):
+            Regular expression pattern for string values.
+        discriminator (Union[str, None]):
+            Field name for discriminating the type in a tagged union.
+        strict (Union[bool, None]):
+            Enables strict validation if set to `True`.
+        multiple_of (Union[float, None]):
+            Specifies that the value must be a multiple of this value, applicable only to numbers.
+        allow_inf_nan (Union[bool, None]):
+            Allows values `inf`, `-inf`, and `nan`, applicable only to numbers.
+        max_digits (Union[int, None]):
+            Maximum number of digits allowed for numeric values.
+        decimal_places (Union[int, None]):
+            Maximum number of decimal places allowed for numeric values.
+        examples (Optional[List[Any]]):
+            Example values for the parameter.
+        **extra (Any):
+            Extra fields for JSON Schema.
 
-            This doesn't affect `Path` parameters as the value is always required.
-            The parameter is available only for compatibility.
-            """
-        ),
-    ] = _Unset,
-    embed: Annotated[
-        bool,
-        Doc(
-            """
-            When `embed` is `True`, the parameter will be expected in a JSON body as a
-            key instead of being the JSON body itself.
+    Returns:
+        _params_Cookie: cookie parameter for a *path operation*.
+    """
+    return _params_Cookie(
+        default=default,
+        default_factory=default_factory,
+        alias=alias,
+        title=title,
+        description=description,
+        gt=gt,
+        ge=ge,
+        lt=lt,
+        le=le,
+        min_length=min_length,
+        max_length=max_length,
+        pattern=pattern,
+        discriminator=discriminator,
+        strict=strict,
+        multiple_of=multiple_of,
+        allow_inf_nan=allow_inf_nan,
+        max_digits=max_digits,
+        decimal_places=decimal_places,
+        examples=examples,
+        **extra,
+    )
 
-            This happens automatically when more than one `Body` parameter is declared.
-            """
-        ),
-    ] = True,
-    media_type: Annotated[
-        str,
-        Doc(
-            """
-            The media type of this parameter field. Changing it would affect the
-            generated OpenAPI, but currently it doesn't affect the parsing of the data.
-            """
-        ),
-    ] = "application/json",
-    alias: Annotated[
-        Optional[str],
-        Doc(
-            """
-            An alternative name for the parameter field.
 
-            This will be used to extract the data and for the generated OpenAPI.
-            It is particularly useful when you can't use the name you want because it
-            is a Python reserved keyword or similar.
-            """
-        ),
-    ] = None,
-    alias_priority: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Priority of the alias. This affects whether an alias generator is used.
-            """
-        ),
-    ] = _Unset,
-    title: Annotated[
-        Optional[str],
-        Doc(
-            """
-            Human-readable title.
-            """
-        ),
-    ] = None,
-    description: Annotated[
-        Optional[str],
-        Doc(
-            """
-            Human-readable description.
-            """
-        ),
-    ] = None,
-    gt: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Greater than. If set, value must be greater than this. Only applicable to
-            numbers.
-            """
-        ),
-    ] = None,
-    ge: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Greater than or equal. If set, value must be greater than or equal to
-            this. Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    lt: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Less than. If set, value must be less than this. Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    le: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Less than or equal. If set, value must be less than or equal to this.
-            Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    min_length: Annotated[
-        Optional[int],
-        Doc(
-            """
-            Minimum length for strings.
-            """
-        ),
-    ] = None,
-    max_length: Annotated[
-        Optional[int],
-        Doc(
-            """
-            Maximum length for strings.
-            """
-        ),
-    ] = None,
-    pattern: Annotated[
-        Optional[str],
-        Doc(
-            """
-            RegEx pattern for strings.
-            """
-        ),
-    ] = None,
-    regex: Annotated[
-        Optional[str],
-        Doc(
-            """
-            RegEx pattern for strings.
-            """
-        ),
-        deprecated(
-            "Deprecated in Pydantic v2, use `pattern` instead."
-        ),
-    ] = None,
-    discriminator: Annotated[
-        Union[str, None],
-        Doc(
-            """
-            Parameter field name for discriminating the type in a tagged union.
-            """
-        ),
-    ] = None,
-    strict: Annotated[
-        Union[bool, None],
-        Doc(
-            """
-            If `True`, strict validation is applied to the field.
-            """
-        ),
-    ] = _Unset,
-    multiple_of: Annotated[
-        Union[float, None],
-        Doc(
-            """
-            Value must be a multiple of this. Only applicable to numbers.
-            """
-        ),
-    ] = _Unset,
-    allow_inf_nan: Annotated[
-        Union[bool, None],
-        Doc(
-            """
-            Allow `inf`, `-inf`, `nan`. Only applicable to numbers.
-            """
-        ),
-    ] = _Unset,
-    max_digits: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Maximum number of allow digits for strings.
-            """
-        ),
-    ] = _Unset,
-    decimal_places: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Maximum number of decimal places allowed for numbers.
-            """
-        ),
-    ] = _Unset,
-    examples: Annotated[
-        Optional[List[Any]],
-        Doc(
-            """
-            Example values for this field.
-            """
-        ),
-    ] = None,
-    deprecated: Annotated[
-        Union[deprecated, str, bool, None],
-        Doc(
-            """
-            Mark this parameter field as deprecated.
+def Body(
+        default: Any = Undefined,
+        *,
+        default_factory: Union[Callable[[], Any], None] = _Unset,
+        embed: bool = True,
+        media_type: str = "application/json",
+        alias: Optional[str] = None,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        gt: Optional[float] = None,
+        ge: Optional[float] = None,
+        lt: Optional[float] = None,
+        le: Optional[float] = None,
+        min_length: Optional[int] = None,
+        max_length: Optional[int] = None,
+        pattern: Optional[str] = None,
+        discriminator: Union[str, None] = None,
+        strict: Union[bool, None] = _Unset,
+        multiple_of: Union[float, None] = _Unset,
+        allow_inf_nan: Union[bool, None] = _Unset,
+        max_digits: Union[int, None] = _Unset,
+        decimal_places: Union[int, None] = _Unset,
+        examples: Optional[List[Any]] = None,
+        **extra: Any,
+) -> _params_Body:
+    """
+    Declare a body parameter for a path operation.
 
-            It will affect the generated OpenAPI (e.g. visible at `/docs`).
-            """
-        ),
-    ] = None,
-    include_in_schema: Annotated[
-        bool,
-        Doc(
-            """
-            To include (or not) this parameter field in the generated OpenAPI.
-            You probably don't need it, but it's available.
+    Args:
+        default (Any):
+            Default value if the parameter field is not set.
+        default_factory (Union[Callable[[], Any], None]):
+            Callable to generate the default value.
+        embed (bool):
+            If `True`, the parameter will be expected in a JSON body as a key, instead
+            of being the JSON body itself.
+        media_type (str):
+            The media type of this parameter field, e.g., "application/json".
+        alias (Optional[str]):
+            Alternative name for the parameter field, used when parameter name
+            conflicts with reserved words.
+        title (Optional[str]):
+            Human-readable title for the parameter.
+        description (Optional[str]):
+            Human-readable description for the parameter.
+        gt (Optional[float]):
+            Specifies that the value must be greater than this value, applicable only to numbers.
+        ge (Optional[float]):
+            Specifies that the value must be greater than or equal to this value, applicable only to numbers.
+        lt (Optional[float]):
+            Specifies that the value must be less than this value, applicable only to numbers.
+        le (Optional[float]):
+            Specifies that the value must be less than or equal to this value, applicable only to numbers.
+        min_length (Optional[int]):
+            Minimum length for string values.
+        max_length (Optional[int]):
+            Maximum length for string values.
+        pattern (Optional[str]):
+            Regular expression pattern for string values.
+        discriminator (Union[str, None]):
+            Field name for discriminating the type in a tagged union.
+        strict (Union[bool, None]):
+            Enables strict validation if set to `True`.
+        multiple_of (Union[float, None]):
+            Specifies that the value must be a multiple of this value, applicable only to numbers.
+        allow_inf_nan (Union[bool, None]):
+            Allows values `inf`, `-inf`, and `nan`, applicable only to numbers.
+        max_digits (Union[int, None]):
+            Maximum number of digits allowed for numeric values.
+        decimal_places (Union[int, None]):
+            Maximum number of decimal places allowed for numeric values.
+        examples (Optional[List[Any]]):
+            Example values for the parameter.
+        **extra (Any):
+            Extra fields for JSON Schema.
 
-            This affects the generated OpenAPI (e.g. visible at `/docs`).
-            """
-        ),
-    ] = True,
-    json_schema_extra: Annotated[
-        Union[Dict[str, Any], None],
-        Doc(
-            """
-            Any additional JSON schema data.
-            """
-        ),
-    ] = None,
-    **extra: Annotated[
-        Any,
-        Doc(
-            """
-            Include extra fields used by the JSON Schema.
-            """
-        ),
-        deprecated(
-            """
-            The `extra` kwargs is deprecated. Use `json_schema_extra` instead.
-            """
-        ),
-    ],
-) -> _params.Body:
-    return _params.Body(
+    Returns:
+        _params_Body: body parameter for a *path operation*.
+    """
+    return _params_Body(
         default=default,
         default_factory=default_factory,
         embed=embed,
         media_type=media_type,
-        alias_priority=alias_priority,
         alias=alias,
         title=title,
         description=description,
@@ -1306,7 +489,6 @@ def Body(  # noqa: N802
         min_length=min_length,
         max_length=max_length,
         pattern=pattern,
-        regex=regex,
         discriminator=discriminator,
         strict=strict,
         multiple_of=multiple_of,
@@ -1314,258 +496,93 @@ def Body(  # noqa: N802
         max_digits=max_digits,
         decimal_places=decimal_places,
         examples=examples,
-        deprecated=deprecated,
-        include_in_schema=include_in_schema,
-        json_schema_extra=json_schema_extra,
         **extra,
     )
 
 
-def Form(  # noqa: N802
-    default: Annotated[
-        Any,
-        Doc(
-            """
-            Default value if the parameter field is not set.
-            """
-        ),
-    ] = Undefined,
-    *,
-    default_factory: Annotated[
-        Union[Callable[[], Any], None],
-        Doc(
-            """
-            A callable to generate the default value.
-
-            This doesn't affect `Path` parameters as the value is always required.
-            The parameter is available only for compatibility.
-            """
-        ),
-    ] = _Unset,
-        embed: Annotated[
-            bool,
-            Doc(
-                """
-                When `embed` is `True`, the parameter will be expected in a JSON body as a
-                key instead of being the JSON body itself.
-    
-                This happens automatically when more than one `Body` parameter is declared.
-                """
-            ),
-        ] = True,
-    alias: Annotated[
-        Optional[str],
-        Doc(
-            """
-            An alternative name for the parameter field.
-
-            This will be used to extract the data and for the generated OpenAPI.
-            It is particularly useful when you can't use the name you want because it
-            is a Python reserved keyword or similar.
-            """
-        ),
-    ] = None,
-    alias_priority: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Priority of the alias. This affects whether an alias generator is used.
-            """
-        ),
-    ] = _Unset,
-    title: Annotated[
-        Optional[str],
-        Doc(
-            """
-            Human-readable title.
-            """
-        ),
-    ] = None,
-    description: Annotated[
-        Optional[str],
-        Doc(
-            """
-            Human-readable description.
-            """
-        ),
-    ] = None,
-    gt: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Greater than. If set, value must be greater than this. Only applicable to
-            numbers.
-            """
-        ),
-    ] = None,
-    ge: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Greater than or equal. If set, value must be greater than or equal to
-            this. Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    lt: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Less than. If set, value must be less than this. Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    le: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Less than or equal. If set, value must be less than or equal to this.
-            Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    min_length: Annotated[
-        Optional[int],
-        Doc(
-            """
-            Minimum length for strings.
-            """
-        ),
-    ] = None,
-    max_length: Annotated[
-        Optional[int],
-        Doc(
-            """
-            Maximum length for strings.
-            """
-        ),
-    ] = None,
-    pattern: Annotated[
-        Optional[str],
-        Doc(
-            """
-            RegEx pattern for strings.
-            """
-        ),
-    ] = None,
-    regex: Annotated[
-        Optional[str],
-        Doc(
-            """
-            RegEx pattern for strings.
-            """
-        ),
-        deprecated(
-            "Deprecated in and Pydantic v2, use `pattern` instead."
-        ),
-    ] = None,
-    discriminator: Annotated[
-        Union[str, None],
-        Doc(
-            """
-            Parameter field name for discriminating the type in a tagged union.
-            """
-        ),
-    ] = None,
-    strict: Annotated[
-        Union[bool, None],
-        Doc(
-            """
-            If `True`, strict validation is applied to the field.
-            """
-        ),
-    ] = _Unset,
-    multiple_of: Annotated[
-        Union[float, None],
-        Doc(
-            """
-            Value must be a multiple of this. Only applicable to numbers.
-            """
-        ),
-    ] = _Unset,
-    allow_inf_nan: Annotated[
-        Union[bool, None],
-        Doc(
-            """
-            Allow `inf`, `-inf`, `nan`. Only applicable to numbers.
-            """
-        ),
-    ] = _Unset,
-    max_digits: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Maximum number of allow digits for strings.
-            """
-        ),
-    ] = _Unset,
-    decimal_places: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Maximum number of decimal places allowed for numbers.
-            """
-        ),
-    ] = _Unset,
-    examples: Annotated[
-        Optional[List[Any]],
-        Doc(
-            """
-            Example values for this field.
-            """
-        ),
-    ] = None,
-    deprecated: Annotated[
-        Union[deprecated, str, bool, None],
-        Doc(
-            """
-            Mark this parameter field as deprecated.
-
-            It will affect the generated OpenAPI (e.g. visible at `/docs`).
-            """
-        ),
-    ] = None,
-    include_in_schema: Annotated[
-        bool,
-        Doc(
-            """
-            To include (or not) this parameter field in the generated OpenAPI.
-            You probably don't need it, but it's available.
-
-            This affects the generated OpenAPI (e.g. visible at `/docs`).
-            """
-        ),
-    ] = True,
-    json_schema_extra: Annotated[
-        Union[Dict[str, Any], None],
-        Doc(
-            """
-            Any additional JSON schema data.
-            """
-        ),
-    ] = None,
-    **extra: Annotated[
-        Any,
-        Doc(
-            """
-            Include extra fields used by the JSON Schema.
-            """
-        ),
-        deprecated(
-            """
-            The `extra` kwargs is deprecated. Use `json_schema_extra` instead.
-            """
-        ),
-    ],
+def Form(
+        default: Any = Undefined,
+        *,
+        default_factory: Union[Callable[[], Any], None] = _Unset,
+        embed: bool = True,
+        alias: Optional[str] = None,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        gt: Optional[float] = None,
+        ge: Optional[float] = None,
+        lt: Optional[float] = None,
+        le: Optional[float] = None,
+        min_length: Optional[int] = None,
+        max_length: Optional[int] = None,
+        pattern: Optional[str] = None,
+        discriminator: Union[str, None] = None,
+        strict: Union[bool, None] = _Unset,
+        multiple_of: Union[float, None] = _Unset,
+        allow_inf_nan: Union[bool, None] = _Unset,
+        max_digits: Union[int, None] = _Unset,
+        decimal_places: Union[int, None] = _Unset,
+        examples: Optional[List[Any]] = None,
+        **extra: Any,
 ) -> Any:
+    """
+    Declare a form parameter for a path operation.
+
+    Args:
+        default (Any):
+            Default value if the parameter field is not set.
+        default_factory (Union[Callable[[], Any], None]):
+            Callable to generate the default value.
+        embed (bool):
+            If `True`, the parameter will be expected in a JSON body as a key, instead
+            of being the JSON body itself.
+        alias (Optional[str]):
+            Alternative name for the parameter field, used when parameter name
+            conflicts with reserved words.
+        title (Optional[str]):
+            Human-readable title for the parameter.
+        description (Optional[str]):
+            Human-readable description for the parameter.
+        gt (Optional[float]):
+            Specifies that the value must be greater than this value, applicable only to numbers.
+        ge (Optional[float]):
+            Specifies that the value must be greater than or equal to this value, applicable only to numbers.
+        lt (Optional[float]):
+            Specifies that the value must be less than this value, applicable only to numbers.
+        le (Optional[float]):
+            Specifies that the value must be less than or equal to this value, applicable only to numbers.
+        min_length (Optional[int]):
+            Minimum length for string values.
+        max_length (Optional[int]):
+            Maximum length for string values.
+        pattern (Optional[str]):
+            Regular expression pattern for string values.
+        discriminator (Union[str, None]):
+            Field name for discriminating the type in a tagged union.
+        strict (Union[bool, None]):
+            Enables strict validation if set to `True`.
+        multiple_of (Union[float, None]):
+            Specifies that the value must be a multiple of this value, applicable only to numbers.
+        allow_inf_nan (Union[bool, None]):
+            Allows values `inf`, `-inf`, and `nan`, applicable only to numbers.
+        max_digits (Union[int, None]):
+            Maximum number of digits allowed for numeric values.
+        decimal_places (Union[int, None]):
+            Maximum number of decimal places allowed for numeric values.
+        examples (Optional[List[Any]]):
+            Example values for the parameter.
+        **extra (Any):
+            Extra fields for JSON Schema.
+
+    Returns:
+        Any: form parameter for a *path operation*.
+    """
     media_type = "application/x-www-form-urlencoded"
-    return _params.Form(
+    return _params_Form(
         default=default,
         default_factory=default_factory,
         embed=embed,
         media_type=media_type,
         alias=alias,
-        alias_priority=alias_priority,
         title=title,
         description=description,
         gt=gt,
@@ -1575,7 +592,6 @@ def Form(  # noqa: N802
         min_length=min_length,
         max_length=max_length,
         pattern=pattern,
-        regex=regex,
         discriminator=discriminator,
         strict=strict,
         multiple_of=multiple_of,
@@ -1583,246 +599,87 @@ def Form(  # noqa: N802
         max_digits=max_digits,
         decimal_places=decimal_places,
         examples=examples,
-        deprecated=deprecated,
-        include_in_schema=include_in_schema,
-        json_schema_extra=json_schema_extra,
         **extra,
     )
 
-
-def File(  # noqa: N802
-    default: Annotated[
-        Any,
-        Doc(
-            """
-            Default value if the parameter field is not set.
-            """
-        ),
-    ] = Undefined,
-    *,
-    default_factory: Annotated[
-        Union[Callable[[], Any], None],
-        Doc(
-            """
-            A callable to generate the default value.
-
-            This doesn't affect `Path` parameters as the value is always required.
-            The parameter is available only for compatibility.
-            """
-        ),
-    ] = _Unset,
-    alias: Annotated[
-        Optional[str],
-        Doc(
-            """
-            An alternative name for the parameter field.
-
-            This will be used to extract the data and for the generated OpenAPI.
-            It is particularly useful when you can't use the name you want because it
-            is a Python reserved keyword or similar.
-            """
-        ),
-    ] = None,
-    alias_priority: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Priority of the alias. This affects whether an alias generator is used.
-            """
-        ),
-    ] = _Unset,
-    title: Annotated[
-        Optional[str],
-        Doc(
-            """
-            Human-readable title.
-            """
-        ),
-    ] = None,
-    description: Annotated[
-        Optional[str],
-        Doc(
-            """
-            Human-readable description.
-            """
-        ),
-    ] = None,
-    gt: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Greater than. If set, value must be greater than this. Only applicable to
-            numbers.
-            """
-        ),
-    ] = None,
-    ge: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Greater than or equal. If set, value must be greater than or equal to
-            this. Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    lt: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Less than. If set, value must be less than this. Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    le: Annotated[
-        Optional[float],
-        Doc(
-            """
-            Less than or equal. If set, value must be less than or equal to this.
-            Only applicable to numbers.
-            """
-        ),
-    ] = None,
-    min_length: Annotated[
-        Optional[int],
-        Doc(
-            """
-            Minimum length for strings.
-            """
-        ),
-    ] = None,
-    max_length: Annotated[
-        Optional[int],
-        Doc(
-            """
-            Maximum length for strings.
-            """
-        ),
-    ] = None,
-    pattern: Annotated[
-        Optional[str],
-        Doc(
-            """
-            RegEx pattern for strings.
-            """
-        ),
-    ] = None,
-    regex: Annotated[
-        Optional[str],
-        Doc(
-            """
-            RegEx pattern for strings.
-            """
-        ),
-        deprecated(
-            "Deprecated in Pydantic v2, use `pattern` instead."
-        ),
-    ] = None,
-    discriminator: Annotated[
-        Union[str, None],
-        Doc(
-            """
-            Parameter field name for discriminating the type in a tagged union.
-            """
-        ),
-    ] = None,
-    strict: Annotated[
-        Union[bool, None],
-        Doc(
-            """
-            If `True`, strict validation is applied to the field.
-            """
-        ),
-    ] = _Unset,
-    multiple_of: Annotated[
-        Union[float, None],
-        Doc(
-            """
-            Value must be a multiple of this. Only applicable to numbers.
-            """
-        ),
-    ] = _Unset,
-    allow_inf_nan: Annotated[
-        Union[bool, None],
-        Doc(
-            """
-            Allow `inf`, `-inf`, `nan`. Only applicable to numbers.
-            """
-        ),
-    ] = _Unset,
-    max_digits: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Maximum number of allow digits for strings.
-            """
-        ),
-    ] = _Unset,
-    decimal_places: Annotated[
-        Union[int, None],
-        Doc(
-            """
-            Maximum number of decimal places allowed for numbers.
-            """
-        ),
-    ] = _Unset,
-    examples: Annotated[
-        Optional[List[Any]],
-        Doc(
-            """
-            Example values for this field.
-            """
-        ),
-    ] = None,
-    deprecated: Annotated[
-        Union[deprecated, str, bool, None],
-        Doc(
-            """
-            Mark this parameter field as deprecated.
-
-            It will affect the generated OpenAPI (e.g. visible at `/docs`).
-            """
-        ),
-    ] = None,
-    include_in_schema: Annotated[
-        bool,
-        Doc(
-            """
-            To include (or not) this parameter field in the generated OpenAPI.
-            You probably don't need it, but it's available.
-
-            This affects the generated OpenAPI (e.g. visible at `/docs`).
-            """
-        ),
-    ] = True,
-    json_schema_extra: Annotated[
-        Union[Dict[str, Any], None],
-        Doc(
-            """
-            Any additional JSON schema data.
-            """
-        ),
-    ] = None,
-    **extra: Annotated[
-        Any,
-        Doc(
-            """
-            Include extra fields used by the JSON Schema.
-            """
-        ),
-        deprecated(
-            """
-            The `extra` kwargs is deprecated. Use `json_schema_extra` instead.
-            """
-        ),
-    ],
+def File(
+        default: Any = Undefined,
+        *,
+        default_factory: Union[Callable[[], Any], None] = _Unset,
+        alias: Optional[str] = None,
+        title: Optional[str] = None,
+        description: Optional[str] = None,
+        gt: Optional[float] = None,
+        ge: Optional[float] = None,
+        lt: Optional[float] = None,
+        le: Optional[float] = None,
+        min_length: Optional[int] = None,
+        max_length: Optional[int] = None,
+        pattern: Optional[str] = None,
+        discriminator: Union[str, None] = None,
+        strict: Union[bool, None] = _Unset,
+        multiple_of: Union[float, None] = _Unset,
+        allow_inf_nan: Union[bool, None] = _Unset,
+        max_digits: Union[int, None] = _Unset,
+        decimal_places: Union[int, None] = _Unset,
+        examples: Optional[List[Any]] = None,
+        **extra: Any,
 ) -> Any:
+    """
+    Declare a file parameter for a path operation.
+
+    Args:
+        default (Any):
+            Default value if the parameter field is not set.
+        default_factory (Union[Callable[[], Any], None]):
+            Callable to generate the default value.
+        alias (Optional[str]):
+            Alternative name for the parameter field, used when parameter name
+            conflicts with reserved words.
+        title (Optional[str]):
+            Human-readable title for the parameter.
+        description (Optional[str]):
+            Human-readable description for the parameter.
+        gt (Optional[float]):
+            Specifies that the value must be greater than this value, applicable only to numbers.
+        ge (Optional[float]):
+            Specifies that the value must be greater than or equal to this value, applicable only to numbers.
+        lt (Optional[float]):
+            Specifies that the value must be less than this value, applicable only to numbers.
+        le (Optional[float]):
+            Specifies that the value must be less than or equal to this value, applicable only to numbers.
+        min_length (Optional[int]):
+            Minimum length for string values.
+        max_length (Optional[int]):
+            Maximum length for string values.
+        pattern (Optional[str]):
+            Regular expression pattern for string values.
+        discriminator (Union[str, None]):
+            Field name for discriminating the type in a tagged union.
+        strict (Union[bool, None]):
+            Enables strict validation if set to `True`.
+        multiple_of (Union[float, None]):
+            Specifies that the value must be a multiple of this value, applicable only to numbers.
+        allow_inf_nan (Union[bool, None]):
+            Allows values `inf`, `-inf`, and `nan`, applicable only to numbers.
+        max_digits (Union[int, None]):
+            Maximum number of digits allowed for numeric values.
+        decimal_places (Union[int, None]):
+            Maximum number of decimal places allowed for numeric values.
+        examples (Optional[List[Any]]):
+            Example values for the parameter.
+        **extra (Any):
+            Extra fields for JSON Schema.
+
+    Returns:
+        Any: file parameter for a *path operation*.
+    """
     media_type = "multipart/form-data"
-    return _params.File(
+    return _params_File(
         default=default,
         default_factory=default_factory,
         media_type=media_type,
         alias=alias,
-        alias_priority=alias_priority,
         title=title,
         description=description,
         gt=gt,
@@ -1832,7 +689,6 @@ def File(  # noqa: N802
         min_length=min_length,
         max_length=max_length,
         pattern=pattern,
-        regex=regex,
         discriminator=discriminator,
         strict=strict,
         multiple_of=multiple_of,
@@ -1840,8 +696,5 @@ def File(  # noqa: N802
         max_digits=max_digits,
         decimal_places=decimal_places,
         examples=examples,
-        deprecated=deprecated,
-        include_in_schema=include_in_schema,
-        json_schema_extra=json_schema_extra,
         **extra,
     )

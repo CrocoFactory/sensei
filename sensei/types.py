@@ -69,6 +69,24 @@ class IRateLimit(ABC):
         """
         pass
 
+    def _rate(self) -> float:
+        return self._calls / self._period
+
+    def __eq__(self, other: "IRateLimit") -> bool:
+        return self._rate() == other._rate()
+
+    def __lt__(self, other: "IRateLimit") -> bool:
+        return self._rate() < other._rate()
+
+    def __le__(self, other: "IRateLimit") -> bool:
+        return self._rate() <= other._rate()
+
+    def __gt__(self, other: "IRateLimit") -> bool:
+        return self._rate() > other._rate()
+
+    def __ge__(self, other: "IRateLimit") -> bool:
+        return self._rate() >= other._rate()
+
 
 class IRequest(Protocol):
     @property
@@ -110,4 +128,8 @@ class IResponse(Protocol):
 
     @property
     def content(self) -> bytes:
+        pass
+
+    @property
+    def headers(self) -> Mapping[str, Any]:
         pass
