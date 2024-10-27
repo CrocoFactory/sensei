@@ -66,6 +66,8 @@ nav:
       - Params/Response: learn/user_guide/params_response.md
       - Making Aliases: learn/user_guide/making_aliases.md
       - Preparers/Finalizers: learn/user_guide/preparers_finalizers.md
+      - OOP Style: learn/user_guide/oop_style.md
+      - Managing Requests: learn/user_guide/managing_requests.md
   - About: about.md
 
 
@@ -95,6 +97,7 @@ markdown_extensions:
         format: !!python/name:pymdownx.superfences.fence_code_format
   pymdownx.tilde:
 
+  pymdownx.details:
   pymdownx.blocks.admonition:
     types:
       - note

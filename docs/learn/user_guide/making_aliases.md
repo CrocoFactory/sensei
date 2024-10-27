@@ -34,7 +34,7 @@ def create_user(firstName: str, birthCity: str) -> User:
 
 But this code violates python naming conventions. For instance, PyCharm warns you that "Argument name should be lowercase."
 Because according to the conventions, arguments in Python should be of the snake_case. To resolve this issue, you can use 
-[Case Converters](/learn/user_guide/params_response.html#case-converters).
+**Case Converters**.
 
 ### Case Converters
 
@@ -171,7 +171,7 @@ Arguments, responsible for applying converters, have the same names as `Router` 
 
 #### Hooks
 
-When you use OOP style, you can define converters through hooks. `<param_type>` corresponds to `__<param_type>_case__` hook.
+When you use [OOP Style](/learn/user_guide/oop_style.html), you can define converters through hooks. `<param_type>` corresponds to `__<param_type>_case__` hook.
 Let's look at the example below:
 
 ```python
@@ -392,7 +392,7 @@ that conform to Python's standards. Here’s a concise summary of the key concep
     providing it directly in the route decorator. This is useful for handling endpoints that do not conform to the 
     general conventions.
 
-4. **Hooks**: For OOP-style implementations, you can define case converters through hooks within your model classes.
+4. **Hooks**: For [OOP Style](/learn/user_guide/oop_style.html) implementations, you can define case converters through hooks within your model classes.
 
 5. **AliasGenerator**: When dealing with nested models and varying case conventions (like camelCase for responses and 
     kebab-case for requests), the `AliasGenerator` from Pydantic is utilized. It allows for defining separate 

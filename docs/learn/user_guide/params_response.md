@@ -10,7 +10,7 @@ If you don't know types of "request parameters", visit [HTTP Requests](/learn/ht
 Sensei's Param Types are inherited from `FieldInfo`, produced by `Field` function. You can apply the same approaches
 that was described for [Field Types](/learn/user_guide/first_steps.html#field-types).
 
-!!! example
+??? example
     Here is a function that creates user and returns JWT token, corresponding to the user.
     ```python
     @router.post('/users')
@@ -222,7 +222,7 @@ a different way.
 Let's assume you use `Body(media_type='multipart/form-data')` instead of `File`. If you try to pass content of binary
 file with non-UTF8 characters, Sensei cannot finish serialization and will throw the `UnicodeDecodeError`.
 
-!!! failure "UnicodeDecodeError"
+??? failure "UnicodeDecodeError"
     ```python 
     @router.post('/upload')
     def upload_image(image: Annotated[bytes, Body(media_type='multipart/form-data')]) -> str:
@@ -501,7 +501,7 @@ def get_users() -> list[User]:
 
 ### `Self`
 `Self` response type is used only in, but it's used only in [routed methods](/learn/user_guide/first_steps.html#routed-methods)
-of classes (see `OOP-style`), specifically in class method(`@classmethod`) and instance methods(`self`). To use `Self`, 
+of classes (will be explored in [OOP Style](/learn/user_guide/oop_style.html)), specifically in class method(`@classmethod`) and instance methods(`self`). To use `Self`, 
 you need to import it.
           
 In python 3.8

@@ -240,7 +240,7 @@ class User(APIModel):
 Models created using `APIModel` have validation.
 This means if you pass value not matching corresponding field constraints, `ValidationError` will be thrown.
 
-!!! failure "ValidationError"
+??? failure "ValidationError"
     ```python
     User(id=-1, username="user", email="randomstr", age=18.01, is_active=-1)
     ```
@@ -562,8 +562,8 @@ print(task)
 
 ### Routed Methods
 
-You can create a model that performs both validation and making request. This is `OOP-style` of making requests with
-Sensei.
+You can create a model that performs both validation and making request. This is [OOP Style](/learn/user_guide/oop_style.html) 
+of making requests with Sensei.
 
 ```python
 from typing import Annotated
@@ -615,7 +615,7 @@ print(user.email)
 george.bluth@gmail.com
 ```
 
-`OOP-style` is good practice to organize endpoints in one class when they related to one model.
+[OOP Style](/learn/user_guide/oop_style.html) is good practice to organize endpoints in one class when they related to one model.
 
 /// warning
 You must not decorate a method as routed in a class not inherited from `APIModel`.
