@@ -200,7 +200,8 @@ class Endpoint(Generic[ResponseModel]):
         lambda model: model is bytes: lambda model, response: response.content,
         lambda model: isinstance(model, BaseModel): lambda model, response: model,
         lambda model: model is None: lambda model, response: None,
-        lambda model: get_origin(model) is list and len(get_args(model)) == 1 and isinstance(get_args(model)[0], type(BaseModel)):
+        lambda model:
+        (get_origin(model) is list and len(get_args(model)) == 1 and isinstance(get_args(model)[0], type(BaseModel))):
             lambda model, response: [get_args(model)[0](**value) for value in response.json()],
         lambda model: (get_origin(model) is list and len(get_args(model)) == 1
                        and ((arg := get_args(model)[0]) is dict or get_origin(arg) is dict)):
