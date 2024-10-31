@@ -194,7 +194,9 @@ class Endpoint(Generic[ResponseModel]):
         lambda model: isinstance(model, type(BaseModel)): lambda model, response: model(**response.json()),
         lambda model: model is str: lambda model, response: response.text,
         lambda model: dict in (model, get_origin(model)): lambda model, response: (
-            response.json() if response.request.method not in('HEAD', 'OPTIONS') else dict(list(response.headers.items()))),
+            response.json() if response.request.method not in ('HEAD', 'OPTIONS') else dict(
+                list(response.headers.items()))
+        ),
         lambda model: model is bytes: lambda model, response: response.content,
         lambda model: isinstance(model, BaseModel): lambda model, response: model,
         lambda model: model is None: lambda model, response: None,

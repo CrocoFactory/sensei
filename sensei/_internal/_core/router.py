@@ -190,7 +190,7 @@ class Router(IRouter):
              Optional[CaseConverter]: Case converter of JSON response.
         """
         return self._response_case
-    
+
     def _get_decorator(
             self,
             path: str,

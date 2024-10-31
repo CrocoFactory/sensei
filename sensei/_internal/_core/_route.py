@@ -145,7 +145,8 @@ class Route(ABC):
         """
         Args:
             func (Preparer | None):
-                Args preparer, used to prepare the args for request before it. The final value also must be `Args` instance.
+                Args preparer, used to prepare the args for request before it.
+                The final value also must be `Args` instance.
                 Executed after router's __prepare_args__
 
         Returns:
