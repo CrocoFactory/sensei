@@ -118,7 +118,8 @@ Instead of `@router.get`, you can use the other operations (HTTP methods):
 * `@router.options`
 
 These decorators are called **route decorators** and the result of these decorators is called 
-**routed function(method)**
+**routed function (method)**. Sometimes, if it is clear from the context that we are talking about a routed function,
+we will shorten this name to a **route**.
 
 /// warning
 Routed functions must not have body.
@@ -151,7 +152,7 @@ call [response type](/learn/user_guide/params_response.html#response-types).
 This "omitting" pattern is called **Interface-driven function** or **Signature-driven function**, because we do not
 write any code achieving
 the result. We dedicate this responsibility to some tool, parsing the function's interface(signature). And according to
-it, tool handles a call automatically.
+it, tool handles a call automatically. This pattern is the basis for achieving a declarative code style
 ///
 
 ### Step 5: Making the API Call
@@ -562,8 +563,8 @@ print(task)
 
 ### Routed Methods
 
-You can create a model that performs both validation and making request. This is [OOP Style](/learn/user_guide/oop_style.html) 
-of making requests with Sensei.
+You can create a model that performs both validation and making request. This OOP Style is called [Routed Model](/learn/user_guide/routed_model.html)
+(we will explore it later).
 
 ```python
 from typing import Annotated
@@ -615,7 +616,7 @@ print(user.email)
 george.bluth@gmail.com
 ```
 
-[OOP Style](/learn/user_guide/oop_style.html) is good practice to organize endpoints in one class when they related to one model.
+[Routed Model](/learn/user_guide/routed_model.html) is good practice to organize endpoints in one class when they related to one model.
 
 /// warning
 You must not decorate a method as routed in a class not inherited from `APIModel`.

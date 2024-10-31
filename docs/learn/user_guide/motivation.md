@@ -1,6 +1,21 @@
 If you are already motivated to use the framework, go to
 [First steps](/learn/user_guide/first_steps.html)
 
+```mermaid
+mindmap
+  root((Golden Rules))
+    SyncAndAsync(Sync/Async)
+      DRY(DRY)
+    Validation(Validation)
+      pydantic(pydantic)
+      Benefits(Benefits)
+    RateLimits(Rate Limits)
+    RelevantResponse(Relevant response)
+        PrimaryData(Primary Data)
+        DiscardingFields(Discarding Fields)
+        Refactoring(Refactoring)
+```
+
 ## What is API Wrapper?
 
 An API wrapper is a client-side collection of code that simplifies the interaction between a client application and a
@@ -729,10 +744,18 @@ This will give you the following transformed response:
 }
 ```
 
-## Magic
+## Recipe
 
 The features just discussed we will call "Golden Rules".
 If you wish to merge this features into one tool, I can make you happy!
 These rules are the foundation of Sensei framework!
+
+```mermaid
+graph TD
+    A{{Golden Rules}} --> B{Sensei}
+    C{{Magic}} --> B
+    D[Declarative Style] --> C
+    E[Signature-Driven] --> C
+```
 
 Let's go to [the first steps](/learn/user_guide/first_steps.html) of your learning curve!
