@@ -52,13 +52,13 @@ class _ModelMeta(ModelMetaclass):
 
 class APIModel(BaseModel, metaclass=_ModelMeta):
     """
-    Base class for creating Sensei API models. Don`t confuse it with Pydantic BaseModel, it`s used simultaneously
-    for validating output data and provide "routed" functions.
+    Base class for creating Sensei API models. Don't confuse it with Pydantic BaseModel, it's used simultaneously
+    for validating output data and provides "routed" functions.
 
-    But usage rools are the same with BaseModel
+    But usage rools is the same with BaseModel
     Usage docs: https://docs.pydantic.dev/2.9/concepts/models/
 
-    To make the proper class, decorate it with @router.model. Avoiding this requirements will lead you to the issues.
+    To make the proper class, decorate it with @router.model. Avoiding this requirement will lead you to the issues.
 
     Examples:
         >>> from typing import Annotated, Any, Self
@@ -110,6 +110,21 @@ class APIModel(BaseModel, metaclass=_ModelMeta):
             Args: The prepared arguments.
         """
         return args
+
+    @staticmethod
+    def __default_case__(s: str) -> str:
+        """
+        Convert the case of all parameters.
+
+        This hook is used to convert the case of all parameters to the desired format.
+
+        Args:
+            s (str): The original parameter string.
+
+        Returns:
+            str: The converted parameter string.
+        """
+        return s
 
     @staticmethod
     def __query_case__(s: str) -> str:

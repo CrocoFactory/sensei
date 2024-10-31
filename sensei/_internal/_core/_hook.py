@@ -5,6 +5,7 @@ class Hook(Enum):
     JSON_FINALIZER = "__finalize_json__"
     ARGS_PREPARER = "__prepare_args__"
 
+    DEFAULT_CASE = "__default_case__"
     QUERY_CASE = "__query_case__"
     BODY_CASE = "__body_case__"
     COOKIE_CASE = "__cookie_case__"

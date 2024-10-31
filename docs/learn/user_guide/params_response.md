@@ -500,16 +500,16 @@ def get_users() -> list[User]:
 ///
 
 ### `Self`
-`Self` response type is used only in, but it's used only in [routed methods](/learn/user_guide/first_steps.html#routed-methods)
-of classes (will be explored in [OOP Style](/learn/user_guide/oop_style.html)), specifically in class method(`@classmethod`) and instance methods(`self`). To use `Self`, 
-you need to import it.
+`Self` response type is used only in [routed methods](/learn/user_guide/first_steps.html#routed-methods)
+of classes (will be explored in [Routed Model](/learn/user_guide/routed_model.html)), specifically in class method 
+(`@classmethod`) and instance methods (`self`). To use `Self`, you need to import it.
           
-In python 3.8
+In python 3.9
 ```python
 from typing_extensions import Self
 ```
 
-In python >=3.9
+In python >3.10
 ```python
 from typing import Self
 ```
@@ -563,7 +563,7 @@ The current class in which the method is declared is taken as the model
     ```
 
 #### Forward Reference
-In python 3.8 `Self` is not included into `typing` module, but is included into `typing_extensions`. If for some reason you can't use `Self`, you can achieve
+In python 3.9 `Self` is not included into `typing` module, but is included into `typing_extensions`. If for some reason you can't use `Self`, you can achieve
 the same functionality using **Forward References**.
 
 /// info
@@ -610,6 +610,34 @@ class User(APIModel):
     def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> "User": 
         ...
 ```
+
+/// warning
+Forward Reference can only be used in routed method (not routed functions). In the following example, Sensei cannot 
+understand the response type.
+
+```python
+class User(APIModel):
+    email: EmailStr
+    id: PositiveInt
+    first_name: str
+    last_name: str
+    avatar: AnyHttpUrl
+
+@router.get('/users')
+def list(
+        cls,
+        page: Annotated[int, Query()] = 1,
+        per_page: Annotated[int, Query(le=7)] = 3
+) -> list["User"]:
+    ...
+
+@router.get('/users/{id_}')
+def get(cls, id_: Annotated[int, Path(alias='id')]) -> "User": 
+    ...
+```
+
+
+///
          
 ### `list[Self]`
 `list[Self]` it's a mix of [`list[<BaseModel>]`](/learn/user_guide/params_response.html#listbasemodel) 

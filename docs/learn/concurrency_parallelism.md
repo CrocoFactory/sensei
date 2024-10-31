@@ -19,9 +19,25 @@ For example, if you have a multicore processor, parallelism allows two tasks to 
 
 ### Key Differences
 
-![Comparison](/img/concurrency_parallelism/comparison.png)
-
-*Illustration from [this article](https://medium.com/@deepshig/concurrency-vs-parallelism-4a99abe9efb8)*
+```mermaid
+flowchart LR
+    subgraph "Parallel"
+        direction LR
+            Slot1{{"Slot 🎰"}}
+            Slot2{{"Slot 🎰"}}
+            A2["👨‍🚀"]---B2["👨‍🌾️"]---C2["👨‍🔧"]-->Slot1
+            D2["👨‍🚒"]---E2["👨‍🎓"]---F2["👨‍🎤"]-->Slot2
+    end
+    subgraph "Concurrent"
+        direction LR
+            Slot{{"Slot 🎰"}}
+            A1["👨‍🚀"]---B1["👨‍🌾️"]---C1["👨‍🔧"]-->Slot
+            D1["👨‍🚒"]---E1["👨‍🎓"]---F1["👨‍🎤"]-->Slot
+    end
+    
+    classDef noBg fill:none,stroke:none;
+    class A1,B1,C1,D1,E1,F1,A2,B2,C2,D2,E2,F2 noBg;
+```
 
 Here is a table showing key differences between concurrency and parallelism
 
@@ -276,7 +292,7 @@ You can think of the event loop as a conductor, coordinating when each coroutine
     resulting in inefficiency. With `async/await`, your program can handle I/O-bound tasks concurrently, making better 
     use of resources.
 
-    !!! example
+    ??? example
         Consider a program that needs to download multiple web pages:
 
         **Synchronous Version:**

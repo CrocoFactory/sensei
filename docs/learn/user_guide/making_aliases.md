@@ -36,7 +36,7 @@ But this code violates python naming conventions. For instance, PyCharm warns yo
 Because according to the conventions, arguments in Python should be of the snake_case. To resolve this issue, you can use 
 **Case Converters**.
 
-### Case Converters
+## Case Converters
 
 **Case Converter** is a function that takes string of one case and converts it to string of another case and similar structure.
 
@@ -96,8 +96,9 @@ But it's important to know, that case converters in the following three examples
 without touching nested models. Let's explore how to apply converters. 
 
 
-#### Router
-You can pass case converters as arguments to `Router` constructor. 
+### Router (Router Level)
+You can pass case converters as arguments to `Router` constructor. This process is called "applying case converters at 
+Router level."  
 
 `<param_type>` corresponds to the `<param_type>_case` argument in `Router` constructor, where `<param_type>` is
 `path`, `query`, etc. And there is `response_case` that corresponds to the conversion of response fields.
@@ -144,10 +145,10 @@ Because headers are called this way:
 - etc...
 ///
       
-#### Route Decorator
+### Route Decorator (Route Level)
 
-You can pass case converters as arguments to [route decorator](/learn/user_guide/first_steps.html#routed-function).
-These converters have higher priority, than converters passed to `Router`. 
+You can pass case converters as arguments to [route decorator](/learn/user_guide/first_steps.html#routed-function). This process is called "applying case converters at 
+Route level." These converters have higher priority, than [router level](#router-router-level) converters. 
 
 Arguments, responsible for applying converters, have the same names as `Router` constructor.
         
@@ -169,10 +170,11 @@ Arguments, responsible for applying converters, have the same names as `Router` 
         ...
     ```
 
-#### Hooks
+### Hooks (Routed Model level)
 
-When you use [OOP Style](/learn/user_guide/oop_style.html), you can define converters through hooks. `<param_type>` corresponds to `__<param_type>_case__` hook.
-Let's look at the example below:
+When you use [Routed Models](/learn/user_guide/routed_model.html) , you can define converters through hooks. 
+`<param_type>` corresponds to `__<param_type>_case__` hook. This process is called "applying case converters at 
+Routed Model level."   Let's look at the example below:
 
 ```python
 router = Router(host, response_case=camel_case)
@@ -191,22 +193,59 @@ class User(APIModel):
     def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: ...
 ```
 
-Hook function can be represented both as instance method and as static method. When you define hook, you replace corresponding
-`Router` converter. So, `response_case=camel_case` in `Router`
+Hook function can be represented both as instance method and as static method. 
+
+/// warning
+Don't interact with `self` argument in hooks. There it always has `None` value. This will be described later in 
+[Routed Models](/learn/user_guide/routed_model.html)
+///
+
+When you define hook, you override corresponding
+`Router` converter. If you try to use router outside [Routed Model](/learn/user_guide/routed_model.html),
+you wouldn't use old router's converter, because it's overriden by hook. 
+   
+So, `response_case=camel_case` in `Router`
 
 ```python
 router = Router(host, response_case=camel_case)
 ```
 
-Will be replaced with this hook
+Will be overriden by hook `__response_case__`
 
 ```python
 @staticmethod
 def __response_case__(s: str) -> str:
     return snake_case(s)
 ```
+
+Consequently, this level has the same priority as [router level](#router-router-level), because it replaces it. As well 
+as [router level](#router-router-level) level, it has lower priority than [route level](#route-decorator-route-level).
+       
+## Configuration Levels (Priority)
+
+These levels determine the scope of applying some request configurator:
+
+* **Router Level**: apply to each routed function associated with that router
+* **Route Level**: apply only to this routed function
+* **Routed Model Level**: replaces Router Level, but defined in a routed model.
+         
+Moreover, there are different types of configuration levels, each of which has special property. 
+In the case of case converters, this type is called **Priority Levels**. Because, if multiple configurators are applied
+to one target (routed function), only one will be executed, based on its priority. 
+They can be described in that diagram:
+
+```mermaid
+flowchart 
+     
+    RoutedModel["Routed Model Level (Second Priority)"] --> |replaces| Router["Router Level (Second Priority)"]
+    Route["Route Level (First Priority)"] ---->|priority over| Router["Router Level (Second Priority)"]
     
-### `AliasGenerator`
+    style Route fill:#C94A2D,stroke:#000,stroke-width:2px;  
+    style RoutedModel fill:#D88C00,stroke:#000,stroke-width:2px; 
+    style Router fill:#2F8B5D,stroke:#000,stroke-width:2px;
+```
+    
+## `AliasGenerator`
 What if we need to apply Case Converters at the **deeper** nesting levels? Assume the API has two endpoints:
                                   
 1) For getting bestseller of a specific year
@@ -275,7 +314,7 @@ def list_item(book: Annotated[Book, Body(embed=False)]) -> None:
 
 Let's explore what's going on.
 
-#### Validation Alias
+### Validation Alias
 
 The validation alias is used when validating incoming data in models. That appears when Sensei unpack response to some model.
 In this example, the `validation_alias` lambda function takes a field name and converts it to camelCase.
@@ -315,7 +354,7 @@ Let's break this routed function down into steps:
          
 3) Returning the result
 
-#### Serialization Alias
+### Serialization Alias
 The serialization alias is used when serializing the model using `model_dump(by_alias=True)`.   
 That appears when Sensei serializes request arguments represented as some model.
 In this example, the `serialization_alias` lambda function converts field names to a camelCase.
@@ -352,7 +391,7 @@ SHARED_CONFIG = ConfigDict(
 ```
 ///
 
-### Field-Specific Aliases
+## Field-Specific Aliases
 In some cases, you may want to apply a specific alias for certain field.
 
 ```python
@@ -392,7 +431,8 @@ that conform to Python's standards. Here’s a concise summary of the key concep
     providing it directly in the route decorator. This is useful for handling endpoints that do not conform to the 
     general conventions.
 
-4. **Hooks**: For [OOP Style](/learn/user_guide/oop_style.html) implementations, you can define case converters through hooks within your model classes.
+4. **Hooks**: For [Routed Models](/learn/user_guide/routed_model.html), you can define case converters through 
+    hooks within your model classes.
 
 5. **AliasGenerator**: When dealing with nested models and varying case conventions (like camelCase for responses and 
     kebab-case for requests), the `AliasGenerator` from Pydantic is utilized. It allows for defining separate 

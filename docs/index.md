@@ -65,7 +65,8 @@ class Pokemon(APIModel):
 
 
 @router.get('/pokemon/{name}')
-def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon: ...
+def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon: 
+    ...
 
 
 pokemon = get_pokemon(name="pikachu")
@@ -73,7 +74,7 @@ print(pokemon)
 ```
 
 Sensei abstracts away much of the manual work, letting developers focus on function signatures while the framework
-handles the API logic and data validation.
+handles the API logic and data validation. This enables declarative style for your apps.
 
 The example of [First Request](#first-request) demonstrates a simple and robust HTTP request using the Sensei framework.
 Here's the key breakdown of the process:
@@ -95,8 +96,8 @@ It inherits from `APIModel`, which provides validation and serialization.
 
 #### 4. Creating the Endpoint:
 
-The `get_pokemon` function is a [routed function](/learn/user_guide/first_steps.html#routed-function) decorated with 
-`@router.get`, defining a GET request for `/pokemon/{name}`.
+The `get_pokemon` function is a routed function decorated with `@router.get`, defining a GET request for
+`/pokemon/{name}`.
 This uses `Annotated` to ensure that `name` is a string and adheres to the validation rule (max length of 300).
 
 #### 5. Making the Request:

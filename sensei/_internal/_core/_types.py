@@ -74,10 +74,13 @@ class _RoutedModel(Protocol):
     __router__ = ...
     __finalize_json__: JsonFinalizer
     __prepare_args__: Preparer
+
+    __default_case__: CaseConverter
     __query_case__: CaseConverter
     __body_case__: CaseConverter
     __cookie_case__: CaseConverter
     __header_case__: CaseConverter
+    __response_case__: CaseConverter
 
 
 RoutedModel = TypeVar("RoutedModel", bound=_RoutedModel)
