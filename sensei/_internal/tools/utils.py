@@ -142,14 +142,6 @@ def is_method(obj: Any) -> bool:
     return is_selfmethod(obj) or is_staticmethod(obj)
 
 
-def is_routed_method(obj: Any) -> bool:
-    cond = False
-    if is_method(obj):
-        func = obj.__func__
-        cond = getattr(func, '__routed__',  None) is True
-    return cond
-
-
 def bind_attributes(obj: _T, *named_objects: tuple[_NamedObj]) -> _T:
     for named_obj in named_objects:
         setattr(obj, named_obj.__name__, named_obj)

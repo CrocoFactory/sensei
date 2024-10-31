@@ -25,7 +25,6 @@ def router(base_url) -> Router:
 @pytest.fixture()
 def base_maker() -> Callable[[Router], type[APIModel]]:
     def model_base(router) -> type[APIModel]:
-        @router.model()
         class BaseModel(APIModel):
             def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
                 return json['data']

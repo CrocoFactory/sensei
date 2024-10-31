@@ -1,8 +1,9 @@
 from typing import Any, Callable, List, Optional, Union
 
-from ._internal import (Path as _params_Path, Query as _params_Query, Cookie as _params_Cookie,
-                        Header as _params_Header, Body as _params_Body, File as _params_File,
-                        Form as _params_Form, Undefined)
+from ._compat import Undefined
+from ._params import (Path as _params_Path, Query as _params_Query, Cookie as _params_Cookie,
+                      Header as _params_Header, Body as _params_Body, File as _params_File,
+                      Form as _params_Form)
 
 _Unset: Any = Undefined
 
@@ -601,6 +602,7 @@ def Form(
         examples=examples,
         **extra,
     )
+
 
 def File(
         default: Any = Undefined,

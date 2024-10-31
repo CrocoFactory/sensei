@@ -10,11 +10,11 @@ from sensei._base_client import BaseClient
 from sensei._utils import get_base_url, normalize_url
 from sensei.client import AsyncClient, Client
 from sensei.types import IResponse
-from ._case_converters import CaseConverters
-from ._endpoint import Endpoint
-from ._requester import Requester, ResponseFinalizer, Preparer, JsonFinalizer
-from ._types import IRouter, Args, ResponseModel, RESPONSE_TYPES
-from ..tools import HTTPMethod, args_to_kwargs, MethodType, identical
+from ._endpoint import Endpoint, ResponseModel, RESPONSE_TYPES
+from ._requester import Requester
+from ._types import IRouter, Hooks
+from .args import Args
+from ..tools import HTTPMethod, args_to_kwargs, MethodType
 from ..tools.utils import is_coroutine_function
 
 _Client = TypeVar('_Client', bound=BaseClient)
@@ -47,11 +47,7 @@ class _CallableHandler(Generic[_Client]):
             host: str,
             request_args: _RequestArgs,
             method_type: MethodType,
-            case_converters: CaseConverters,
-            response_finalizer: ResponseFinalizer | None = None,
-            json_finalizer: JsonFinalizer = identical,
-            pre_preparer: Preparer = identical,
-            post_preparer: Preparer = identical,
+            hooks: Hooks
     ):
         self._func = func
         self._router = router
@@ -62,7 +58,12 @@ class _CallableHandler(Generic[_Client]):
         self._request_args = request_args
         self._method_type = method_type
         self._temp_client: _Client | None = None
-        self._case_converters = case_converters
+        self._case_converters = hooks.case_converters
+
+        post_preparer = hooks.post_preparer
+        pre_preparer = hooks.prepare_args
+        response_finalizer = hooks.response_finalizer
+        json_finalizer = hooks.finalize_json
 
         if is_coroutine_function(post_preparer):
             async def preparer(value: Args) -> Args:

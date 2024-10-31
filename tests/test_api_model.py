@@ -32,7 +32,6 @@ class TestAPIModel:
             def __response_case__(s: str) -> str:
                 return snake_case(s)
 
-        @router.model()
         class Validation(Base):
             def __cookie_case__(self, s: str) -> str:
                 return header_case(s)
