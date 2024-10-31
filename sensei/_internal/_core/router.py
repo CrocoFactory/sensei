@@ -9,33 +9,17 @@ from sensei._descriptors import RateLimitAttr, PortAttr
 from sensei._utils import get_base_url
 from sensei.cases import header_case as to_header_case
 from sensei.client import Manager
-from sensei.types import IRateLimit, Json
-from ._case_converters import CaseConverters, CaseConverter
-from ._endpoint import Args
-from ._hook import Hook
-from ._requester import JsonFinalizer, Preparer
+from sensei.types import IRateLimit
+from ._requester import JsonFinalizer
 from ._route import Route
-from ._types import RoutedFunction, RoutedModel, IRouter
-from .api_model import APIModel
+from ._types import IRouter, Preparer, RoutedFunction, CaseConverters, CaseConverter, Hooks
 from ..tools import HTTPMethod, set_method_type, identical, MethodType, bind_attributes
-
-_RouteDecorator = Callable[[Callable], RoutedFunction]
 
 _KT = TypeVar('_KT')
 _VT = TypeVar('_VT')
 
 
-class _MappingGetter(dict[_KT, _VT]):
-    def __init__(self, dict_getter: Callable[[], dict[_KT, _VT]]):
-        __dict = dict_getter()
-        super().__init__(__dict)
-        self.__getter = dict_getter
-
-    def __getitem__(self, item: _KT) -> _VT:
-        return self.__getter()[item]
-
-    def copy(self):
-        return _MappingGetter(self.__getter)
+_RouteDecorator = Callable[[Callable], RoutedFunction]
 
 
 class Router(IRouter):
@@ -206,7 +190,7 @@ class Router(IRouter):
              Optional[CaseConverter]: Case converter of JSON response.
         """
         return self._response_case
-    
+
     def _get_decorator(
             self,
             path: str,
@@ -236,13 +220,11 @@ class Router(IRouter):
         """
 
         def decorator(func: Callable) -> Callable:
-            def json_finalizer(json: Json) -> Json:
-                finalizer = identical if skip_finalizer else self._finalize_json
-                return finalizer(json)
-
-            def pre_preparer(args: Args) -> Args:
-                preparer = identical if skip_preparer else self._prepare_args
-                return preparer(args)
+            hooks = Hooks(
+                case_converters=case_converters,
+                finalize_json=self._finalize_json,
+                prepare_args=self._prepare_args,
+            )
 
             route = Route(
                 path=path,
@@ -250,12 +232,13 @@ class Router(IRouter):
                 router=self,
                 func=func,
                 host=self._host,
-                case_converters=case_converters,
-                json_finalizer=json_finalizer,
-                pre_preparer=pre_preparer
+                hooks=hooks,
+                skip_preparer=skip_preparer,
+                skip_finalizer=skip_finalizer,
             )
 
             func.__routed__ = True
+            func.__route__ = route
 
             def _setattrs(
                     instance: Any,
@@ -264,6 +247,7 @@ class Router(IRouter):
                     route: Route
             ) -> None:
                 method_type = route.method_type = wrapper.__method_type__  # type: ignore
+
                 if MethodType.self_method(method_type):
                     route.__self__ = instance
                     func.__self__ = instance
@@ -291,44 +275,6 @@ class Router(IRouter):
             return wrapper
 
         return decorator
-
-    def model(self, model_cls: Optional[RoutedModel] = None) -> RoutedModel:
-        """
-        Associate a model class with the router to enable "routed" methods and `dunder` hooks.
-
-        This method modifies a class derived from `APIModel` to work seamlessly with the router,
-        allowing the use of routed methods and special hooks.
-
-        Args:
-            model_cls (Optional[RoutedModel], optional):
-                The class to be modified. If `None`, returns a decorator for later use.
-                Defaults to `None`.
-
-        Raises:
-            ValueError: If a model is already linked to the router.
-        """
-
-        def decorator(model_cls: RoutedModel) -> RoutedModel:
-            if self._linked_to_model:
-                raise ValueError('Only one model can be associated with a router')
-
-            model_cls.__router__ = self
-            self._linked_to_model = True
-
-            hooks = Hook.values()
-
-            for hook in hooks:
-                hook_fun = getattr(model_cls, hook, None)
-
-                if hook_fun and hook_fun is not getattr(APIModel, hook):
-                    setattr(self, hook[1:-2], hook_fun)
-
-            return model_cls
-
-        if model_cls is None:
-            return decorator  # type: ignore
-        else:
-            return decorator(model_cls)
 
     def get(
             self,

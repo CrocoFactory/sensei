@@ -190,8 +190,8 @@ class TestRouter:
 
         router.port = None
 
-    def test_unset_params(self, base_maker, router):
-        base = base_maker(router)
+    def test_unset_params(self, base_url, router):
+        router = Router(base_url, __finalize_json__=lambda x: x['data'])
 
         class Company(APIModel):
             name: Optional[str] = None
@@ -201,7 +201,7 @@ class TestRouter:
             company: Optional[Company] = None
             start: datetime = None
 
-        class User(base):
+        class User(APIModel):
             email: EmailStr
             id: PositiveInt
             first_name: str

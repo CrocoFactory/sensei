@@ -10,7 +10,6 @@ from sensei import APIModel, Body, Form, File
 
 class TestValidation:
     def test_response_types(self, router):
-        @router.model()
         class _ValidationModel(APIModel):
             @staticmethod
             @router.get('/test1')
@@ -34,7 +33,6 @@ class TestValidation:
             _ValidationModel.test3()
 
     def test_args_validation(self, router):
-        @router.model()
         class _ValidationModel(APIModel):
             @router.delete('/users/{id_}')
             def delete(self) -> Self: ...
@@ -50,7 +48,6 @@ class TestValidation:
             model.get(0)
 
     def test_body_validation(self, router):
-        @router.model()
         class _ValidationModel(APIModel):
             @classmethod
             @router.post('/users/{id_}')

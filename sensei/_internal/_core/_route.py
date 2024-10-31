@@ -7,10 +7,9 @@ from typing import Callable, TypeVar
 
 from sensei._base_client import BaseClient
 from ._callable_handler import CallableHandler, AsyncCallableHandler
-from ._case_converters import CaseConverters
-from ._requester import ResponseFinalizer, Preparer, JsonFinalizer
-from ._types import IRouter
-from ..tools import HTTPMethod, MethodType, identical
+from ._requester import ResponseFinalizer, Preparer
+from ._types import IRouter, Hooks
+from ..tools import HTTPMethod, MethodType
 
 _Client = TypeVar('_Client', bound=BaseClient)
 
@@ -21,15 +20,13 @@ class Route(ABC):
         '_method',
         '_func',
         '_host',
-        '_response_finalizer',
         '_method_type',
         '_is_async',
-        '_case_converters',
-        '_preparer',
-        '_json_finalizer',
-        '_pre_preparer',
         '__self__',
         '_router',
+        '_hooks',
+        '_skip_preparer',
+        '_skip_finalizer'
     )
 
     def __new__(
@@ -40,9 +37,9 @@ class Route(ABC):
             *,
             func: Callable,
             host: str,
-            case_converters: CaseConverters,
-            json_finalizer: JsonFinalizer = identical,
-            pre_preparer: Preparer = identical,
+            hooks: Hooks,
+            skip_preparer: bool = False,
+            skip_finalizer: bool = False,
     ):
         if inspect.iscoroutinefunction(func):
             instance = super().__new__(_AsyncRoute)
@@ -63,9 +60,9 @@ class Route(ABC):
             *,
             func: Callable,
             host: str,
-            case_converters: CaseConverters,
-            json_finalizer: JsonFinalizer | None = None,
-            pre_preparer: Preparer = identical,
+            hooks: Hooks,
+            skip_preparer: bool = False,
+            skip_finalizer: bool = False,
     ):
         self._path = path
         self._method = method
@@ -73,13 +70,13 @@ class Route(ABC):
         self._router = router
 
         self._host = host
-        self._response_finalizer: ResponseFinalizer | None = None
-        self._preparer: Preparer = identical
+
+        self._hooks = hooks
+        self._skip_preparer = skip_preparer
+        self._skip_finalizer = skip_finalizer
+
         self._method_type: MethodType = MethodType.STATIC
 
-        self._case_converters = case_converters
-        self._json_finalizer = json_finalizer
-        self._pre_preparer = pre_preparer
         self.__self__: object | None = None
 
     @property
@@ -109,6 +106,10 @@ class Route(ABC):
         else:
             raise TypeError(f'Method type must be an instance of {MethodType}')
 
+    @property
+    def hooks(self) -> Hooks:
+        return self._hooks
+
     def _get_wrapper(self, func: Callable[..., ...]):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -132,7 +133,7 @@ class Route(ABC):
             ResponseFinalizer: Wrapped function, used to finalize response
         """
         def decorator(func: ResponseFinalizer) -> ResponseFinalizer:
-            self._response_finalizer = self._get_wrapper(func)
+            self._hooks.response_finalizer = self._get_wrapper(func)
             return func
 
         if func is None:
@@ -144,14 +145,15 @@ class Route(ABC):
         """
         Args:
             func (Preparer | None):
-                Args preparer, used to prepare the args for request before it. The final value also must be `Args` instance.
+                Args preparer, used to prepare the args for request before it.
+                The final value also must be `Args` instance.
                 Executed after router's __prepare_args__
 
         Returns:
             Preparer: Wrapped function, used to prepare the args for request before it
         """
         def decorator(func: Preparer) -> Preparer:
-            self._preparer = self._get_wrapper(func)
+            self._hooks.post_preparer = self._get_wrapper(func)
             return func
 
         if func is None:
@@ -170,11 +172,9 @@ class _SyncRoute(Route):
             method_type=self._method_type,
             path=self.path,
             method=self._method,
-            post_preparer=self._preparer,
-            response_finalizer=self._response_finalizer,
-            case_converters=self._case_converters,
-            json_finalizer=self._json_finalizer,
-            pre_preparer=self._pre_preparer
+            hooks=self._hooks,
+            skip_preparer=self._skip_preparer,
+            skip_finalizer=self._skip_finalizer,
         ) as response:
             return response
 
@@ -189,10 +189,8 @@ class _AsyncRoute(Route):
             method_type=self._method_type,
             path=self.path,
             method=self._method,
-            post_preparer=self._preparer,
-            response_finalizer=self._response_finalizer,
-            case_converters=self._case_converters,
-            json_finalizer=self._json_finalizer,
-            pre_preparer=self._pre_preparer
+            hooks=self._hooks,
+            skip_preparer=self._skip_preparer,
+            skip_finalizer=self._skip_finalizer,
         ) as response:
             return response

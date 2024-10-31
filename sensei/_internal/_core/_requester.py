@@ -8,9 +8,8 @@ from sensei._base_client import BaseClient
 from sensei._utils import placeholders
 from sensei.client import Client, AsyncClient
 from sensei.types import IResponse, Json
-from ._case_converters import CaseConverter, CaseConverters
 from ._endpoint import Endpoint, Args, ResponseModel
-from ._types import JsonFinalizer, ResponseFinalizer, Preparer
+from ._types import JsonFinalizer, ResponseFinalizer, Preparer, CaseConverters, CaseConverter
 from ..tools import identical
 
 
