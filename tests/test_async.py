@@ -1,9 +1,11 @@
 import datetime
+
+import jwt
 import pytest
 import respx
-import jwt
 from pydantic_core import ValidationError
-from tests.base_user import BaseUser
+
+from tests.base_user import BaseUser, UserCredentials
 from tests.mock_api import mock_api, SECRET_TOKEN, JWT_ALGORITHM
 
 
@@ -42,7 +44,7 @@ class TestAsync:
         user = await user_model.get(1)  # type: ignore
 
         async with respx.mock() as mock:
-            mock_api(mock, base_url)
+            mock_api(mock, base_url, '/token')
             token = await user.login()  # type: ignore
 
         assert isinstance(token, str)
@@ -54,7 +56,7 @@ class TestAsync:
     async def test_update(self, user_model):
         user = await user_model.get(1)  # type: ignore
 
-        res = await user.update(name="Brandy", job="Data Scientist") # type: ignore
+        res = await user.update(name="Brandy", job="Data Scientist")  # type: ignore
         assert user.first_name == "Brandy"
         assert isinstance(res, datetime.datetime)
 
@@ -63,3 +65,26 @@ class TestAsync:
         user = await user_model.get(1)  # type: ignore
         res = await user.change(name="Brandy", job="Data Scientist")  # type: ignore
         assert isinstance(res, bytes)
+
+    @pytest.mark.asyncio
+    async def test_sign_up(self, user_model, base_url):
+        email = "helloworld@gmail.com"
+
+        with respx.mock() as mock:
+            mock_api(mock, base_url, '/register')
+            token = await user_model.sign_up(UserCredentials(email=email, password="mypassword"))  # type: ignore
+
+        assert isinstance(token, str)
+
+        payload = jwt.decode(token, SECRET_TOKEN, algorithms=JWT_ALGORITHM)
+        assert payload['sub'] == email
+
+    @pytest.mark.asyncio
+    async def test_user_headers(self, user_model):
+        headers = await user_model.user_headers()  # type: ignore
+        assert isinstance(headers, dict)
+
+    @pytest.mark.asyncio
+    async def test_allowed_methods(self, user_model):
+        methods = sorted(['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'])
+        assert methods == sorted(await user_model.allowed_http_methods())  # type: ignore

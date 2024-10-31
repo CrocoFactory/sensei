@@ -1,18 +1,23 @@
 from __future__ import annotations
+
 from functools import wraps
+from typing import Callable, Optional, Any, TypeVar
+
 from httpx import URL
-from typing import Callable, Optional, Any
-from sensei.client import Manager
-from ._endpoint import CaseConverter
-from ._requester import JsonFinalizer, Preparer
-from ._route import Route
-from ..tools import HTTPMethod, set_method_type, identical, MethodType
-from sensei._utils import bind_attributes, get_base_url
-from ._types import RoutedFunction, IRouter, RoutedModel
-from ._hook import Hook
-from sensei.types import IRateLimit
+
 from sensei._descriptors import RateLimitAttr, PortAttr
+from sensei._utils import get_base_url
 from sensei.cases import header_case as to_header_case
+from sensei.client import Manager
+from sensei.types import IRateLimit
+from ._requester import JsonFinalizer
+from ._route import Route
+from ._types import IRouter, Preparer, RoutedFunction, CaseConverters, CaseConverter, Hooks
+from ..tools import HTTPMethod, set_method_type, identical, MethodType, bind_attributes
+
+_KT = TypeVar('_KT')
+_VT = TypeVar('_VT')
+
 
 _RouteDecorator = Callable[[Callable], RoutedFunction]
 
@@ -22,40 +27,46 @@ class Router(IRouter):
     Router for managing API routes and handling HTTP requests.
 
     The `Router` class provides decorators for defining API endpoints with various HTTP methods
-    (GET, POST, PATCH, PUT, DELETE). It handles URL construction, request preparation, JSON finalization,
-    and rate limiting.
+    (GET, POST, PATCH, PUT, DELETE, HEAD, OPTIONS).
+    It handles URL construction, request preparation, JSON finalization, and rate limiting.
 
     Args:
         host (str):
             The root URL of the associated API. It may contain a colon and a placeholder for the port, e.g., `:{port}`.
             If a port is provided, it will replace the placeholder.
-        port (Optional[int], optional):
+        port (int, optional):
             The port number of the associated API. If `None`, the port placeholder in `host` will not be replaced.
             Defaults to `None`.
-        rate_limit (Optional[IRateLimit], optional):
+        rate_limit (IRateLimit, optional):
             An object implementing the `IRateLimit` interface to handle API rate limiting.
             Defaults to `None`.
-        manager (Optional[Manager], optional):
+        manager (Manager, optional):
             A `Manager` instance used to provide an HTTP client to the router.
             Defaults to `None`.
+        default_case (CaseConverter, optional):
+            Case converter for all parameters.
+            Defaults to identical case
         query_case (CaseConverter, optional):
-            A converter function for the case of query parameters.
-            Defaults to `identical`.
+            Case converter of query parameters.
+            Defaults to the identical case.
         body_case (CaseConverter, optional):
-            A converter function for the case of body parameters.
-            Defaults to `identical`.
+            Case converter of body parameters.
+            Defaults to the identical case.
         cookie_case (CaseConverter, optional):
-            A converter function for the case of cookies.
-            Defaults to `identical`.
+            Case converter of cookies.
+            Defaults to the identical case.
         header_case (CaseConverter, optional):
-            A converter function for the case of headers.
-            Defaults to `identical`.
+            Case converter of headers.
+            Defaults to the identical case.
+        response_case (CaseConverter, optional):
+            Case converter of JSON response.
+            Defaults to the identical case.
         __finalize_json__ (JsonFinalizer, optional):
             A function to finalize the JSON response. The final value must be JSON serializable.
-            Defaults to `identical`.
+            Defaults to the identical case.
         __prepare_args__ (Preparer, optional):
             A preparer function used to prepare the arguments for the request before it is sent.
-            The final value must be an instance of `Args`. Defaults to `identical`.
+            The final value must be an instance of `Args`. Defaults to the identical case.
     """
 
     rate_limit = RateLimitAttr()
@@ -68,11 +79,12 @@ class Router(IRouter):
             port: Optional[int] = None,
             rate_limit: Optional[IRateLimit] = None,
             manager: Optional[Manager] = None,
-            query_case: CaseConverter = identical,
-            body_case: CaseConverter = identical,
-            cookie_case: CaseConverter = identical,
-            header_case: CaseConverter = to_header_case,
-            response_case: CaseConverter = identical,
+            default_case: CaseConverter | None = None,
+            query_case: CaseConverter | None = None,
+            body_case: CaseConverter | None = None,
+            cookie_case: CaseConverter | None = None,
+            header_case: CaseConverter | None = to_header_case,
+            response_case: CaseConverter | None = None,
             __finalize_json__: JsonFinalizer = identical,
             __prepare_args__: Preparer = identical
     ):
@@ -82,6 +94,7 @@ class Router(IRouter):
         self.port = port
         self.rate_limit = rate_limit
 
+        self._default_case = default_case
         self._query_case = query_case
         self._body_case = body_case
         self._cookie_case = cookie_case
@@ -115,50 +128,75 @@ class Router(IRouter):
         """
         return self._manager
 
-    def _replace_default_converters(
-            self,
-            query_case: CaseConverter | None = None,
-            body_case: CaseConverter | None = None,
-            cookie_case: CaseConverter | None = None,
-            header_case: CaseConverter | None = None,
-            response_case: CaseConverter | None = None,
-    ) -> dict[str, CaseConverter]:
+    @manager.setter
+    def manager(self, value: Manager) -> None:
         """
-        Replace default case converters with provided ones if any.
+        Set the manager used to provide an HTTP client to the router.
 
         Args:
-            query_case (CaseConverter | None, optional):
-                Case converter for query parameters. Defaults to `None`.
-            body_case (CaseConverter | None, optional):
-                Case converter for body parameters. Defaults to `None`.
-            cookie_case (CaseConverter | None, optional):
-                Case converter for cookies. Defaults to `None`.
-            header_case (CaseConverter | None, optional):
-                Case converter for headers. Defaults to `None`.
-
-        Returns:
-            dict[str, CaseConverter]: A dictionary mapping parameter types to their converters.
+            value (Optional[Manager], optional):
+                A `Manager` instance used to provide an HTTP client to the router.
+                Defaults to `None`.
         """
-        converters = {
-            'query_case': query_case,
-            'body_case': body_case,
-            'cookie_case': cookie_case,
-            'header_case': header_case,
-            'response_case': response_case,
-        }
+        if not isinstance(value, Manager):
+            raise TypeError(f'Manager must be an instance of {Manager}')
+        else:
+            self._manager = value
 
-        for key, converter in converters.items():
-            if converter is None:
-                converters[key] = getattr(self, f'_{key}')
+    @property
+    def default_case(self) -> CaseConverter | None:
+        """
+        Returns:
+             Optional[CaseConverter]: Case converter for all parameters.
+        """
+        return self._default_case
 
-        return converters
+    @property
+    def query_case(self) -> CaseConverter | None:
+        """
+        Returns:
+             Optional[CaseConverter]: Case converter of query parameters.
+        """
+        return self._query_case
+
+    @property
+    def body_case(self) -> CaseConverter | None:
+        """
+        Returns:
+             Optional[CaseConverter]: Case converter of body parameters.
+        """
+        return self._body_case
+
+    @property
+    def cookie_case(self) -> CaseConverter | None:
+        """
+        Returns:
+             Optional[CaseConverter]: Case converter of cookies.
+        """
+        return self._cookie_case
+
+    @property
+    def header_case(self) -> CaseConverter | None:
+        """
+        Returns:
+             Optional[CaseConverter]: Case converter of headers.
+        """
+        return self._header_case
+
+    @property
+    def response_case(self) -> CaseConverter | None:
+        """
+        Returns:
+             Optional[CaseConverter]: Case converter of JSON response.
+        """
+        return self._response_case
 
     def _get_decorator(
             self,
             path: str,
             method: HTTPMethod,
             *,
-            case_converters: dict[str, CaseConverter],
+            case_converters: CaseConverters,
             skip_finalizer: bool = False,
             skip_preparer: bool = False,
     ) -> Callable:
@@ -170,7 +208,7 @@ class Router(IRouter):
                 The relative path of the route.
             method (HTTPMethod):
                 The HTTP method for the route (e.g., GET, POST).
-            case_converters (dict[str, CaseConverter]):
+            case_converters (CaseConverters):
                 A dictionary of case converters for query, body, cookie, and header parameters.
             skip_finalizer (bool):
                 Skip JSON finalizer, when finalizing response. Defaults to `False`.
@@ -182,20 +220,25 @@ class Router(IRouter):
         """
 
         def decorator(func: Callable) -> Callable:
-            json_finalizer = identical if skip_finalizer else self._finalize_json
-            pre_preparer = identical if skip_preparer else self._prepare_args
+            hooks = Hooks(
+                case_converters=case_converters,
+                finalize_json=self._finalize_json,
+                prepare_args=self._prepare_args,
+            )
+
             route = Route(
                 path=path,
                 method=method,
+                router=self,
                 func=func,
-                manager=self._manager,
                 host=self._host,
-                port=self.port,
-                rate_limit=self.rate_limit,
-                case_converters=case_converters,
-                json_finalizer=json_finalizer,
-                pre_preparer=pre_preparer
+                hooks=hooks,
+                skip_preparer=skip_preparer,
+                skip_finalizer=skip_finalizer,
             )
+
+            func.__routed__ = True
+            func.__route__ = route
 
             def _setattrs(
                     instance: Any,
@@ -204,6 +247,7 @@ class Router(IRouter):
                     route: Route
             ) -> None:
                 method_type = route.method_type = wrapper.__method_type__  # type: ignore
+
                 if MethodType.self_method(method_type):
                     route.__self__ = instance
                     func.__self__ = instance
@@ -232,49 +276,12 @@ class Router(IRouter):
 
         return decorator
 
-    def model(self, model_cls: Optional[RoutedModel] = None) -> RoutedModel:
-        """
-        Associate a model class with the router to enable "routed" methods and `dunder` hooks.
-
-        This method modifies a class derived from `APIModel` to work seamlessly with the router,
-        allowing the use of routed methods and special hooks.
-
-        Args:
-            model_cls (Optional[RoutedModel], optional):
-                The class to be modified. If `None`, returns a decorator for later use.
-                Defaults to `None`.
-
-        Raises:
-            ValueError: If a model is already linked to the router.
-        """
-
-        def decorator(model_cls: RoutedModel) -> RoutedModel:
-            if self._linked_to_model:
-                raise ValueError('Only one model can be associated with a router')
-
-            model_cls.__router__ = self
-            self._linked_to_model = True
-
-            hooks = Hook.values()
-
-            for hook in hooks:
-                hook_fun = getattr(model_cls, hook, None)
-                if hook_fun:
-                    setattr(self, hook[1:-2], hook_fun)
-
-            return model_cls
-
-        if model_cls is None:
-            return decorator  # type: ignore
-        else:
-            return decorator(model_cls)
-
     def get(
             self,
             path: str,
             /, *,
+            default_case: CaseConverter | None = None,
             query_case: CaseConverter | None = None,
-            body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
             header_case: CaseConverter | None = None,
             response_case: CaseConverter | None = None,
@@ -290,10 +297,10 @@ class Router(IRouter):
         Args:
             path (str):
                 The relative path of the route.
+            default_case (CaseConverter | None, optional):
+                Case converter for all parameters. Defaults to using the router's default.
             query_case (CaseConverter | None, optional):
                 Case converter for query parameters. Defaults to using the router's default.
-            body_case (CaseConverter | None, optional):
-                Case converter for body parameters. Defaults to using the router's default.
             cookie_case (CaseConverter | None, optional):
                 Case converter for cookie parameters. Defaults to using the router's default.
             header_case (CaseConverter | None, optional):
@@ -312,7 +319,15 @@ class Router(IRouter):
         Raises:
             pydantic_core.ValidationError: If type validation of arguments fails.
         """
-        converters = self._replace_default_converters(query_case, body_case, cookie_case, header_case, response_case)
+        converters = CaseConverters(
+            self,
+            default_case=default_case,
+            query_case=query_case,
+            body_case=None,
+            cookie_case=cookie_case,
+            header_case=header_case,
+            response_case=response_case,
+        )
 
         decorator = self._get_decorator(
             path=path,
@@ -327,6 +342,7 @@ class Router(IRouter):
             self,
             path: str,
             /, *,
+            default_case: CaseConverter | None = None,
             query_case: CaseConverter | None = None,
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
@@ -344,6 +360,8 @@ class Router(IRouter):
         Args:
             path (str):
                 The relative path of the route.
+            default_case (CaseConverter | None, optional):
+                Case converter for all parameters. Defaults to using the router's default.
             query_case (CaseConverter | None, optional):
                 Case converter for query parameters. Defaults to using the router's default.
             body_case (CaseConverter | None, optional):
@@ -366,7 +384,15 @@ class Router(IRouter):
         Raises:
             pydantic_core.ValidationError: If type validation of arguments fails.
         """
-        converters = self._replace_default_converters(query_case, body_case, cookie_case, header_case, response_case)
+        converters = CaseConverters(
+            self,
+            default_case=default_case,
+            query_case=query_case,
+            body_case=body_case,
+            cookie_case=cookie_case,
+            header_case=header_case,
+            response_case=response_case,
+        )
 
         decorator = self._get_decorator(
             path=path,
@@ -381,6 +407,7 @@ class Router(IRouter):
             self,
             path: str,
             /, *,
+            default_case: CaseConverter | None = None,
             query_case: CaseConverter | None = None,
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
@@ -398,6 +425,8 @@ class Router(IRouter):
         Args:
             path (str):
                 The relative path of the route.
+            default_case (CaseConverter | None, optional):
+                Case converter for all parameters. Defaults to using the router's default.
             query_case (CaseConverter | None, optional):
                 Case converter for query parameters. Defaults to using the router's default.
             body_case (CaseConverter | None, optional):
@@ -420,7 +449,15 @@ class Router(IRouter):
         Raises:
             pydantic_core.ValidationError: If type validation of arguments fails.
         """
-        converters = self._replace_default_converters(query_case, body_case, cookie_case, header_case, response_case)
+        converters = CaseConverters(
+            self,
+            default_case=default_case,
+            query_case=query_case,
+            body_case=body_case,
+            cookie_case=cookie_case,
+            header_case=header_case,
+            response_case=response_case,
+        )
 
         decorator = self._get_decorator(
             path=path,
@@ -435,6 +472,7 @@ class Router(IRouter):
             self,
             path: str,
             /, *,
+            default_case: CaseConverter | None = None,
             query_case: CaseConverter | None = None,
             body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
@@ -452,6 +490,8 @@ class Router(IRouter):
         Args:
             path (str):
                 The relative path of the route.
+            default_case (CaseConverter | None, optional):
+                Case converter for all parameters. Defaults to using the router's default.
             query_case (CaseConverter | None, optional):
                 Case converter for query parameters. Defaults to using the router's default.
             body_case (CaseConverter | None, optional):
@@ -474,7 +514,15 @@ class Router(IRouter):
         Raises:
             pydantic_core.ValidationError: If type validation of arguments fails.
         """
-        converters = self._replace_default_converters(query_case, body_case, cookie_case, header_case, response_case)
+        converters = CaseConverters(
+            self,
+            default_case=default_case,
+            query_case=query_case,
+            body_case=body_case,
+            cookie_case=cookie_case,
+            header_case=header_case,
+            response_case=response_case,
+        )
 
         decorator = self._get_decorator(
             path=path,
@@ -489,8 +537,8 @@ class Router(IRouter):
             self,
             path: str,
             /, *,
+            default_case: CaseConverter | None = None,
             query_case: CaseConverter | None = None,
-            body_case: CaseConverter | None = None,
             cookie_case: CaseConverter | None = None,
             header_case: CaseConverter | None = None,
             response_case: CaseConverter | None = None,
@@ -506,10 +554,10 @@ class Router(IRouter):
         Args:
             path (str):
                 The relative path of the route.
+            default_case (CaseConverter | None, optional):
+                Case converter for all parameters. Defaults to using the router's default.
             query_case (CaseConverter | None, optional):
                 Case converter for query parameters. Defaults to using the router's default.
-            body_case (CaseConverter | None, optional):
-                Case converter for body parameters. Defaults to using the router's default.
             cookie_case (CaseConverter | None, optional):
                 Case converter for cookie parameters. Defaults to using the router's default.
             header_case (CaseConverter | None, optional):
@@ -528,11 +576,143 @@ class Router(IRouter):
         Raises:
             pydantic_core.ValidationError: If type validation of arguments fails.
         """
-        converters = self._replace_default_converters(query_case, body_case, cookie_case, header_case, response_case)
+        converters = CaseConverters(
+            self,
+            default_case=default_case,
+            query_case=query_case,
+            body_case=None,
+            cookie_case=cookie_case,
+            header_case=header_case,
+            response_case=response_case,
+        )
 
         decorator = self._get_decorator(
             path=path,
             method="DELETE",
+            case_converters=converters,
+            skip_finalizer=skip_finalizer,
+            skip_preparer=skip_preparer,
+        )
+        return decorator
+
+    def head(
+            self,
+            path: str,
+            /, *,
+            default_case: CaseConverter | None = None,
+            query_case: CaseConverter | None = None,
+            cookie_case: CaseConverter | None = None,
+            header_case: CaseConverter | None = None,
+            response_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
+            skip_preparer: bool = False,
+    ) -> _RouteDecorator:
+        """
+        Create a route using the HTTP HEAD method.
+
+        This decorator transforms a function into a routed function that sends a HEAD request
+        to the specified path, handling parameter case conversion and argument validation.
+
+        Args:
+            path (str):
+                The relative path of the route.
+            default_case (CaseConverter | None, optional):
+                Case converter for all parameters. Defaults to using the router's default.
+            query_case (CaseConverter | None, optional):
+                Case converter for query parameters. Defaults to using the router's default.
+            cookie_case (CaseConverter | None, optional):
+                Case converter for cookie parameters. Defaults to using the router's default.
+            header_case (CaseConverter | None, optional):
+                Case converter for header parameters. Defaults to using the router's default.
+            response_case:
+                Case converter for JSON response. Defaults to using the router's default.
+            skip_finalizer:
+                Skip JSON finalizer, when finalizing response. Defaults to `False`.
+            skip_preparer (bool):
+                Skip preparing the arguments for the request. Defaults to `False`.
+
+        Returns:
+            RoutedFunction: A routed function that sends a HEAD request according to the specified path and validates
+            its arguments based on type annotations.
+
+        Raises:
+            pydantic_core.ValidationError: If type validation of arguments fails.
+        """
+        converters = CaseConverters(
+            self,
+            default_case=default_case,
+            query_case=query_case,
+            body_case=None,
+            cookie_case=cookie_case,
+            header_case=header_case,
+            response_case=response_case,
+        )
+
+        decorator = self._get_decorator(
+            path=path,
+            method="HEAD",
+            case_converters=converters,
+            skip_finalizer=skip_finalizer,
+            skip_preparer=skip_preparer,
+        )
+        return decorator
+
+    def options(
+            self,
+            path: str,
+            /, *,
+            default_case: CaseConverter | None = None,
+            query_case: CaseConverter | None = None,
+            cookie_case: CaseConverter | None = None,
+            header_case: CaseConverter | None = None,
+            response_case: CaseConverter | None = None,
+            skip_finalizer: bool = False,
+            skip_preparer: bool = False,
+    ) -> _RouteDecorator:
+        """
+        Create a route using the HTTP OPTIONS method.
+
+        This decorator transforms a function into a routed function that sends a OPTIONS request
+        to the specified path, handling parameter case conversion and argument validation.
+
+        Args:
+            path (str):
+                The relative path of the route.
+            default_case (CaseConverter | None, optional):
+                Case converter for all parameters. Defaults to using the router's default.
+            query_case (CaseConverter | None, optional):
+                Case converter for query parameters. Defaults to using the router's default.
+            cookie_case (CaseConverter | None, optional):
+                Case converter for cookie parameters. Defaults to using the router's default.
+            header_case (CaseConverter | None, optional):
+                Case converter for header parameters. Defaults to using the router's default.
+            response_case:
+                Case converter for JSON response. Defaults to using the router's default.
+            skip_finalizer:
+                Skip JSON finalizer, when finalizing response. Defaults to `False`.
+            skip_preparer (bool):
+                Skip preparing the arguments for the request. Defaults to `False`.
+
+        Returns:
+            RoutedFunction: A routed function that sends a OPTIONS request according to the specified path and validates
+            its arguments based on type annotations.
+
+        Raises:
+            pydantic_core.ValidationError: If type validation of arguments fails.
+        """
+        converters = CaseConverters(
+            self,
+            default_case=default_case,
+            query_case=query_case,
+            body_case=None,
+            cookie_case=cookie_case,
+            header_case=header_case,
+            response_case=response_case,
+        )
+
+        decorator = self._get_decorator(
+            path=path,
+            method="OPTIONS",
             case_converters=converters,
             skip_finalizer=skip_finalizer,
             skip_preparer=skip_preparer,

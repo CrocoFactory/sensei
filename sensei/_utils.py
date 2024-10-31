@@ -1,39 +1,8 @@
-import inspect
 import re
-from typing import Any, TypeVar, Protocol
+from typing import Any, TypeVar
+from urllib.parse import urlparse, urlunparse
 
 _T = TypeVar("_T")
-
-
-class _NamedObj(Protocol):
-    __name__ = ...
-
-
-def is_classmethod(obj: Any) -> bool:
-    return isinstance(obj, classmethod)
-
-
-def is_staticmethod(obj: Any) -> bool:
-    return isinstance(obj, staticmethod)
-
-
-def is_instancemethod(obj: Any) -> bool:
-    return inspect.isfunction(obj)
-
-
-def is_selfmethod(obj: Any) -> bool:
-    return is_classmethod(obj) or is_instancemethod(obj)
-
-
-def is_method(obj: Any) -> bool:
-    return is_selfmethod(obj) or is_staticmethod(obj)
-
-
-def bind_attributes(obj: _T, *named_objects: tuple[_NamedObj]) -> _T:
-    for named_obj in named_objects:
-        setattr(obj, named_obj.__name__, named_obj)
-
-    return obj
 
 
 def placeholders(url: str) -> list[str]:
@@ -99,7 +68,17 @@ def format_str(s: str, values: dict[str, Any], ignore_missed: bool = False) -> s
             return s.format(**values)
 
 
+def normalize_url(url: str) -> str:
+    parsed = urlparse(url)
+
+    path = parsed.path.rstrip('/') if len(parsed.path) == 1 or not parsed.path.endswith('//') else parsed.path
+
+    normalized_url = urlunparse(parsed._replace(path=path))
+    return normalized_url  # type: ignore
+
+
 def get_base_url(host: str, port: int) -> str:
+    host = normalize_url(host)
     if 'port' in placeholders(host):
         api_url = format_str(host, {'port': port})
     elif port is not None:

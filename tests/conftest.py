@@ -1,12 +1,14 @@
 import asyncio
 import datetime
+from typing import Any, Callable, Annotated, List
+
 import pytest
-from typing import Any, Callable, Annotated
 from httpx import Response
 from pydantic import EmailStr, PositiveInt, AnyHttpUrl
 from typing_extensions import Self
-from .base_user import BaseUser
+
 from sensei import Router, APIModel, Args, snake_case, Query, Path, format_str, Body
+from .base_user import BaseUser, UserCredentials
 
 
 @pytest.fixture(scope="session")
@@ -23,7 +25,6 @@ def router(base_url) -> Router:
 @pytest.fixture()
 def base_maker() -> Callable[[Router], type[APIModel]]:
     def model_base(router) -> type[APIModel]:
-        @router.model()
         class BaseModel(APIModel):
             def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
                 return json['data']
@@ -117,6 +118,32 @@ def sync_maker() -> Callable[[Router, type[APIModel]], type[BaseUser]]:
                 args.url = format_str(args.url, {'id_': self.id})
                 return args
 
+            @classmethod
+            @router.post('/register', skip_finalizer=True)
+            def sign_up(
+                    cls,
+                    user: Annotated[UserCredentials, Body(embed=False, media_type='application/x-www-form-urlencoded')]
+            ) -> str:
+                ...
+
+            @classmethod
+            @sign_up.finalize
+            def _sign_up_out(cls, response: Response) -> str:
+                return response.json()['token']
+
+            @classmethod
+            @router.head('/users')
+            def user_headers(cls) -> dict[str, Any]: ...
+
+            @classmethod
+            @router.options('/users')
+            def allowed_http_methods(cls) -> List[str]: ...
+
+            @allowed_http_methods.finalize
+            def _allowed_http_methods_out(self, response: Response) -> List[str]:
+                headers = response.headers
+                return headers['access-control-allow-methods'].split(',')
+
         return User
     return make_model
 
@@ -200,6 +227,32 @@ def async_maker() -> Callable[[Router, type[APIModel]], type[BaseUser]]:
             def _change_in(self, args: Args) -> Args:
                 args.url = format_str(args.url, {'id_': self.id})
                 return args
+
+            @classmethod
+            @router.post('/register', skip_finalizer=True)
+            async def sign_up(
+                    cls,
+                    user: Annotated[UserCredentials, Body(embed=False, media_type='application/x-www-form-urlencoded')]
+            ) -> str:
+                ...
+
+            @classmethod
+            @sign_up.finalize
+            async def _sign_up_out(cls, response: Response) -> str:
+                return response.json()['token']
+
+            @classmethod
+            @router.head('/users')
+            async def user_headers(cls) -> dict[str, Any]: ...
+
+            @classmethod
+            @router.options('/users')
+            async def allowed_http_methods(cls) -> List[str]: ...
+
+            @allowed_http_methods.finalize
+            async def _allowed_http_methods_out(self, response: Response) -> List[str]:
+                headers = response.headers
+                return headers['access-control-allow-methods'].split(',')
 
         return User
     return make_model

@@ -1,3 +1,4 @@
 from .chained_map import ChainedMap
-from .utils import make_model, split_params, is_safe_method, validate_method, args_to_kwargs, set_method_type, identical
 from .types import HTTPMethod, MethodType
+from .utils import (make_model, split_params, accept_body, validate_method, args_to_kwargs, set_method_type, identical,
+                    is_staticmethod, is_classmethod, is_selfmethod, bind_attributes, is_method)

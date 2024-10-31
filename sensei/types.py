@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Protocol, Mapping, Any, Union
+
 from typing_extensions import Self
 
 Json = Union[dict, list[dict]]
@@ -67,6 +69,24 @@ class IRateLimit(ABC):
         """
         pass
 
+    def _rate(self) -> float:
+        return self._calls / self._period
+
+    def __eq__(self, other: "IRateLimit") -> bool:
+        return self._rate() == other._rate()
+
+    def __lt__(self, other: "IRateLimit") -> bool:
+        return self._rate() < other._rate()
+
+    def __le__(self, other: "IRateLimit") -> bool:
+        return self._rate() <= other._rate()
+
+    def __gt__(self, other: "IRateLimit") -> bool:
+        return self._rate() > other._rate()
+
+    def __ge__(self, other: "IRateLimit") -> bool:
+        return self._rate() >= other._rate()
+
 
 class IRequest(Protocol):
     @property
@@ -88,30 +108,28 @@ class IResponse(Protocol):
     def __await__(self):
         pass
 
-    @abstractmethod
     def json(self) -> Json:
         pass
 
-    @abstractmethod
     def raise_for_status(self) -> Self:
         pass
 
     @property
-    @abstractmethod
     def request(self) -> IRequest:
         pass
 
     @property
-    @abstractmethod
     def text(self) -> str:
         pass
 
     @property
-    @abstractmethod
     def status_code(self) -> int:
         pass
 
     @property
-    @abstractmethod
     def content(self) -> bytes:
+        pass
+
+    @property
+    def headers(self) -> Mapping[str, Any]:
         pass

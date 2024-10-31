@@ -7,4 +7,4 @@ if PYDANTIC_V2:
     from pydantic_core import PydanticUndefined
     Undefined = PydanticUndefined
 else:
-    from pydantic.fields import Undefined
+    pass

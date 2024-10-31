@@ -1,16 +1,8 @@
 site_name: Sensei
 site_description: The Python framework, providing a quick way to build API wrappers. Use type annotations to build requests with little or no implementation.
-site_url: https://sensei.factorycroco.com
+site_url: https://sensei.crocofactory.dev
 use_directory_urls: false
 
-markdown_extensions:
-  - pymdownx.highlight:
-      anchor_linenums: true
-      line_spans: __span
-      pygments_lang_class: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - pymdownx.superfences
 
 theme:
   name: material
@@ -62,4 +54,68 @@ repo_name: CrocoFactory/sensei
 repo_url: https://github.com/CrocoFactory/sensei
 
 nav:
-- Sensei: index.md
+  - Sensei: index.md
+  - Learn:
+    - learn/learn.md
+    - Type Hints: learn/type_hints.md
+    - Concurrency/Parallelism: learn/concurrency_parallelism.md
+    - HTTP Requests: learn/http_requests.md
+    - User Guide:
+      - Motivation: learn/user_guide/motivation.md
+      - First Steps: learn/user_guide/first_steps.md
+      - Params/Response: learn/user_guide/params_response.md
+      - Making Aliases: learn/user_guide/making_aliases.md
+      - Preparers/Finalizers: learn/user_guide/preparers_finalizers.md
+      - OOP Style: learn/user_guide/oop_style.md
+      - Managing Requests: learn/user_guide/managing_requests.md
+  - About: about.md
+
+
+markdown_extensions:
+  admonition:
+  abbr:
+  attr_list:
+  footnotes:
+  md_in_html:
+  tables:
+  toc:
+    permalink: true
+
+  pymdownx.betterem:
+    smart_enable: all
+  pymdownx.caret:
+  pymdownx.highlight:
+    line_spans: __span
+  pymdownx.inlinehilite:
+  pymdownx.keys:
+  pymdownx.mark:
+
+  pymdownx.superfences:
+    custom_fences:
+      - name: mermaid
+        class: mermaid
+        format: !!python/name:pymdownx.superfences.fence_code_format
+  pymdownx.tilde:
+
+  pymdownx.details:
+  pymdownx.blocks.admonition:
+    types:
+      - note
+      - attention
+      - caution
+      - danger
+      - error
+      - tip
+      - hint
+      - warning
+      - info
+      - check
+  pymdownx.blocks.details:
+  pymdownx.blocks.tab:
+    alternate_style: True
+
+  mdx_include:
+  markdown_include_variants:
+
+extra_css:
+  - css/style.css
