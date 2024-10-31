@@ -1,10 +1,10 @@
-from sensei import APIModelfrom sensei import APIModelWhen you need to handle response in a nonstandard way or add or change arguments 
+When you need to handle response in a nonstandard way or add or change arguments 
 before request, you can apply preparers and finalizers respectively. Before the start, we need to remember about 
-[Configuration Levels](/learn/user_guide/making_aliases.html#configuration-levels-priority).
+[Hook Levels](/learn/user_guide/making_aliases.html#hook-levels-priority).
 
-## Configuration Levels (Order)
+## Hook Levels (Order)
 
-As was mentioned in [Configuration Levels](/learn/user_guide/making_aliases.html#configuration-levels-priority), there are three 
+As was mentioned in [Hook Levels](/learn/user_guide/making_aliases.html#hook-levels-priority), there are three 
 ways of applying converters:
 
 !!! example
@@ -41,8 +41,7 @@ ways of applying converters:
     
         ```python
         router = Router(host, response_case=camel_case)
-        
-        @router.model()
+
         class User(APIModel):
             def __header_case__(self, s: str) -> str:
                 return kebab_case(s)
@@ -57,10 +56,10 @@ ways of applying converters:
         ```
 
 These levels are not only related to [case converters](/learn/user_guide/making_aliases.html#case-converters). 
-They are also related to other request configurators, such as [Preparers](#preparers) and [Finalizers](#finalizers). 
+They are also related to other hooks, such as [Preparers](#preparers) and [Finalizers](#finalizers). 
 
 But here they don't determine the single Preparer/Finalizer from all that will be executed (determine priority), 
-like case converters. Each of them will be executed, but in different order. So, this type of configuration levels is 
+like for case converters. Each of them will be executed, but in different order. So, this type of hook levels is 
 called **Order Levels**. 
 
 Here is an illustration of execution orders of Preparers/Finalizers. 
@@ -83,8 +82,6 @@ Preparers are used for request preparation. That means add or change arguments
 before request. 
 
 ### Algorithm
-
-Here is an algorithm to apply route level preparer. Router/routed model level preparers will be described in section [Usage](#usage).
 
 Look at the example below:
       
@@ -144,7 +141,6 @@ Look at the example below:
     
     router = Router('https://api.example.com')
               
-    @router.model()
     class User(APIModel):
         id: NonNegativeInt
         email: EmailStr
@@ -223,7 +219,6 @@ a value of the same type. The next step is based on a level type:
 === "Routed Model Level"
     You only need to define a method with name `__prepare_args__` inside `User`. Sensei will use this hook, when it's necessary.
     ```python
-    @router.model()
     class User:
         ...
 
@@ -281,7 +276,6 @@ from pydantic import NonNegativeInt, EmailStr
 
 router = Router('https://api.example.com')
 
-@router.model()
 class User(APIModel):
     id: NonNegativeInt
     email: EmailStr
@@ -368,7 +362,6 @@ router = Router('https://api.example.com')
 class Context:
     token: str
 
-@router.model()
 class User(APIModel):
     id: NonNegativeInt
     email: EmailStr
@@ -416,7 +409,7 @@ In the example above, there are two preparers of different levels.
         return args
     ```        
   
-According to [Order Levels](#configuration-levels-order), preparer at routed model level (`__prepare_args__`) is executed before 
+According to [Order Levels](#hook-levels-order), preparer at routed model level (`__prepare_args__`) is executed before 
 route level preparer (`_update_in` ).
 
 /// tip 
@@ -662,7 +655,7 @@ wrapping model in another model.
 But there is a problem, what if you have dozens of similar functions and for each you have to
 define the same finalizer? JSON finalizer is the solution of this problem.
 
-Let's try to figure out the algorithm using the situation described above:
+Let's try to figure out the algorithm to the situation described above:
 
 === "Router Level"
     ```python
@@ -704,7 +697,6 @@ Let's try to figure out the algorithm using the situation described above:
     
     router = Router('https://api.example.com')
     
-    @router.model()
     class User(APIModel):
         email: EmailStr
         id: PositiveInt
@@ -726,11 +718,18 @@ Let's try to figure out the algorithm using the situation described above:
         @router.get('/users/{id_}')
         def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: 
             ...
+
+    user = User.get(1)
+    print(user)
     ```
+
+```text
+User(email='john@example.com' id=1 name='John')
+```
 
 Let's take this code step by step.
         
-#### Step 1: Define Route
+##### Step 1: Define Route
 
 First, we need to define a route(s)
        
@@ -765,7 +764,7 @@ First, we need to define a route(s)
         ...
     ```
 
-#### Step 2: Define Finalizer
+##### Step 2: Define Finalizer
 
 To define a JSON finalizer, you have to create a function, that takes only one argument of some JSON-serializable type
 corresponding to the response. Usually servers return JSON as `dict[str, Any]`, but rarely can return `list[dict]`.
@@ -786,3 +785,89 @@ The next step is based on a level type:
     def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
         return json['data']
     ```
+
+##### Step 3: Make the call
+
+When you make the following call
+          
+=== "Router Level"
+    ```python
+    user = get_user(1)
+    print(user)
+    ```
+
+=== "Routed Model Level"
+    ```python
+    user = User.get(1)
+    print(user)
+    ```
+
+Sensei makes a request, retrieves the response, decodes it as JSON and pass it to response finalizer if it's defined.
+
+```text
+User(email='john@example.com' id=1 name='John')
+```
+
+That is, JSON finalizer is executed before response finalizer. Due to this, `Self` response type can be handled
+without a response finalizer.
+
+#### Usage
+
+JSON finalizers are used for JSON response transformation before internal or user-defined response finalizing. 
+The example was shown in [Algorithm](#algorithm_2)
+
+!!! tip
+    If some Router/Routed Model level finalizer should be excluded for some route, you can use `skil_finalizer=True` in route 
+
+    ```python
+    
+    class User(APIModel):
+        ...
+    
+        @classmethod
+        @router.get('/users/{id_}', skip_finalizer=True)
+        def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: 
+            ...
+    ```
+
+## Conclusion
+
+In summary, Sensei provides flexible hooks to customize how requests are prepared and responses are handled through 
+[Preparers](#preparers) and [Finalizers](#finalizers). These hooks can be applied at different levels with an organized execution order, 
+providing nuanced control over request handling and response processing:
+
+- **Hook Levels**
+   
+    Sensei defines three levels for hooks:
+
+    1. Routed Model Level (executed first)
+    2. Router Level (executed next)
+    3. Route Level (executed last)
+
+    Each of these levels allows you to add preparers or finalizers that operate at different scopes, 
+    with Routed Model Level being the most specific and executed first.
+
+- **Preparers**
+
+    Preparers are used to modify or add arguments before a request is sent. You can apply them at:
+
+    1. Routed Model Level - Define within the routed model to alter specific instance arguments.
+    2. Router Level - Attach to a `Router` instance for consistent preparation across routes.
+    3. Route Level - Directly to a specific route, modifying arguments only for that route.
+
+    Example:
+    Preparers are commonly used to add authentication headers, or to dynamically set route parameters (e.g., filling in 
+    path variables from the instance attributes).
+
+- **Finalizers**
+
+    Finalizers process responses after a request. They come in two forms:
+
+    1. Response Finalizer: Operates on the `httpx.Response` object, transforming it into the final returned data.
+    2. JSON Finalizer: Works on JSON data from the response, modifying it before other processing. JSON finalizers are 
+        helpful for removing unnecessary nested structures or normalizing data formats.
+
+    Example:
+    If an API response wraps data in an additional "data" field, a JSON finalizer can remove this wrapper automatically 
+    for all routes associated with the router or routed model. The Response Finalizer can then transform the processed 
+    JSON into the model or data structure defined in the route.

@@ -574,31 +574,23 @@ from pydantic import NonNegativeInt
 
 router = Router('https://api.example.com/')
 
-@router.model()  # (1)!  
 class User(APIModel):
     @classmethod
     @router.get('/users/{id_}')
     def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: 
-        ... # (2)!
+        ... # (1)!
 ```
 
-1. Binding `Router` to the model
-2. This is called [routed method](/learn/user_guide/first_steps.html#routed-function)
+1. This is called [routed method](/learn/user_guide/first_steps.html#routed-function)
 
 The algorithm is the following:
 
 1. Create a `Router` instance
     ```python
     router = Router('https://api.example.com/')
-    ```    
+    ```
 
-2. Bind router to a model.
-    ```python
-    @router.model()  
-    class User(APIModel):
-    ```   
-
-3. Define endpoints through [routed methods](/learn/user_guide/first_steps.html#routed-function)
+2. Define endpoints through [routed methods](/learn/user_guide/first_steps.html#routed-function)
     ```python
     @classmethod
     @router.get('/users/{id_}')
@@ -634,7 +626,6 @@ from pydantic import NonNegativeInt
 
 router = Router('https://api.example.com/')
 
-@router.model() 
 class User(BaseModel):
     @classmethod
     @router.get('/users/{id_}')

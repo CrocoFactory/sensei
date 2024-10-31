@@ -522,7 +522,6 @@ The current class in which the method is declared is taken as the model
     
 !!! example
     ```python
-    @router.model()  
     class User(APIModel):
         @classmethod
         @router.get('/users/{id_}')
@@ -592,7 +591,6 @@ class Tree:
 For instance, this code:
 
 ```python
-@router.model()  
 class User(APIModel):
     @classmethod
     @router.get('/users/{id_}')
@@ -603,7 +601,6 @@ class User(APIModel):
 Can also be written as:
 
 ```python
-@router.model()  
 class User(APIModel):
     @classmethod
     @router.get('/users/{id_}')

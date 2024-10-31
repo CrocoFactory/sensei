@@ -1,4 +1,4 @@
-from sensei import camel_casefrom sensei import header_casefrom sensei import RouterIn some situations, we need to follow multiple naming conventions at the same time.
+In some situations, we need to follow multiple naming conventions at the same time.
 For instance, it's a common approach to convert fields of some structure from camelCase (or another case) to snake_case 
 to follow Python’s naming conventions.
 
@@ -170,7 +170,7 @@ Arguments, responsible for applying converters, have the same names as `Router` 
         ...
     ```
 
-### Hooks (Routed Model level)
+### Class Hooks (Routed Model level)
 
 When you use [Routed Models](/learn/user_guide/routed_model.html) , you can define converters through hooks. 
 `<param_type>` corresponds to `__<param_type>_case__` hook. This process is called "applying case converters at 
@@ -179,7 +179,6 @@ Routed Model level."   Let's look at the example below:
 ```python
 router = Router(host, response_case=camel_case)
 
-@router.model()
 class User(APIModel):
     def __header_case__(self, s: str) -> str:
         return kebab_case(s)
@@ -199,10 +198,6 @@ Hook function can be represented both as instance method and as static method.
 Don't interact with `self` argument in hooks. There it always has `None` value. This will be described later in 
 [Routed Models](/learn/user_guide/routed_model.html)
 ///
-
-When you define hook, you override corresponding
-`Router` converter. If you try to use router outside [Routed Model](/learn/user_guide/routed_model.html),
-you wouldn't use old router's converter, because it's overriden by hook. 
    
 So, `response_case=camel_case` in `Router`
 
@@ -221,16 +216,18 @@ def __response_case__(s: str) -> str:
 Consequently, this level has the same priority as [router level](#router-router-level), because it replaces it. As well 
 as [router level](#router-router-level) level, it has lower priority than [route level](#route-decorator-route-level).
        
-## Configuration Levels (Priority)
+## Hook Levels (Priority)
 
-These levels determine the scope of applying some request configurator:
+Code that handles intercepted function calls, events or messages passed between software components is called a hook. 
+The levels that were described above determine the scope of applying some hook. 
+In the context of this article, hooks are the case converters.
 
-* **Router Level**: apply to each routed function associated with that router
-* **Route Level**: apply only to this routed function
+* **Router Level**: apply hook to each routed function associated with that router
+* **Route Level**: apply hook only to this routed function
 * **Routed Model Level**: replaces Router Level, but defined in a routed model.
          
-Moreover, there are different types of configuration levels, each of which has special property. 
-In the case of case converters, this type is called **Priority Levels**. Because, if multiple configurators are applied
+Moreover, there are different types of hook levels, each of which has special property. 
+In the case of case converters, this type is called **Priority Levels**. Because, if multiple hooks are applied
 to one target (routed function), only one will be executed, based on its priority. 
 They can be described in that diagram:
 
@@ -431,8 +428,8 @@ that conform to Python's standards. Here’s a concise summary of the key concep
     providing it directly in the route decorator. This is useful for handling endpoints that do not conform to the 
     general conventions.
 
-4. **Hooks**: For [Routed Models](/learn/user_guide/routed_model.html), you can define case converters through 
-    hooks within your model classes.
+4. **Class Hooks**: For [Routed Models](/learn/user_guide/routed_model.html), you can define case converters through 
+    class hooks within your model classes.
 
 5. **AliasGenerator**: When dealing with nested models and varying case conventions (like camelCase for responses and 
     kebab-case for requests), the `AliasGenerator` from Pydantic is utilized. It allows for defining separate 
