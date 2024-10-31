@@ -3,13 +3,13 @@ from typing import Any
 
 from pydantic import BaseModel
 from pydantic._internal._model_construction import ModelMetaclass
+from typing_extensions import TypeGuard
 
 from sensei.types import Json
 from ._endpoint import Args
 from ._hook import Hook
 from ._types import RoutedMethod
-from ..tools import is_routed_method
-from ..tools import is_staticmethod, is_classmethod, is_selfmethod, bind_attributes
+from ..tools import is_staticmethod, is_classmethod, is_selfmethod, bind_attributes, is_method
 
 
 class _Namespace(dict):
@@ -23,9 +23,17 @@ class _Namespace(dict):
         except AttributeError:
             pass
 
+    @staticmethod
+    def _is_routed_method(obj: Any) -> TypeGuard[RoutedMethod]:
+        cond = False
+        if is_method(obj):
+            func = obj.__func__
+            cond = getattr(func, '__routed__', None) is True
+        return cond
+
     def __setitem__(self, key: Any, value: Any):
         if is_staticmethod(value) or is_classmethod(value):
-            if is_routed_method(value):
+            if self._is_routed_method(value):
                 self._decorate_method(value)
         elif key in Hook.values() and is_selfmethod(value):
             value = functools.partial(value, None)
@@ -42,7 +50,7 @@ class _ModelMeta(ModelMetaclass):
             cls,
             cls_name: str,
             bases: tuple[type[Any], ...],
-            namespace: dict[str, Any],
+            namespace: _Namespace,
     ):
         obj = super().__new__(cls, cls_name, bases, namespace)
         obj.__router__ = None
