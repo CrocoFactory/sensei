@@ -313,7 +313,8 @@ class CaseConverters(_MappingGetter[ConverterName, CaseConverter]):
         super().__init__(self.__getter)
 
     @property
-    def defaults(self) -> dict[ConverterName, CaseConverter]:
+    @validate_call(validate_return=True)
+    def defaults(self) -> dict[ConverterName, Optional[CaseConverter]]:
         return self._sub_defaults
 
     @defaults.setter
@@ -344,10 +345,12 @@ class CaseConverters(_MappingGetter[ConverterName, CaseConverter]):
         default = self._default_case
 
         for key, converter in converters.items():
-            converter = self._sub_defaults.get(key) or converter
+            converter = converter or self.defaults.get(key)
             if converter is None:
                 router_converter = getattr(router, f'{key}')
                 converters[key] = default if router_converter is None else router_converter
+            else:
+                converters[key] = converter
 
         return converters
 
@@ -397,7 +400,7 @@ class Hooks(BaseModel):
             else:
                 setattr(self, stripped, value)
 
-        self.case_converters.defaults = hooks
+        self.case_converters.defaults = case_hooks
 
 
 Preparer = Callable[[Args], Union[Args, Awaitable[Args]]]

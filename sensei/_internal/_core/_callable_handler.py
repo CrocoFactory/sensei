@@ -15,7 +15,7 @@ from ._requester import Requester
 from ._types import IRouter, Hooks
 from .args import Args
 from ..tools import HTTPMethod, args_to_kwargs, MethodType
-from ..tools.utils import is_coroutine_function
+from ..tools.utils import is_coroutine_function, identical
 
 _Client = TypeVar('_Client', bound=BaseClient)
 _RequestArgs = tuple[tuple[Any, ...], dict[str, Any]]
@@ -47,7 +47,9 @@ class _CallableHandler(Generic[_Client]):
             host: str,
             request_args: _RequestArgs,
             method_type: MethodType,
-            hooks: Hooks
+            hooks: Hooks,
+            skip_preparer: bool = False,
+            skip_finalizer: bool = False,
     ):
         self._func = func
         self._router = router
@@ -60,10 +62,17 @@ class _CallableHandler(Generic[_Client]):
         self._temp_client: _Client | None = None
         self._case_converters = hooks.case_converters
 
+        if skip_preparer:
+            hooks.prepare_args = identical
+
+        if skip_finalizer:
+            hooks.finalize_json = identical
+
         post_preparer = hooks.post_preparer
         pre_preparer = hooks.prepare_args
-        response_finalizer = hooks.response_finalizer
+
         json_finalizer = hooks.finalize_json
+        response_finalizer = hooks.response_finalizer
 
         if is_coroutine_function(post_preparer):
             async def preparer(value: Args) -> Args:

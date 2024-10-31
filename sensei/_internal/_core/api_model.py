@@ -6,7 +6,7 @@ from pydantic._internal._model_construction import ModelMetaclass
 from typing_extensions import TypeGuard
 
 from sensei.types import Json
-from ._types import RoutedMethod, ModelHook
+from ._types import RoutedMethod, ModelHook, RoutedFunction
 from .args import Args
 from ..tools import is_staticmethod, is_classmethod, is_selfmethod, bind_attributes, is_method
 
@@ -14,96 +14,43 @@ from ..tools import is_staticmethod, is_classmethod, is_selfmethod, bind_attribu
 class _Namespace(dict):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__hooks: dict[str, Callable] = {}
-        self._routed_keys = set()
+        self._routed_functions = set()
+
+    @property
+    def routed_functions(self) -> set[RoutedFunction]:
+        return self._routed_functions
 
     @staticmethod
     def _decorate_method(method: RoutedMethod) -> None:
         preparer = method.__func__.prepare
         finalizer = method.__func__.finalize
-        method.__route__ = method.__func__.__route__
 
         bind_attributes(method, finalizer, preparer)  # type: ignore
 
     @staticmethod
-    def _is_routed_method(obj: Any) -> TypeGuard[RoutedMethod]:
+    def _is_routed_function(obj: Any) -> TypeGuard[RoutedMethod]:
         cond = False
         if is_method(obj):
-            func = obj.__func__
-            cond = getattr(func, '__routed__', None) is True
+            if is_staticmethod(obj) or is_classmethod(obj):
+                obj = obj.__func__
+            cond = getattr(obj, '__routed__', None) is True
         return cond
 
     def __setitem__(self, key: Any, value: Any):
-        if is_staticmethod(value) or is_classmethod(value):
-            if self._is_routed_method(value):
+        if self._is_routed_function(value):
+            if is_staticmethod(value) or is_classmethod(value):
                 self._decorate_method(value)
-                value.__route__.hooks.set_model_hooks(self.__hooks)
+                self._routed_functions.add(value.__func__)
+            else:
+                self._routed_functions.add(value)
         elif key in ModelHook.values():
             if is_selfmethod(value):
                 value = functools.partial(value, None)
 
-            self.__hooks[key] = value
-
         super().__setitem__(key, value)
 
 
-class _ModelMeta(ModelMetaclass):
-    @classmethod
-    def __prepare__(metacls, name, bases):
-        namespace = _Namespace()
-        return namespace
-
-    def __new__(
-            cls,
-            cls_name: str,
-            bases: tuple[type[Any], ...],
-            namespace: _Namespace,
-    ):
-        print('hello new')
-        obj = super().__new__(cls, cls_name, bases, namespace)
-        obj.__router__ = None
-
-        return obj
-
-    def __init__(
-            cls,
-            cls_name: str,
-            bases: tuple[type[Any], ...],
-            namespace: _Namespace,
-    ):
-        print('hello init')
-        super().__init__(cls_name, bases, namespace)
-
-
-class APIModel(BaseModel, metaclass=_ModelMeta):
-    """
-    Base class for creating Sensei API models. Don't confuse it with Pydantic BaseModel, it's used simultaneously
-    for validating output data and provides "routed" functions.
-
-    But usage rools is the same with BaseModel
-    Usage docs: https://docs.pydantic.dev/2.9/concepts/models/
-
-    To make the proper class, decorate it with @router.model. Avoiding this requirement will lead you to the issues.
-
-    Examples:
-        >>> from typing import Annotated, Any, Self
-        >>> from sensei import Router, Query, Path, APIModel
-        ...
-        >>> router = Router('https://reqres.in/api')
-        ...
-        >>> class User(APIModel):
-        ...     email: str
-        ...     id: int
-        ...     first_name: str
-        ...     last_name: str
-        ...     avatar: str
-        ...
-        ...     @classmethod
-        ...     @router.get('/users/{id_}')
-        ...     def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self:
-        ...         ...
-    """
-
+class _ModelBase(BaseModel):
     @staticmethod
     def __finalize_json__(json: Json) -> Json:
         """
@@ -227,3 +174,70 @@ class APIModel(BaseModel, metaclass=_ModelMeta):
 
     def __str__(self):
         return f'{self.__class__.__name__}({super().__str__()})'
+
+
+class _ModelMeta(ModelMetaclass):
+    @classmethod
+    def __prepare__(metacls, name, bases):
+        namespace = _Namespace()
+        return namespace
+
+    def __new__(
+            cls,
+            cls_name: str,
+            bases: tuple[type[Any], ...],
+            namespace: _Namespace,
+    ):
+        obj = super().__new__(cls, cls_name, bases, namespace)
+
+        hooks = cls.__collect_hooks(obj)
+
+        routed_functions = namespace.routed_functions
+        for fun in routed_functions:
+            fun.__route__.hooks.set_model_hooks(hooks)
+
+        obj.__router__ = None
+
+        return obj
+
+    @staticmethod
+    def __collect_hooks(obj: object) -> dict[ModelHook, Callable]:
+        hooks = {}
+        for value in ModelHook.values():
+            hook = getattr(obj, value, None)
+
+            is_defined = hook is not getattr(_ModelBase, value, None)
+            if hook and is_defined:
+                hooks[value] = hook
+        return hooks  # type: ignore
+
+
+class APIModel(_ModelBase, metaclass=_ModelMeta):
+    """
+    Base class for creating Sensei API models. Don't confuse it with Pydantic BaseModel, it's used simultaneously
+    for validating output data and provides "routed" functions.
+
+    But usage rools is the same with BaseModel
+    Usage docs: https://docs.pydantic.dev/2.9/concepts/models/
+
+    To make the proper class, decorate it with @router.model. Avoiding this requirement will lead you to the issues.
+
+    Examples:
+        >>> from typing import Annotated, Any, Self
+        >>> from sensei import Router, Query, Path, APIModel
+        ...
+        >>> router = Router('https://reqres.in/api')
+        ...
+        >>> class User(APIModel):
+        ...     email: str
+        ...     id: int
+        ...     first_name: str
+        ...     last_name: str
+        ...     avatar: str
+        ...
+        ...     @classmethod
+        ...     @router.get('/users/{id_}')
+        ...     def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self:
+        ...         ...
+    """
+    pass

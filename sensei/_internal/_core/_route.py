@@ -9,7 +9,7 @@ from sensei._base_client import BaseClient
 from ._callable_handler import CallableHandler, AsyncCallableHandler
 from ._requester import ResponseFinalizer, Preparer
 from ._types import IRouter, Hooks
-from ..tools import HTTPMethod, MethodType, identical
+from ..tools import HTTPMethod, MethodType
 
 _Client = TypeVar('_Client', bound=BaseClient)
 
@@ -24,7 +24,9 @@ class Route(ABC):
         '_is_async',
         '__self__',
         '_router',
-        '_hooks'
+        '_hooks',
+        '_skip_preparer',
+        '_skip_finalizer'
     )
 
     def __new__(
@@ -69,13 +71,9 @@ class Route(ABC):
 
         self._host = host
 
-        if skip_preparer:
-            hooks.prepare_args = identical
-
-        if skip_finalizer:
-            hooks.finalize_json = identical
-
         self._hooks = hooks
+        self._skip_preparer = skip_preparer
+        self._skip_finalizer = skip_finalizer
 
         self._method_type: MethodType = MethodType.STATIC
 
@@ -174,6 +172,8 @@ class _SyncRoute(Route):
             path=self.path,
             method=self._method,
             hooks=self._hooks,
+            skip_preparer=self._skip_preparer,
+            skip_finalizer=self._skip_finalizer,
         ) as response:
             return response
 
@@ -189,5 +189,7 @@ class _AsyncRoute(Route):
             path=self.path,
             method=self._method,
             hooks=self._hooks,
+            skip_preparer=self._skip_preparer,
+            skip_finalizer=self._skip_finalizer,
         ) as response:
             return response
