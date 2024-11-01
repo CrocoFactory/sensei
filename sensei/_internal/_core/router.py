@@ -17,9 +17,10 @@ from ..tools import HTTPMethod, set_method_type, identical, MethodType, bind_att
 
 _KT = TypeVar('_KT')
 _VT = TypeVar('_VT')
+_RF = TypeVar('_RF', bound=RoutedFunction)
 
 
-_RouteDecorator = Callable[[Callable], RoutedFunction]
+_RouteDecorator = Callable[[_RF], _RF]
 
 
 class Router(IRouter):
@@ -237,7 +238,7 @@ class Router(IRouter):
                 skip_finalizer=skip_finalizer,
             )
 
-            func.__routed__ = True
+            func.__sensei_routed_function__ = True
             func.__route__ = route
 
             def _setattrs(

@@ -1,4 +1,3 @@
-import functools
 from typing import Any, Callable
 
 from pydantic import BaseModel
@@ -8,7 +7,7 @@ from typing_extensions import TypeGuard
 from sensei.types import Json
 from ._types import RoutedMethod, ModelHook, RoutedFunction
 from .args import Args
-from ..tools import is_staticmethod, is_classmethod, is_selfmethod, bind_attributes, is_method
+from ..tools import is_staticmethod, is_classmethod, is_instancemethod, bind_attributes, is_method
 
 
 class _Namespace(dict):
@@ -33,7 +32,7 @@ class _Namespace(dict):
         if is_method(obj):
             if is_staticmethod(obj) or is_classmethod(obj):
                 obj = obj.__func__
-            cond = getattr(obj, '__routed__', None) is True
+            cond = getattr(obj, '__sensei_routed_function__', None) is True
         return cond
 
     def __setitem__(self, key: Any, value: Any):
@@ -44,8 +43,8 @@ class _Namespace(dict):
             else:
                 self._routed_functions.add(value)
         elif key in ModelHook.values():
-            if is_selfmethod(value):
-                value = functools.partial(value, None)
+            if is_instancemethod(value):
+                raise ValueError(f'Class hook {value.__name__} cannot be instance method')
 
         super().__setitem__(key, value)
 
@@ -214,13 +213,11 @@ class _ModelMeta(ModelMetaclass):
 
 class APIModel(_ModelBase, metaclass=_ModelMeta):
     """
-    Base class for creating Sensei API models. Don't confuse it with Pydantic BaseModel, it's used simultaneously
-    for validating output data and provides "routed" functions.
+    Base class for creating Sensei API models. Don't confuse it with Pydantic BaseModel. It can be used
+    for both validating output data and providing "routed" functions.
 
-    But usage rools is the same with BaseModel
+    But rools are the same with BaseModel
     Usage docs: https://docs.pydantic.dev/2.9/concepts/models/
-
-    To make the proper class, decorate it with @router.model. Avoiding this requirement will lead you to the issues.
 
     Examples:
         >>> from typing import Annotated, Any, Self

@@ -146,7 +146,8 @@ Look at the example below:
         email: EmailStr
         nickname: str
         
-        def __prepare_args__(self, args: Args) -> Args:
+        @staticmethod
+        def __prepare_args__(args: Args) -> Args:
             print(f'Preparing arguments for {args.url} request')
             return args
     
@@ -217,12 +218,14 @@ a value of the same type. The next step is based on a level type:
     ```
 
 === "Routed Model Level"
-    You only need to define a method with name `__prepare_args__` inside `User`. Sensei will use this hook, when it's necessary.
+    You only need to define a class or static method with name `__prepare_args__` inside `User`. Sensei will use this 
+    hook, when it's necessary.
     ```python
     class User:
         ...
-
-        def __prepare_args__(self, args: Args) -> Args:
+        
+        @staticmethod
+        def __prepare_args__(args: Args) -> Args:
             print(f'Preparing arguments for {args.url} request')
             return args
     ```
@@ -367,7 +370,8 @@ class User(APIModel):
     email: EmailStr
     nickname: str
 
-    def __prepare_args__(self, args: Args) -> Args:
+    @staticmethod
+    def __prepare_args__(args: Args) -> Args:
         args.headers['Authorization'] = f'Bearer {Context.token}' # (1)!
         return args
 
@@ -396,7 +400,8 @@ In the example above, there are two preparers of different levels.
 
 === "Routed Model Level"
     ```python 
-    def __prepare_args__(self, args: Args) -> Args:
+    @staticmethod
+    def __prepare_args__(args: Args) -> Args:
         args.headers['Authorization'] = f'Bearer {Context.token}' 
         return args
     ```     
@@ -701,8 +706,9 @@ Let's try to figure out the algorithm to the situation described above:
         email: EmailStr
         id: PositiveInt
         name: str
-        
-        def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
+                    
+        @classmethod
+        def __finalize_json__(cls, json: dict[str, Any]) -> dict[str, Any]:
             return json['data']
     
         @classmethod
@@ -780,9 +786,10 @@ The next step is based on a level type:
     ```
 
 === "Routed Model Level"
-     You only need to define a method with name `__finalize_json__` inside `User`. Sensei will use this hook, when it's necessary.
+     You only need to define a class or static method with name `__finalize_json__` inside `User`. Sensei will use this hook, when it's necessary.
     ```python
-    def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
+    @classmethod
+    def __finalize_json__(cls, json: dict[str, Any]) -> dict[str, Any]:
         return json['data']
     ```
 

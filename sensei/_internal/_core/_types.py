@@ -15,6 +15,8 @@ from ..tools import MethodType, identical, HTTPMethod
 
 CaseConverter = Callable[[str], str]
 
+_RT = TypeVar('_RT')
+
 
 class RoutedMethod(Protocol):
     __func__: RoutedFunction
@@ -23,8 +25,8 @@ class RoutedMethod(Protocol):
     __route__: IRoute
 
 
-class RoutedFunction(Protocol):
-    def __call__(self, *args, **kwargs):
+class RoutedFunction(Callable[..., _RT]):
+    def __call__(self, *args, **kwargs) -> _RT:
         ...
 
     def prepare(self, preparer: Preparer | None = None) -> Preparer:
@@ -37,7 +39,7 @@ class RoutedFunction(Protocol):
     __name__: str
     __doc__: str
     __route__: IRoute
-    __routed__: bool = True
+    __sensei_routed_function__: bool = True
 
 
 class IRequest(Protocol):

@@ -570,11 +570,15 @@ You can create a model that performs both validation and making request. This OO
 from typing import Annotated
 from typing_extensions import Self
 from sensei import APIModel, Router, Path
-from pydantic import NonNegativeInt
+from pydantic import NonNegativeInt, EmailStr
 
 router = Router('https://api.example.com/')
 
 class User(APIModel):
+    id: NonNegativeInt
+    username: str
+    email: EmailStr
+    
     @classmethod
     @router.get('/users/{id_}')
     def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: 
@@ -612,7 +616,7 @@ george.bluth@gmail.com
 
 /// warning
 You must not decorate a method as routed in a class not inherited from `APIModel`.
-This make impossible to use [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html), that we will learn in 
+This makes impossible to use [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html), that we will learn in 
 the future, and can lead to issues in the other situations.
 
 For instance, there is a common error to use `BaseModel` for the same purpose as `APIModel`:

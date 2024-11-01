@@ -18,14 +18,17 @@ class TestAPIModel:
         router = Router(base_url, default_case=camel_case)
 
         class Base(APIModel):
-            def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
+            @classmethod
+            def __finalize_json__(cls, json: dict[str, Any]) -> dict[str, Any]:
                 return json['data']
 
-            def __prepare_args__(self, args: Args) -> Args:
+            @classmethod
+            def __prepare_args__(cls, args: Args) -> Args:
                 args.headers['X-Token'] = 'secret_token'
                 return args
 
-            def __header_case__(self, s: str) -> str:
+            @staticmethod
+            def __header_case__(s: str) -> str:
                 return kebab_case(s)
 
             @staticmethod
@@ -33,7 +36,8 @@ class TestAPIModel:
                 return snake_case(s)
 
         class Validation(Base):
-            def __cookie_case__(self, s: str) -> str:
+            @classmethod
+            def __cookie_case__(cls, s: str) -> str:
                 return header_case(s)
             
             @classmethod

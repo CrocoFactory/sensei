@@ -180,7 +180,8 @@ Routed Model level."   Let's look at the example below:
 router = Router(host, response_case=camel_case)
 
 class User(APIModel):
-    def __header_case__(self, s: str) -> str:
+    @classmethod
+    def __header_case__(cls, s: str) -> str:
         return kebab_case(s)
 
     @staticmethod
@@ -192,12 +193,7 @@ class User(APIModel):
     def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: ...
 ```
 
-Hook function can be represented both as instance method and as static method. 
-
-/// warning
-Don't interact with `self` argument in hooks. There it always has `None` value. This will be described later in 
-[Routed Models](/learn/user_guide/routed_model.html)
-///
+Hook function can be represented both as class method and as static method, but not instance methods.
    
 So, `response_case=camel_case` in `Router`
 
@@ -218,7 +214,7 @@ as [router level](#router-router-level) level, it has lower priority than [route
        
 ## Hook Levels (Priority)
 
-Code that handles intercepted function calls, events or messages passed between software components is called a hook. 
+Code that handles intercepted function calls, events or messages passed between software components is called a **hook**. 
 The levels that were described above determine the scope of applying some hook. 
 In the context of this article, hooks are the case converters.
 
