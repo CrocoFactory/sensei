@@ -1,4 +1,4 @@
-When you need to handle response in a nonstandard way or add or change arguments 
+from sensei import APIModelWhen you need to handle response in a nonstandard way or add or change arguments 
 before request, you can apply preparers and finalizers respectively. Before the start, we need to remember about 
 [Hook Levels](/learn/user_guide/making_aliases.html#hook-levels-priority).
 
@@ -80,6 +80,9 @@ flowchart TB
 Preparer is a function that takes instance of `Args` as argument and returns the modified. 
 Preparers are used for request preparation. That means add or change arguments 
 before request. 
+    
+Preparers are executed after internal argument parsing. So, all request parameters are available in
+`Args` model within a preparer.
 
 ### Algorithm
 
@@ -340,7 +343,7 @@ def update_user(id_: int, nickname: str) -> None:
     ...
 
 @router.post('/users')
-def create_user(email: str, nickname: str) -> User:
+def create_user(email: EmailStr, nickname: str) -> User:
     ...
 
 Context.token = 'secret_token'
@@ -386,7 +389,7 @@ class User(APIModel):
     
     @classmethod
     @router.post('/users')
-    def create(cls, email: str, nickname: str) -> "User":
+    def create(cls, email: EmailStr, nickname: str) -> "User":
         ...
 
 Context.token = 'secret_token'
@@ -837,7 +840,37 @@ The example was shown in [Algorithm](#algorithm_2)
             ...
     ```
 
-## Conclusion
+## Async 
+
+Preparers/Finalizers can be async, if associated routed function is also async.
+
+```python
+class User(APIModel):
+    ...
+
+    @router.patch('/users/{id_}')
+    async def update(
+            name: str,
+            job: str
+    ) -> datetime.datetime:
+        ...
+    
+    @update.prepare
+    async def _update_in(self, args: Args) -> Args:
+        args.url = format_str(args.url, {'id_': self.id})
+        await asyncio.sleep(1.5)
+        return args
+    
+    @update.finalize
+    async def _update_out(self, response: Response) -> datetime.datetime:
+        json_ = response.json()
+        result = datetime.datetime.strptime(json_['updated_at'], "%Y-%m-%dT%H:%M:%S.%fZ")
+        await asyncio.sleep(1.5)
+        self.first_name = json_['name']
+        return result
+```
+
+## Recap
 
 In summary, Sensei provides flexible hooks to customize how requests are prepared and responses are handled through 
 [Preparers](#preparers) and [Finalizers](#finalizers). These hooks can be applied at different levels with an organized execution order, 
@@ -847,20 +880,16 @@ providing nuanced control over request handling and response processing:
    
     Sensei defines three levels for hooks:
 
-    1. Routed Model Level (executed first)
-    2. Router Level (executed next)
-    3. Route Level (executed last)
+    1. Routed Model Level (executed first) - Define within the routed model, to use across routed methods
+    2. Router Level (executed next) - Attach to a `Router` instance to use across routes
+    3. Route Level (executed last) - Directly to a specific route 
 
     Each of these levels allows you to add preparers or finalizers that operate at different scopes, 
     with Routed Model Level being the most specific and executed first.
 
 - **Preparers**
 
-    Preparers are used to modify or add arguments before a request is sent. You can apply them at:
-
-    1. Routed Model Level - Define within the routed model to alter specific instance arguments.
-    2. Router Level - Attach to a `Router` instance for consistent preparation across routes.
-    3. Route Level - Directly to a specific route, modifying arguments only for that route.
+    Preparers are used to modify or add arguments before a request is sent. 
 
     Example:
     Preparers are commonly used to add authentication headers, or to dynamically set route parameters (e.g., filling in 

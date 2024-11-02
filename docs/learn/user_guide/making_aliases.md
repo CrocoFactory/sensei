@@ -408,7 +408,7 @@ This specific alias takes precedence over the `AliasGenerator`, which means that
 are transformed by the generator, `year` will be serialized as `publication-year`
 and validated as `pubYear`
 
-## Conclusion
+## Recap
 
 In the Sensei, managing different naming conventions (like camelCase, snake_case, etc.) is crucial for building APIs 
 that conform to Python's standards. Here’s a concise summary of the key concepts:

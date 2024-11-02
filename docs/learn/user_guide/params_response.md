@@ -562,8 +562,9 @@ The current class in which the method is declared is taken as the model
     ```
 
 #### Forward Reference
-In python 3.9 `Self` is not included into `typing` module, but is included into `typing_extensions`. If for some reason you can't use `Self`, you can achieve
-the same functionality using **Forward References**.
+In python 3.9 `Self` is not included into `typing` module, but is included into `typing_extensions`. 
+Because of this, IDEs often cannot understand this return type in python `3.9`. 
+You can achieve the same functionality using **Forward References**.
 
 /// info
 [Forward reference](https://peps.python.org/pep-0484/#forward-references) is way to resolve issue, when a type hint contains names that have not been defined yet. 
@@ -674,13 +675,13 @@ You can use [Forward References](/learn/user_guide/params_response.html#forward-
 In Sensei, defining [Param Types](#param-types) and [Response Types](#response-types) enables structured request and response handling, 
 promoting flexibility, code clarity, and effective validation. Here's a brief overview:
 
-1. [Param Types](#param-types) are used to specify the origin of parameters in HTTP requests (`Path`, `Query`, `Cookie`, `Header`, 
+1. **Param Types** are used to specify the origin of parameters in HTTP requests (`Path`, `Query`, `Cookie`, `Header`, 
      `Body`, `File`, `Form`). They provide a consistent way to validate request:
      - `Path` is for URL path params, `Query` for URL queries, and `Body` for JSON data in requests.
      - `File` and `Form` types cater to form-data, with `File` designed for binary files.
      - `Header` and `Cookie` handle HTTP headers and cookies, respectively.
 
-2. [Response Types](#response-types) define the structure of responses and support automated JSON parsing and response validation:
+2. **Response Types** define the structure of responses and support automated JSON parsing and response validation:
      - Basic types like `str`, `bytes`, `None`, and `dict` provide flexible output for text, binary data, or basic JSON.
      - Structured response types using `BaseModel` ensure data validation, with `Self` and `list[Self]` enhancing 
        functionality in OOP-style.
