@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Protocol, Mapping, Any, Union
 
+from httpx import AsyncClient, Client
 from typing_extensions import Self
 
 Json = Union[dict, list[dict]]
@@ -38,27 +39,9 @@ class IRateLimit(ABC):
         self._calls = rate_limit
 
     @abstractmethod
-    async def async_acquire(self) -> bool:
-        """
-        Attempt to acquire a token.
-
-        :return: True if a token was acquired, False otherwise.
-        """
-        pass
-
-    @abstractmethod
     async def async_wait_for_slot(self) -> None:
         """
         Wait until a slot becomes available by periodically acquiring a token.
-        """
-        pass
-
-    @abstractmethod
-    def acquire(self) -> bool:
-        """
-        Synchronously attempt to acquire a token.
-
-        :return: True if a token was acquired, False otherwise.
         """
         pass
 
@@ -133,3 +116,6 @@ class IResponse(Protocol):
     @property
     def headers(self) -> Mapping[str, Any]:
         pass
+
+
+BaseClient = Union[AsyncClient, Client]

@@ -5,7 +5,6 @@ from typing import Callable, Optional, Any, TypeVar
 
 from httpx import URL
 
-from sensei._descriptors import RateLimitAttr, PortAttr
 from sensei._utils import get_base_url
 from sensei.cases import header_case as to_header_case
 from sensei.client import Manager
@@ -70,9 +69,6 @@ class Router(IRouter):
             The final value must be an instance of `Args`. Defaults to the identical case.
     """
 
-    rate_limit = RateLimitAttr()
-    port = PortAttr()
-
     def __init__(
             self,
             host: str,
@@ -92,8 +88,8 @@ class Router(IRouter):
         self._manager = manager
         self._host = host
 
-        self.port = port
-        self.rate_limit = rate_limit
+        self._port = port
+        self._rate_limit = rate_limit
 
         self._default_case = default_case
         self._query_case = query_case
@@ -104,7 +100,6 @@ class Router(IRouter):
 
         self._finalize_json = __finalize_json__
         self._prepare_args = __prepare_args__
-        self._linked_to_model: bool = False
 
     @property
     def base_url(self) -> URL:
@@ -115,9 +110,39 @@ class Router(IRouter):
             str: The base URL.
         """
         host = self._host
-        port = self.port
+        port = self._port
         base = get_base_url(host, port)
         return URL(base)
+
+    @property
+    def port(self) -> int:
+        """
+        Returns: The port number of the associated API.
+            If `None`, the port placeholder in `host` will not be replaced.
+        """
+        return self._port
+
+    @port.setter
+    def port(self, value: int) -> None:
+        if value is None or isinstance(value, int) and 1 <= value <= 65535:
+            self._port = value
+        else:
+            raise ValueError('Port must be between 1 and 65535')
+
+    @property
+    def rate_limit(self) -> IRateLimit:
+        """
+        Returns: An object implementing the `IRateLimit` interface to handle API rate limiting.
+            Defaults to `None`.
+        """
+        return self._rate_limit
+
+    @rate_limit.setter
+    def rate_limit(self, value: IRateLimit) -> None:
+        if value is None or isinstance(value, IRateLimit):
+            self._rate_limit = value
+        else:
+            raise TypeError(f'Value must implement {IRateLimit} interface')
 
     @property
     def manager(self) -> Optional[Manager]:
@@ -232,7 +257,6 @@ class Router(IRouter):
                 method=method,
                 router=self,
                 func=func,
-                host=self._host,
                 hooks=hooks,
                 skip_preparer=skip_preparer,
                 skip_finalizer=skip_finalizer,

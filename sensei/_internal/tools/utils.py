@@ -6,6 +6,7 @@ from typing import Any, get_args, Callable, TypeVar, Optional, Protocol
 
 from pydantic import BaseModel, ConfigDict
 from pydantic._internal._model_construction import ModelMetaclass
+from pydantic.fields import FieldInfo
 
 from sensei._utils import placeholders
 from .types import HTTPMethod, MethodType
@@ -78,9 +79,17 @@ def args_to_kwargs(func: Callable, *args, **kwargs) -> OrderedDict[str, Any]:
     sig = inspect.signature(func)
 
     bound_args = sig.bind_partial(*args, **kwargs)
-    bound_args.apply_defaults()
 
-    return OrderedDict(bound_args.arguments)
+    args = OrderedDict(bound_args.arguments)
+    bound_args.apply_defaults()
+    new_args = OrderedDict(bound_args.arguments)
+
+    dif = new_args.keys() - args.keys()
+    for k, v in new_args.items():
+        v = v.default if isinstance(v, FieldInfo) and k in dif else v
+        new_args[k] = v
+
+    return new_args
 
 
 def set_method_type(func: Callable):

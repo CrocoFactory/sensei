@@ -71,8 +71,8 @@ For instance, `snake_case("myString") == my_string`, `snake_case("MY_STRING") ==
 There is an explanation for **closure** property of case converters for math-lovers. 
 
 ^^Definition^^ *Let C = {f~1~, f~2~, ..., f~n~}*, is the set of functions, *f~i~ : D~i~ -> E~i~.*  
-*If ∀ k, m ∈ {1, ..., n}* and *∀ x ∈  D~k~* condition *f~k~(x) ∈ D~m~* is met *=> {f~1~, f~2~, ..., f~n~}* **closed** 
-relative to each other.
+*{f~1~, f~2~, ..., f~n~}* **closed** relative to each other <=> *∀ k, m ∈ {1, ..., n}* and *∀ x ∈  D~k~* 
+condition *f~k~(x) ∈ D~m~* is met 
 
 ^^Corollary^^ *D~k~ = E~k~ = D~m~ = E~m~ = D ∀ k, m ∈ {1, ..., n} => {f~1~, f~2~, ..., f~n~}* **closed** relative to 
 each other.

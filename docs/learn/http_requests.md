@@ -610,7 +610,7 @@ When the server sets a cookie, it can be sent back with subsequent requests to m
     response = requests.get('https://api.example.com/data', cookies=cookies)
     ```
                     
-## Better Solution for HTTP Requests: Introducing `httpx`
+## Introducing `httpx`
 
 While the `requests` library is a popular choice for making HTTP requests in Python, `httpx` offers several enhancements and modern features that can improve your API interaction experience. Here’s a closer look at `httpx`, its similarities with `requests`, the concept of the client, client parameters, and the importance of closing the client.
 

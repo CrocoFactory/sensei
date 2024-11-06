@@ -4,12 +4,12 @@ from abc import abstractmethod, ABC
 from enum import Enum
 from typing import Protocol, TypeVar, Callable, Any, Mapping, Union, Awaitable, Literal, get_args, Optional
 
+from httpx import URL
 from pydantic import validate_call, BaseModel, ConfigDict
 from typing_extensions import Self, TypeGuard
 
 from sensei.client import Manager
-from sensei.types import IRateLimit
-from sensei.types import Json
+from sensei.types import IRateLimit, Json
 from .args import Args
 from ..tools import MethodType, identical, HTTPMethod
 
@@ -91,6 +91,11 @@ class IResponse(Protocol):
 
 class IRouter(ABC):
     __slots__ = ()
+
+    @property
+    @abstractmethod
+    def base_url(self) -> URL:
+        pass
 
     @property
     @abstractmethod

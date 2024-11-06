@@ -393,6 +393,72 @@ classDiagram
         User <|-- SubUser : inherits
 ```
 
+/// warning
+You should prefer to use `Self` instead of [Forward References](/learn/user_guide/params_response.html#forward-reference).
+This is related to inheritance. If you make a subclass of a class, having [Forward Reference](/learn/user_guide/params_response.html#forward-reference)
+as the type hint, the subclass will try to return superclass and encounter the error. 
+
+Setting `Self` resolve issue, because this response type allows to dynamically retrieve the current class. 
+         
+=== "ValueError"
+    !!! failure "ValueError"
+        ```python
+        class BaseUser(APIModel):
+            ...
+        
+            @classmethod
+            @router.get('/users/{id_}')
+            def get(cls, id_: Annotated[int, Path(alias='id')]) -> "BaseUser":
+                ...
+        
+        
+        class User(BaseUser):
+            ...
+        
+            @classmethod
+            @router.get('/users')
+            def query(
+                    cls,
+                    page: Annotated[int, Query()] = 1,
+                    per_page: Annotated[int, Query(le=7)] = 3
+            ) -> list["User"]:
+                ...
+        
+        user = User.get(1)
+        print(user)
+        ```
+        ValueError: Response finalizer must be set, if response is not from: (type[pydantic.main.BaseModel], <class 'str'\>, 
+            <class 'dict'\>, <class 'bytes'\>, list[dict], <class 'pydantic.main.BaseModel'\>, list[pydantic.main.BaseModel])
+
+=== "Success"
+    !!! success 
+        ```python
+        class BaseUser(APIModel):
+            ...
+        
+            @classmethod
+            @router.get('/users/{id_}')
+            def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self:
+                ...
+        
+        
+        class User(BaseUser):
+            ...
+        
+            @classmethod
+            @router.get('/users')
+            def query(
+                    cls,
+                    page: Annotated[int, Query()] = 1,
+                    per_page: Annotated[int, Query(le=7)] = 3
+            ) -> list[Self]:
+                ...
+        
+        user = User.get(1)
+        print(user)
+        ```    
+///
+
 ### Async/Sync
 
 Often you want to implement both synchronized and asynchronous versions of the code. 
@@ -431,9 +497,9 @@ Inheritance from an abstract class is a good choice.
     In this example, both `Dog` and `Cat` are subclasses of `Animal` and implement the `make_sound` method, 
     providing their specific sounds. This way, each subclass meets the requirements of the abstract base class `Animal`.
 
-When you use abstract classes, most of the IDEs provide autosuggestions, when you type name of abstract method
-in subclass. Consequently, inheritance from abstract class is a fast and deduplicated way to make sync and async code
-versions.
+When you use abstract classes, most of the IDEs provide autocompletion when you type the name of abstract method
+in subclass. If you use autocompletion, the method with its full signature will be provided. 
+Consequently, inheritance from abstract class is a fast and deduplicated way to make sync and async code versions.
 
 ```python
 from abc import ABC, abstractmethod

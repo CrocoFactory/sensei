@@ -4,10 +4,11 @@ import inspect
 from abc import ABC, abstractmethod
 from typing import Generic, Any
 
-from sensei._base_client import BaseClient
+from httpx import Client, AsyncClient, Response
+
 from sensei._utils import placeholders
-from sensei.client import Client, AsyncClient
-from sensei.types import IResponse, Json
+from sensei.client.rate_limiter import AsyncRateLimiter, RateLimiter
+from sensei.types import IResponse, Json, BaseClient, IRateLimit
 from ._endpoint import Endpoint, Args, ResponseModel
 from ._types import JsonFinalizer, ResponseFinalizer, Preparer, CaseConverters, CaseConverter
 from ..tools import identical
@@ -22,7 +23,7 @@ class _DecoratedResponse(IResponse):
 
     def __init__(
             self,
-            response: IResponse,
+            response: Response,
             json_finalizer: JsonFinalizer = identical,
             response_case: CaseConverter = identical,
     ):
@@ -51,6 +52,7 @@ class Requester(ABC, Generic[ResponseModel]):
         "_endpoint",
         "_json_finalizer",
         "_preparer",
+        "_rate_limit",
         "_is_async_preparer",
         "_is_async_response_finalizer",
         "_case_converters"
@@ -61,6 +63,7 @@ class Requester(ABC, Generic[ResponseModel]):
             client: BaseClient,
             endpoint: Endpoint,
             *,
+            rate_limit: IRateLimit,
             case_converters: CaseConverters,
             response_finalizer: ResponseFinalizer | None = None,
             json_finalizer: JsonFinalizer = identical,
@@ -79,16 +82,19 @@ class Requester(ABC, Generic[ResponseModel]):
             client: BaseClient,
             endpoint: Endpoint,
             *,
+            rate_limit: IRateLimit,
             case_converters: CaseConverters,
             response_finalizer: ResponseFinalizer | None = None,
             json_finalizer: JsonFinalizer = identical,
             preparer: Preparer = identical,
     ):
         self._client = client
+
         self._response_finalizer = response_finalizer or self._finalize
         self._endpoint = endpoint
         self._json_finalizer = json_finalizer
         self._preparer = preparer
+        self._rate_limit = rate_limit
         self._is_async_preparer = inspect.iscoroutinefunction(self._preparer)
         self._is_async_response_finalizer = inspect.iscoroutinefunction(self._response_finalizer)
         self._case_converters = case_converters
@@ -132,6 +138,10 @@ class _AsyncRequester(Requester):
         client = self._client
         args = await self._get_args(**kwargs)
 
+        rate_limit = self._rate_limit
+        if rate_limit:
+            await AsyncRateLimiter(rate_limit).wait_for_slot()
+
         response = await client.request(**args)
         response.raise_for_status()
         case = self._case_converters['response_case']
@@ -163,6 +173,10 @@ class _Requester(Requester):
     def request(self, **kwargs) -> ResponseModel:
         client = self._client
         args = self._get_args(**kwargs)
+
+        rate_limit = self._rate_limit
+        if rate_limit:
+            RateLimiter(rate_limit).wait_for_slot()
 
         response = client.request(**args)
         response.raise_for_status()

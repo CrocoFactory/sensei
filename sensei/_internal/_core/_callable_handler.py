@@ -4,12 +4,11 @@ import inspect
 from inspect import isclass
 from typing import Callable, TypeVar, Generic, Any, get_origin, get_args
 
+from httpx import Client, AsyncClient
 from typing_extensions import Self
 
-from sensei._base_client import BaseClient
-from sensei._utils import get_base_url, normalize_url
-from sensei.client import AsyncClient, Client
-from sensei.types import IResponse
+from sensei._utils import normalize_url
+from sensei.types import IResponse, BaseClient
 from ._endpoint import Endpoint, ResponseModel, RESPONSE_TYPES
 from ._requester import Requester
 from ._types import IRouter, Hooks
@@ -26,7 +25,6 @@ class _CallableHandler(Generic[_Client]):
         '_func',
         '_method',
         '_path',
-        '_host',
         '_request_args',
         '_method_type',
         '_temp_client',
@@ -44,7 +42,6 @@ class _CallableHandler(Generic[_Client]):
             method: HTTPMethod,
             router: IRouter,
             func: Callable,
-            host: str,
             request_args: _RequestArgs,
             method_type: MethodType,
             hooks: Hooks,
@@ -55,7 +52,6 @@ class _CallableHandler(Generic[_Client]):
         self._router = router
         self._method = method
         self._path = path
-        self._host = host
 
         self._request_args = request_args
         self._method_type = method_type
@@ -168,6 +164,7 @@ class _CallableHandler(Generic[_Client]):
         requester = Requester(
             client,
             endpoint,
+            rate_limit=self._router.rate_limit,
             response_finalizer=self._response_finalizer,
             json_finalizer=self._json_finalizer,
             preparer=self._preparer,
@@ -176,14 +173,12 @@ class _CallableHandler(Generic[_Client]):
         return requester
 
     def _get_request_args(self, client: BaseClient) -> tuple[Requester, dict]:
-        if normalize_url(str(client.base_url)) != normalize_url(get_base_url(self._host, self._router.port)):
+        if normalize_url(str(client.base_url)) != normalize_url(str(self._router.base_url)):
             raise ValueError('Client base url must be equal to Router base url')
-
-        if client.rate_limit and self._router.rate_limit and client.rate_limit > self._router.rate_limit:
-            raise ValueError('Client rate limit must be less or equal to Router rate limit')
 
         requester = self._make_requester(client)
         kwargs = args_to_kwargs(self._func, *self._request_args[0], **self._request_args[1])
+
         method_type = self._method_type
 
         if MethodType.self_method(method_type):
@@ -196,14 +191,17 @@ class AsyncCallableHandler(_CallableHandler[AsyncClient], Generic[ResponseModel]
     async def __aenter__(self) -> ResponseModel:
         router = self._router
         manager = router.manager
-        if manager is None or manager.empty():
-            client = AsyncClient(host=self._host, port=router.port, rate_limit=router.rate_limit)
+
+        client = None
+        if manager is not None:
+            client = manager.get(is_async=True)
+
+        if manager is None or client is None:
+            client = AsyncClient(base_url=self._router.base_url)
             await client.__aenter__()
             self._temp_client = client
         else:
-            client = manager.get()
-            if not isinstance(client, AsyncClient):
-                raise TypeError(f'Manager`s client must be type of {AsyncClient}')
+            client = manager.get(True)
 
         requester, kwargs = self._get_request_args(client)
 
@@ -220,14 +218,16 @@ class CallableHandler(_CallableHandler[Client], Generic[ResponseModel]):
         router = self._router
         manager = router.manager
 
-        if manager is None or manager.empty():
-            client = Client(host=self._host, port=router.port, rate_limit=router.rate_limit)
+        client = None
+        if manager is not None:
+            client = manager.get()
+
+        if manager is None or client is None:
+            client = Client(base_url=self._router.base_url)
             client.__enter__()
             self._temp_client = client
         else:
             client = manager.get()
-            if not isinstance(client, Client):
-                raise TypeError(f'Manager`s client must be type of {Client}')
 
         requester, kwargs = self._get_request_args(client)
 
