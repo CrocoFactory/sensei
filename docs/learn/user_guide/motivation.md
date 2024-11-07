@@ -18,9 +18,9 @@ mindmap
 
 ## What is API Wrapper?
 
-An API wrapper is a client-side collection of code that simplifies the interaction between a client application and a
+API wrapper is a client-side code that simplifies the interaction between a client application and a
 web API.
-The library abstracts the complexity of making HTTP requests, handling responses, and processing data, allowing
+Wrappers abstract the complexity of making HTTP requests, handling responses, and processing data, allowing
 developers
 to easily integrate API functionality without needing to deal with the lower-level details of the API's implementation.
 Usually, you deal with API wrappers as Python libraries.
@@ -53,20 +53,19 @@ Usually, you deal with API wrappers as Python libraries.
 
 ## Golden Rules
 
-Imagine you are one of the users using your API Wrapper.
-Let's analyze the needs of the users.
-We can list the most preferable features desired to be seen by the users:
+Assume you create API wrapper as a python library.
+Let's analyze the needs of the users, that will use your library and list the most preferable of them:
 
 ### Sync and async code versions.
 
 Since **User A** can create a CPU-bound application making few calls of functions from our
 wrapper, he does not need to integrate app based on parallelism with three lines of async code.
-Moreover, these lines will be evaluated only once per app session.
+Moreover, these lines could be evaluated only once per app session.
 But **User B** can create an app that most of the time performs
 I/O-bound work, consequently his concurrent application will benefit from these lines of async code.
 
-But mostly it's hard to implement both versions of the code, following DRY principle.
-Most of the attempts lead to the code duplication or bad code architecture.
+But mostly it's hard to implement both versions of the code, following the DRY principle.
+Most of the attempts lead to code duplication or bad code architecture.
 
 ///info
 [DRY (Don't Repeat Yourself)](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) principle is a software development concept aimed at reducing the repetition of code and
@@ -76,11 +75,13 @@ duplications
 should exist. If you find yourself copying and pasting code, that’s a sign you’re violating DRY.
 ///
 
-Let's show duplicated code example
+Let's show a duplicated code example, consisting of two modules:
 
-#### Synchronous Example
+#### Synchronous Version
 
 ```python
+# sync_api.py
+
 import httpx
 from httpx import Response
 from typing import Any
@@ -116,9 +117,11 @@ def get_weather_sync(city: str, units: str = "metric") -> dict[str, Any]:
 print(get_weather_sync("London"))
 ```
 
-#### Asynchronous Example
+#### Asynchronous Version
 
 ```python
+# async_api.py
+
 import httpx
 import asyncio
 from httpx import Response
@@ -161,7 +164,7 @@ asyncio.run(main())
 
 #### Deduplicated version
 
-Let's try to implement both versions and apply minimal duplication(deduplication), merging code into shared logic.
+Let's try to implement both versions and reduce duplication (apply deduplication), merging code into shared logic.
 
 ```python
 import httpx
@@ -253,20 +256,19 @@ Consequently, people can say that these repetitions are justified and minimal.
 
 Let's imagine a less successful case:
 
-* You have dozens of functions making requests. All of them have shared logic different to the other endpoints
-* In the async version, you have more than one async code section. It forces you to merge code into shared logic again!
+* You have dozens of functions making requests. All of them have shared logic different from the other endpoints
+* The async version has alternating sections of asynchronous and synchronous code. It forces you to merge code into shared logic again!
 
-Under these conditions, following DRY leads you to the terrible code architecture.
+Under these conditions, following DRY leads you to terrible code architecture.
 But you cannot ignore code duplication!
-Otherwise, to produce small change, you need to apply the same steps multiple times.
-To async and sync versions. We will come back to the solution of this issue later.
+Otherwise, to produce a small change, you need to apply the same steps to async and sync versions. We will come back to the solution of this issue later.
 
 ### Client-side validation
 
 Why should you validate data before accessing the API (client-side validation)?
-A better outcome is catching exceptions, thrown due to wrong data, than getting JSON explaining the reason of the error.
+Catching exceptions thrown due to wrong data is a better outcome than getting JSON explaining the reason for the error.
 
-Let's imagine the API, wrapping by you to the following request:
+Assume you make the following request to the API:
 
 ```http
 POST /create-task HTTP/1.1
@@ -280,7 +282,7 @@ Content-Type: application/json
 }
 ```
 
-Respond like that:
+And API responds like that:
 
 ```http
 HTTP/1.1 422 Unprocessable Entity
@@ -297,21 +299,21 @@ Content-Length: 1234
 
 This is the response to our attempt to create a task in some project-management app.
 Why is the data invalid?
-We have to find an answer by self due to bad-designed API.
-We have been doing it for hours and eureka!
+We have to find an answer by ourselves due to a bad-designed API.
+We have been doing it for hours, and it's Eureka!
 
-There are three reasons of error:
+There are three reasons for error:
 
 * Title may not be empty
-* Due date must be in the future
-* Priority must be on of 'low', 'medium', 'high'
+* due_date must be in the future
+* Priority must be 'low', 'medium', 'high'
 
-If the users provide invalid data, we have to explain why it is invalid.
-Because the users prefer a better designed API, rather than finding a solution to the problem for hours like you.
+If the users provide invalid data, we must explain why it is invalid.
+Because the users prefer a better-designed API, rather than finding a solution to the problem for hours like you.
 You should solve this problem instead of an API developer.
 You need to validate data and throw an exception when data is invalid.
 
-There is a good approach using `pydantic` framework.
+There is a good approach using the `pydantic` framework.
 It is intended to perform various validations.
 Let's write two versions of code achieving almost the same results.
 
@@ -322,7 +324,7 @@ import httpx
 from datetime import datetime
 from typing import Any, Literal, get_args
 
-client = httpx.Client(base_url='https://project-managment/api')
+client = httpx.Client(base_url='https://project-managment.com/api')
 Priority = Literal['low', 'medium', 'high']  # (1)!
 
 
@@ -373,7 +375,7 @@ def create_task(
 3. Validate that the provided priority is one of the defined values, getting possible values of the Priority type
 4. Raise an exception for HTTP errors
 
-Don't you find writing such code boring?
+Don't you find it boring to write such code?
 What if `/create-task` route would have more parameters?
 Let's write code, using `pydantic`!
 
@@ -386,7 +388,7 @@ from typing import Any, Literal, Union
 from pydantic.alias_generators import to_camel
 from pydantic import BaseModel, field_validator, Field, AliasGenerator, ConfigDict
 
-client = httpx.Client(base_url='https://project-managment/api')
+client = httpx.Client(base_url='https://project-managment.com/api')
 Priority = Literal['low', 'medium', 'high']  #(1)!
 
 
@@ -418,10 +420,10 @@ def create_task(title: str, due_date: int, priority: Priority, description: str 
 1. Define the possible task priorities using a `Literal` type.
 2. Configure the model to use camelCase for serialization.
 3. Title of the task, limited to 120 characters.
-4. Due date represented as a timestamp.
+4. due_date represented as a timestamp.
 5. Optional description, max 500 characters.
-6. Validator to ensure the due date is in the future.
-7. Raise an error if due date is not in the future.
+6. Validator to ensure the due_date is in the future.
+7. Raise an error if due_date is not in the future.
 8. Create a `Task` instance with provided parameters.
 9. Serialize the `Task` instance to JSON format.
 10. Raise an exception for HTTP errors.
@@ -430,32 +432,32 @@ def create_task(title: str, due_date: int, priority: Priority, description: str 
 
 Let's compare "vanilla" and `pydantic` versions:
 
-1) The vanilla version requiring throwing an exception in every boilerplate situation.
-   The pydantic version only requires throwing an exception when due date is invalid.
-   In other cases it validates all automatically, according to type hints and such params as `max_length`.
+1) The vanilla version requires throwing an exception in every boilerplate situation.
+   The pydantic version only requires throwing an exception when due_date is invalid.
+   In other cases, it validates and throws exceptions automatically, according to type hints and such params as `max_length`.
 
-2) In the vanilla version, we manually set up request parameters(json) and convert name of args, that is `snake_case` to
+2) In the vanilla version, we manually set up request parameters (JSON) and convert the name of args, that is `snake_case` to
    `camelCase`. The pydantic version suggests built-in functions for converting cases of arguments and provides the
    possibility
    to set automatic conversion.
 
 3) The pydantic version looks like shorter than the vanilla version.
 
-Even if the API is well-designed and provide understandable error messages, you should perform **client-side
-validation**. Furthermore, the data validation before request doesn't require a significant resource allocation.
+Even if the API is well-designed and provides understandable error messages, you should perform **client-side
+validation**. Furthermore, the data validation before the request doesn't require a significant resource allocation.
 
-Here are benefits, accessible when applying client-side validation:
+Here are the benefits, accessible when applying client-side validation:
 
 ##### Prevents unnecessary requests
 
-If you validate data on the client side, you can stop invalid requests from even reaching the server.
+If you validate data on the client side, you can stop invalid requests from reaching the server.
 This reduces server load, as fewer incorrect requests are sent, leading to better performance.
 Even if you're not a server owner, you're doing a good job for him.
 
 ##### Reduced latency
 
 Client-side validation allows users to immediately see if they've made an error, improving the user experience by
-avoiding the delay that comes from sending a request to the server and waiting for the response.
+avoiding the delay between sending a request to the server and waiting for the response.
 
 ##### API Rate Limits
 
@@ -506,7 +508,7 @@ Content-Type: application/json
 ```
 
 In this case, the important part of the response is the user object inside the "data" field.
-However, to avoid forced extraction data from nested fields yourself,
+However, to avoid forced extraction of data from nested fields yourself,
 you can transform this response by extracting just the "user" data and returning it directly.
 
 Here’s how we would transform it:
@@ -655,7 +657,7 @@ This will give you the following transformed response:
 ##### Converting Case         
 
 In addition to renaming fields for clarity,
-it is also common a common approach to convert field names from camelCase(or another case) to snake_case to follow 
+it is also common a common approach to convert field names from camelCase (or another case) to snake_case to follow 
 Python’s naming conventions.
 
 ///info
@@ -669,7 +671,7 @@ There are some common cases:
 
 2. **kebab-case**  
    Lowercase words separated by hyphens (e.g., `my-variable-name`).  
-   **Usage** Primarily used in URLs (HTML, CSS classes/IDs).
+   **Usage:** Primarily used in URLs (HTML, CSS classes/IDs).
 
 3. **CONSTANT_CASE** or **UPPER_CASE**  
    All uppercase letters with underscores between words (e.g., `CONSTANT_VALUE`).  
@@ -681,7 +683,7 @@ There are some common cases:
 
 5. **PascalCase**  
    Every word starts with a capital letter, no separators (e.g., `MyVariableName`).  
-   **Usage:** Used in C#, .NET, Java, and TypeScript for class and type names.
+   **Usage:** Used in C#, .NET, Java, and other languages for class and type names.
 
 6. **Header-Case**  
    Capitalizes the first letter of each word, separated by hyphens (e.g., `My-Header-Name`).  
@@ -747,8 +749,8 @@ This will give you the following transformed response:
 ## Recipe
 
 The features just discussed we will call "Golden Rules".
-If you wish to merge this features into one tool, I can make you happy!
-These rules are the foundation of Sensei framework!
+If you wish to merge these features into one tool, I can make you happy!
+These rules are the foundation of the Sensei framework!
 
 ```mermaid
 graph TD

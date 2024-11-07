@@ -1,5 +1,5 @@
-from sensei import APIModelWhen you need to handle response in a nonstandard way or add or change arguments 
-before request, you can apply preparers and finalizers respectively. Before the start, we need to remember about 
+When you need to handle a response in a nonstandard way or add or change arguments 
+before a request, you can apply preparers and finalizers respectively. Before the start, we need to remember about 
 [Hook Levels](/learn/user_guide/making_aliases.html#hook-levels-priority).
 
 ## Hook Levels (Order)
@@ -20,21 +20,18 @@ ways of applying converters:
         
         @router.post('/users')
         def create_user(first_name: str, birth_city: str, ...) -> User: 
-            ...
+            pass
         ```
 
     === "Route Level"
         ```python
-        from sensei import Router, kebab_case, camel_case
+        from sensei import Router, camel_case, snake_case
         
-        router = Router(
-            'https://api.example.com',
-            body_case=kebab_case
-        )
+        router = Router('https://api.example.com')
             
-        @router.post('/users', body_case=camel_case)
+        @router.post('/users', body_case=camel_case, response_case=snake_case)
         def create_user(first_name: str, birth_city: str, ...) -> User: 
-            ...
+            pass
         ```
 
     === "Routed Model Level"
@@ -52,17 +49,17 @@ ways of applying converters:
         
             @classmethod
             @router.get('/users/{id_}')
-            def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: ...
+            def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: pass
         ```
 
 These levels are not only related to [case converters](/learn/user_guide/making_aliases.html#case-converters). 
 They are also related to other hooks, such as [Preparers](#preparers) and [Finalizers](#finalizers). 
 
 But here they don't determine the single Preparer/Finalizer from all that will be executed (determine priority), 
-like for case converters. Each of them will be executed, but in different order. So, this type of hook levels is 
+like for case converters. Each of them will be executed but in a different order. So, this type of hook levels is 
 called **Order Levels**. 
 
-Here is an illustration of execution orders of Preparers/Finalizers. 
+Here is an illustration of the execution orders of Preparers/Finalizers. 
   
 ```mermaid
 flowchart TB 
@@ -77,8 +74,8 @@ flowchart TB
 ```
 
 ## Preparers
-Preparer is a function that takes instance of `Args` as argument and returns the modified. 
-Preparers are used for request preparation. That means add or change arguments 
+Preparer is a function that takes an instance of `Args` as the argument and returns the modified. 
+Preparers are used for request preparation. That means adding or changing arguments 
 before request. 
     
 Preparers are executed after internal argument parsing. So, all request parameters are available in
@@ -102,7 +99,7 @@ Look at the example below:
     
     @router.get('/users/{id_}')
     def get_user(id_: int) -> User:
-        ...
+        pass
     
     @get_user.prepare
     def _get_user_in(args: Args) -> Args:
@@ -131,7 +128,7 @@ Look at the example below:
     
     @router.get('/users/{id_}')
     def get_user(id_: int) -> User:
-        ...
+        pass
     
     user = get_user(1)
     print(user)
@@ -157,7 +154,7 @@ Look at the example below:
         @classmethod
         @router.get('/users/{id_}')
         def get(cls, id_: int) -> "User":
-            ...
+            pass
     
     user = User.get(1)
     print(user)
@@ -178,14 +175,14 @@ First, we need to define a route(s)
     ```python
     @router.get('/users/{id_}')
     def get_user(id_: int) -> User:
-        ...
+        pass
     ```
 
 === "Router Level"
     ```python
     @router.get('/users/{id_}')
     def get_user(id_: int) -> User:
-        ...
+        pass
     ```
 
 === "Routed Model Level"
@@ -193,7 +190,7 @@ First, we need to define a route(s)
     @classmethod
     @router.get('/users/{id_}')
     def get(cls, id_: int) -> "User":
-        ...
+        pass
     ```
    
 #### Step 2: Define Preparer
@@ -211,7 +208,7 @@ a value of the same type. The next step is based on a level type:
     ```
 
 === "Router Level"
-    Pass function to `Router` object
+    Pass the function to `Router` object
     ```python
     def _prepare_args(args: Args) -> Args:
         print(f'Preparing arguments for {args.url} request')
@@ -221,8 +218,8 @@ a value of the same type. The next step is based on a level type:
     ```
 
 === "Routed Model Level"
-    You only need to define a class or static method with name `__prepare_args__` inside `User`. Sensei will use this 
-    hook, when it's necessary.
+    You only need to define a class or static method with the name `__prepare_args__` inside `User`. Sensei will use this 
+    hook when it's necessary.
     ```python
     class User:
         ...
@@ -255,7 +252,7 @@ When you make the following call
     print(user)
     ```
 
-Sensei collects function's arguments, transforms it to `Args` instance and calls preparer if it's defined.
+Sensei collects the function's arguments, transforms it to the `Args` instance, and calls preparer if it's defined.
 
 ```text
 Preparing arguments for /users/1 request
@@ -269,7 +266,7 @@ User(id=1, email="john@example.com", nickname="john")
 
 ### Usage
 
-There are few examples of using preparers at different levels.
+There are a few examples of using preparers at different levels.
 
 #### Route (Routed Method)
 
@@ -293,7 +290,7 @@ class User(APIModel):
             name: str,
             job: str
     ) -> None:
-        ...
+        pass
     
     @update.prepare
     def _update_in(self, args: Args) -> Args:
@@ -310,11 +307,11 @@ The example above is route level, not routed model level.
 
 You can use preparers when all requests require a set of the same parameters, like 
 `Authorization` header. These preparers are executed for each routed function, related to the router
-that preparer is associated with.
+that the preparer is associated with.
 
 ##### Router
 
-To apply preparer at router level, you need to use argument `__prepare_args__` of `Router` constructor.
+To apply preparer at the router level, you need to use argument `__prepare_args__` of the `Router` constructor.
 
 ```python
 from sensei import APIModel, Router, Args
@@ -340,11 +337,11 @@ router = Router('https://api.example.com', __prepare_args__=prepare_args)
 
 @router.patch('/users/{id_}')
 def update_user(id_: int, nickname: str) -> None:
-    ...
+    pass
 
 @router.post('/users')
 def create_user(email: EmailStr, nickname: str) -> User:
-    ...
+    pass
 
 Context.token = 'secret_token'
 id_ = create_user('john@example.com', 'john').id
@@ -357,7 +354,7 @@ update_user(id_, 'john_good')
 
 ##### Routed Model
                    
-To apply preparer at routed model level, you need to use hook `__prepare_args__`. 
+To apply preparer at the routed model level, you need to use hook `__prepare_args__`. 
 
 ```python
 from sensei import APIModel, Router, Args, format_str
@@ -380,7 +377,7 @@ class User(APIModel):
 
     @router.patch('/users/{id_}')
     def update(self, nickname: str) -> None:
-        ...
+        pass
     
     @update.prepare
     def _update_in(self, args: Args) -> Args:
@@ -390,7 +387,7 @@ class User(APIModel):
     @classmethod
     @router.post('/users')
     def create(cls, email: EmailStr, nickname: str) -> "User":
-        ...
+        pass
 
 Context.token = 'secret_token'
 user = User.create('john@example.com', 'john')
@@ -421,7 +418,7 @@ According to [Order Levels](#hook-levels-order), preparer at routed model level 
 route level preparer (`_update_in` ).
 
 /// tip 
-If some Router/Routed Model level preparer should be excluded for some route, you can use `skip_preparer=True` in route 
+If some Router/Routed Model level preparer should be excluded for some routes, you can use `skip_preparer=True` in the route 
 decorator
 
 ```python
@@ -430,7 +427,7 @@ class User(APIModel):
 
     @router.get('/users/{id_}', skip_preparer=True)
     def get(self, id_: int) -> "User":
-        ...
+        pass
 ```
 
 But this doesn't exclude route level preparers, like that:
@@ -449,18 +446,18 @@ Let's explore them:
                      
 ### Response Finalizer
 
-Response Finalizer is a function that takes instance of `httpx.Response` as argument and returns the result of calling 
-routed function (method). Return value must be of the same type with routed function (method).
+Response Finalizer is a function that takes an instance of `httpx.Response` as the argument and returns the result of calling 
+the associated routed function (method). The return value must be of the same type as the routed function (method).
 
-Response Finalizers are used for response transformation, that can't be performed automatically, if set a corresponding response 
+Response Finalizers are used for response transformation, which can't be performed automatically if you set a corresponding response 
 type from the category of automatically handled.
                      
 /// info
-Response Finalizers can be defined only at route level. 
+Response Finalizers can be defined only at the route level. 
 ///     
 
-If [response type](/learn/user_guide/params_response.html#response-types) is not from category automatically handled, you have to define response finalizer.
-Otherwise, error will be thrown.
+If [response type](/learn/user_guide/params_response.html#response-types) is not from the category automatically handled, you have to define a response finalizer.
+Otherwise, an error will be thrown.
 
 #### Algorithm
 
@@ -485,7 +482,7 @@ def sign_up(
             media_type='application/x-www-form-urlencoded'
         )]
 ) -> str:
-    ...
+    pass
 
 @sign_up.finalize
 def _sign_up_out(response: Response) -> str:
@@ -509,7 +506,7 @@ Let's take this code step by step.
        
 ##### Step 1: Define Route
 
-First, we need to define a route
+First, we need to define a route:
 
 ```python
 @router.post('/register')
@@ -519,12 +516,12 @@ def sign_up(
             media_type='application/x-www-form-urlencoded'
         )]
 ) -> str:
-    ...
+    pass
 ```
    
 ##### Step 2: Define Finalizer
 
-To define a response finalizer, you have to create a function, that takes only one argument of `httpx.Response` type and returns
+To define a response finalizer, you have to create a function, that takes only one argument of the `httpx.Response` type and returns
 a value of the same type as the routed function. After that, decorate it as `@<routed_function>.finalize`.
 
 ```python
@@ -546,13 +543,13 @@ token = sign_up(UserCredentials(
 print(f'JWT token: {token}')
 ```
 
-Sensei makes a request, retrieves the response and pass `Response` object to finalizer, if it's defined.
+Sensei makes a request, retrieves the response, and passes the `Response` object to the finalizer if it's defined.
 
 ```text
 Finalizing response for request /register
 ```
 
-Finally, the routed function returns the result of the finalizer call.  In this example the result is JWT token.
+Finally, the routed function returns the result of the finalizer call.  In this example, the result is a JWT token.
 
 ```text
 JWT token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdW...
@@ -584,7 +581,7 @@ if set a corresponding response type from the category of automatically handled.
                 media_type='application/x-www-form-urlencoded'
             )]
     ) -> str:
-        ...
+        pass
     
     @sign_up.finalize
     def _sign_up_out(response: Response) -> str:
@@ -601,11 +598,11 @@ if set a corresponding response type from the category of automatically handled.
 
 ### JSON Finalizer
 
-JSON Finalizer is a function that takes decoded JSON response, as argument and returns the modified JSON. 
+JSON Finalizer is a function that takes the decoded JSON response, as the argument and returns the modified JSON. 
 These finalizers are used for JSON response transformation before internal or user-defined response finalizing.
      
 /// info
-JSON Finalizers can be defined only at router/routed model level. 
+JSON Finalizers can be defined only at the router/routed model level. 
 ///
         
 #### Algorithm
@@ -628,7 +625,7 @@ Content-Type: application/json
 }
 ```
 
-To automatically handle the response, you either need to define this model
+To automatically handle the response, you either need to define this model:
 
 ```python
 class _UserData(APIModel):
@@ -650,20 +647,20 @@ class User(APIModel):
     
 @router.get('/users/{id_}')
 def get_user(id_: Annotated[int, Path(alias='id')]) -> User: 
-    ...
+    pass
 
 @get_user.finalize
 def _user_out(response: Response) -> User:
     return User(**response.json()['data'])
 ```
 
-The approach with response finalizer returns a better model than the approach with
+The approach with a response finalizer returns a better model than the approach with
 wrapping model in another model. 
 
-But there is a problem, what if you have dozens of similar functions and for each you have to
-define the same finalizer? JSON finalizer is the solution of this problem.
+But there is a problem, what if you have dozens of similar functions and you have to
+define the same finalizer for each? JSON finalizer is the solution to this problem.
 
-Let's try to figure out the algorithm to the situation described above:
+Let's try to figure out the algorithm for the situation described above:
 
 === "Router Level"
     ```python
@@ -686,11 +683,11 @@ Let's try to figure out the algorithm to the situation described above:
             page: Annotated[int, Query()] = 1,
             per_page: Annotated[int, Query(le=7)] = 3
     ) -> list[User]:
-        ...
+        pass
     
     @router.get('/users/{id_}')
     def get_user(id_: Annotated[int, Path(alias='id')]) -> User: 
-        ...
+        pass
 
     user = get_user(1)
     print(user)
@@ -721,12 +718,12 @@ Let's try to figure out the algorithm to the situation described above:
                 page: Annotated[int, Query()] = 1,
                 per_page: Annotated[int, Query(le=7)] = 3
         ) -> list[Self]:
-            ...
+            pass
     
         @classmethod
         @router.get('/users/{id_}')
         def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: 
-            ...
+            pass
 
     user = User.get(1)
     print(user)
@@ -749,11 +746,11 @@ First, we need to define a route(s)
             page: Annotated[int, Query()] = 1,
             per_page: Annotated[int, Query(le=7)] = 3
     ) -> list[User]:
-        ...
+        pass
     
     @router.get('/users/{id_}')
     def get_user(id_: Annotated[int, Path(alias='id')]) -> User: 
-        ...
+        pass
     ```
 
 === "Routed Model Level"
@@ -765,18 +762,18 @@ First, we need to define a route(s)
             page: Annotated[int, Query()] = 1,
             per_page: Annotated[int, Query(le=7)] = 3
     ) -> list[Self]:
-        ...
+        pass
 
     @classmethod
     @router.get('/users/{id_}')
     def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: 
-        ...
+        pass
     ```
 
 ##### Step 2: Define Finalizer
 
 To define a JSON finalizer, you have to create a function, that takes only one argument of some JSON-serializable type
-corresponding to the response. Usually servers return JSON as `dict[str, Any]`, but rarely can return `list[dict]`.
+corresponding to the response. Usually, servers return JSON as `dict[str, Any]`, but rarely can return `list[dict]`.
 The next step is based on a level type:
             
 === "Router Level"
@@ -789,7 +786,7 @@ The next step is based on a level type:
     ```
 
 === "Routed Model Level"
-     You only need to define a class or static method with name `__finalize_json__` inside `User`. Sensei will use this hook, when it's necessary.
+     You only need to define a class or static method with the name `__finalize_json__` inside `User`. Sensei will use this hook, when it's necessary.
     ```python
     @classmethod
     def __finalize_json__(cls, json: dict[str, Any]) -> dict[str, Any]:
@@ -812,13 +809,13 @@ When you make the following call
     print(user)
     ```
 
-Sensei makes a request, retrieves the response, decodes it as JSON and pass it to response finalizer if it's defined.
+Sensei makes a request, retrieves the response, decodes it as JSON, and passes it to the response finalizer if it's defined.
 
 ```text
 User(email='john@example.com' id=1 name='John')
 ```
 
-That is, JSON finalizer is executed before response finalizer. Due to this, `Self` response type can be handled
+That is, the JSON finalizer is executed before the response finalizer. Due to this, the `Self` response type can be handled
 without a response finalizer.
 
 #### Usage
@@ -827,7 +824,7 @@ JSON finalizers are used for JSON response transformation before internal or use
 The example was shown in [Algorithm](#algorithm_2)
 
 !!! tip
-    If some Router/Routed Model level finalizer should be excluded for some route, you can use `skil_finalizer=True` in route 
+    If some Router/Routed Model level finalizer should be excluded for some routes, you can use `skil_finalizer=True` in the route: 
 
     ```python
     
@@ -837,12 +834,12 @@ The example was shown in [Algorithm](#algorithm_2)
         @classmethod
         @router.get('/users/{id_}', skip_finalizer=True)
         def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: 
-            ...
+            pass
     ```
 
 ## Async 
 
-Preparers/Finalizers can be async, if associated routed function is also async.
+Preparers/Finalizers can be async if the associated routed function is also async.
 
 ```python
 class User(APIModel):
@@ -853,7 +850,7 @@ class User(APIModel):
             name: str,
             job: str
     ) -> datetime.datetime:
-        ...
+        pass
     
     @update.prepare
     async def _update_in(self, args: Args) -> Args:
@@ -892,7 +889,7 @@ providing nuanced control over request handling and response processing:
     Preparers are used to modify or add arguments before a request is sent. 
 
     Example:
-    Preparers are commonly used to add authentication headers, or to dynamically set route parameters (e.g., filling in 
+    Preparers are commonly used to add authentication headers or to dynamically set route parameters (e.g., filling in 
     path variables from the instance attributes).
 
 - **Finalizers**

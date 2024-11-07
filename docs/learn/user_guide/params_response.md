@@ -1,17 +1,17 @@
 ## Param Types
 
-**Param Types** is set of objects to declare request parameter of a specific type through type hints,
+**Param Types** is the set of objects to declare request parameter of a specific type through type hints,
 There are `Path`, `Query`, `Cookie`,`Header`, `Body`, `File`, `Form`.
 
 /// tip
-If you don't know types of "request parameters", visit [HTTP Requests](/learn/http_requests.html)
+If you don't know the types of "request parameters", visit [HTTP Requests](/learn/http_requests.html)
 ///
 
-Sensei's Param Types are inherited from `FieldInfo`, produced by `Field` function. You can apply the same approaches
+Sensei's Param Types are inherited from `FieldInfo`, produced by the `Field` function. You can apply the same approaches
 that was described for [Field Types](/learn/user_guide/first_steps.html#field-types).
 
 ??? example
-    Here is a function that creates user and returns JWT token, corresponding to the user.
+    Here is a function that creates a user and returns a JWT token, corresponding to the user.
     ```python
     @router.post('/users')
     def create_user(
@@ -49,18 +49,18 @@ This endpoint retrieves a post by its ID from the URL path.
 ```python
 @router.get('/posts/{id_}')
 def get_post(cls, id_: Annotated[int, Path()]) -> Post:
-    ...
+    pass
 ```
 
-When use `Path` parameter, placeholder name must match argument name.
+When using the `Path` parameter, a placeholder name must match the argument name.
 
 /// tip
-If you are sure that you will not write validations, you can omit `Path` declaration.
+If you are sure that you will not write validations, you can omit the `Path` declaration.
 
 ```python
 @router.get('/posts/{id_}')
 def get_post(cls, id_: int) -> Post:
-    ...
+    pass
 ```
 
 ///
@@ -72,16 +72,16 @@ This uses a query parameter to search for users based on a string.
 ```python
 @router.get('/search')
 def search_users(cls, query: Annotated[str, Query()] = "") -> list[User]:
-    ...
+    pass
 ```
 
 /// tip
-If you use method, that usually include query parameters, you can omit `Query` declaration.
+If you use a method, that usually includes query parameters, you can omit the `Query` declaration.
 
 ```python
 @router.get('/search')
 def search_users(cls, query: str = "") -> list[User]:
-    ...
+    pass
 ```
 
 Methods that usually include query parameters:
@@ -99,20 +99,20 @@ This accepts a `User` object in the request body for user creation.
 ```python
 @router.post('/create_user')
 def create_user(cls, user: Annotated[User, Body()]) -> User:
-    ...
+    pass
 ```
 
 `Body` parameters have arguments that other parameters don't have:
 
-#### MIME type
+#### MIME-type
 
-If the content of your request body is not default (e.g JSON), you can change its media-type
+If the content of your request body is not default (e.g JSON), you can change its media type:
 
 !!! example
     ```python
     @router.post('/create_user')
     def create_user(cls, user: Annotated[User, Body(media_type='application/xml')]) -> User:
-        ...
+        pass
     ```
 
 #### Embed/Non-embed
@@ -133,10 +133,10 @@ key-value pair where the value is the actual `User`.
 ```python
 @router.post('/create_user')
 def create_user(user: Annotated[User, Body(embed=True)]) -> User:
-    ...
+    pass
 ```
 
-This will produce the following request
+This will produce the following request:
 
 ```json
 {
@@ -156,10 +156,10 @@ When `embed=False`, the `User` is expected to be the body itself, like this:
 ```python
 @router.post('/create_user')
 def create_user(user: Annotated[User, Body(embed=False)]) -> User:
-    ...
+    pass
 ```
 
-This will produce the following request
+This will produce the following request:
 
 ```json
 {
@@ -171,12 +171,12 @@ This will produce the following request
 Here, the body directly contains the serialized `User` object.
 
 /// tip
-If you use method, that usually include request body, you can omit `Body` declaration.
+If you use a method, that usually includes the request body, you can omit the `Body` declaration.
 
 ```python
 @router.post('/create_user')
 def create_user(cls, user: User) -> User:
-    ...
+    pass
 ```
 
 Methods that usually include request body:
@@ -193,13 +193,13 @@ Here, `username` and `password` are captured from a form submission.
 ```python
 @router.post('/login')
 def login_user(cls, username: Annotated[str, Form()], password: Annotated[str, Form()]) -> str:
-    ...
+    pass
 ```
 
 /// note | Technical Details
-`Form` is inherited from `Body`. You can use `embed` argument, but can't use `media_type`, because `Form` has preset
+`Form` is inherited from `Body`. You can use the `embed` argument, but can't use `media_type`, because `Form` has preset
 `media_type='application/x-www-form-urlencoded'`.
-You can achive the same functionality, if use `Body(media_type='application/x-www-form-urlencoded')` instead of `Form`.
+You can achieve the same functionality if use `Body(media_type='application/x-www-form-urlencoded')` instead of `Form`.
 ///
 
 ### File
@@ -209,24 +209,23 @@ This accepts an image file from the request as a `File`.
 ```python
 @router.post('/upload')
 def upload_image(cls, image: Annotated[bytes, File()]) -> str:
-    ...
+    pass
 ```
 
 `File` is inherited from `Form`, consequently there is `embed` argument like in `Body`.
 
 /// warning
-Despite `File` is inherited from `Form`, which is inherited from `Body`, you cannot achieve the same functionality,
-if use `Body(media_type='multipart/form-data')` instead of `File`. It's because `File` parameters are serialized in
-a different way.
+Despite `File` being inherited from `Form`, which is inherited from `Body`, you cannot achieve the same functionality,
+if using `Body(media_type='multipart/form-data')` instead of `File`. It's because `File` parameters are serialized differently.
 
-Let's assume you use `Body(media_type='multipart/form-data')` instead of `File`. If you try to pass content of binary
+Let's assume you use `Body(media_type='multipart/form-data')` instead of `File`. If you try to pass the content of binary
 file with non-UTF8 characters, Sensei cannot finish serialization and will throw the `UnicodeDecodeError`.
 
 ??? failure "UnicodeDecodeError"
     ```python 
     @router.post('/upload')
     def upload_image(image: Annotated[bytes, Body(media_type='multipart/form-data')]) -> str:
-        ...
+        pass
 
     with open('/path/to/image', 'rb') as f:
         image = f.read()
@@ -239,18 +238,18 @@ file with non-UTF8 characters, Sensei cannot finish serialization and will throw
 
 ### Header
 
-This function downloads a file while authenticating the user with a token from headers
+This function downloads a file while authenticating the user with a token from the headers:
 
 ```python
 @router.get('/download')
 def download_file(cls, x_token: Annotated[str, Header()]) -> bytes:
-    ...
+    pass
 ```
 
 /// info
-When your endpoint relies on custom headers, that are not supported by default in HTTP, you should call it with prefix `X-`.
-For instance, we want to define header containing request signature, that is encoded metadata, such as current time, 
-your username, etc. You should call it like that:
+When your endpoint relies on custom headers, that are not supported by default in HTTP, you should call it with the prefix `X-`.
+For instance, we want to define a header containing the request signature, that is encoded metadata, such as current time, 
+your username, etc. You should call it like this:
 
 ```text
 X-Signature
@@ -264,7 +263,7 @@ This requires `session_id` from the browser cookies for user verification.
 ```python
 @router.get('/verify')
 def verify_user(cls, session_id: Annotated[str, Cookie()]) -> bool:
-    ...
+    pass
 ```
 
 ## Response Types
@@ -275,30 +274,30 @@ that we will learn in the future. That means these types are handled automatical
         
 ### `None`
 
-If this type is present or function has no return type , `None` is returned.
+If this type is present or a function has no return type, `None` is returned.
 
 !!! example
-    You can use `None`, when function doesn't return relevant response or doesn't return it at all. 
-    For instance, endpoints with `DELETE` method often don't return the response.
+    You can use `None` when a function doesn't return a relevant response or doesn't return it at all. 
+    For instance, endpoints with the `DELETE` method often don't return the response.
 
     ```python
     @router.delete('/users')
     def delete_user() -> None: 
-        ...
+        pass
     ```
 
 ### `str`
 
 `str` response type refers to the text representation of the response. If this type is present, the `text` attribute
-of `Response` object is returned.
+of the `Response` object is returned.
 
 !!! example
-    When you need to get `html` code of a page, you can use `str`.
+    When you need to get the `html` code of a page, you can use `str`.
 
     ```python
     @router.get('/index.html')
     def get_page() -> str: 
-        ...
+        pass
 
     get_page()
     ```
@@ -313,16 +312,16 @@ of `Response` object is returned.
     </head>
     <body>
         <h1>Hello, World!</h1>
-        <a href="https://example.com">Visite</a>
+        <a href="https://example.com">Visit</a>
     </body>
     </html>
     ```
 
 ### `bytes`
 
-`bytes` response types refers to raw binary representation of the response. If this type is present, the `content`
+`bytes` response type refers to the raw binary representation of the response. If this type is present, the `content`
 attribute
-of `Response` object is returned.
+of the `Response` object is returned.
 
 !!! example
     When you need to query the binary file, you can use `bytes`.
@@ -333,7 +332,7 @@ of `Response` object is returned.
 
     @router.get('/ai_image')
     def generate_image(style: str, resolution: Resolution) -> bytes: 
-        ...
+        pass
     
     image_bytes = generate_image("cartoon", Resolution(1200, 400))
     image = Image.open(BytesIO(image_bytes))
@@ -344,22 +343,22 @@ of `Response` object is returned.
 `dict` response type refers to the JSON representation of the response. 
 In particular, it refers to JSON as a `dict`. Don't confuse with [`list[dict]`](/learn/user_guide/params_response.html#listdict). 
 
-If this type is present and method is not OPTIONS or HEAD, the result of `json()` method of `Response` object is returned.
-Otherwise, if method is OPTIONS or HEAD, the attribute `headers` of `Response` object is returned. This is the only one response
+If this type is present and the method is not OPTIONS or HEAD, the result of the `json()` method of the `Response` object is returned.
+Otherwise, if the method is OPTIONS or HEAD, the attribute `headers` of the `Response` object is returned. This is the only response
 type that can be used for automatic header extraction.
 
-Instead of `dict` you can provide `dict[KT, VT]`, where `KT` is key type and `VT` is value type.
+Instead of `dict` you can provide `dict[KT, VT]`, where `KT` is the key type and `VT` is the value type.
 
 /// tip
-Use `dict` response type only when your want to get headers,
+Use the `dict` response type only when you want to get headers,
 using 'HEAD' or 'OPTIONS' method, or response validation is redundant or useless
       
-In this example, adding validations for `version` and `available` field could be redundant. Especially, if this function
-is used as helper.
+In this example, adding validations for the `version` and `available` fields could be redundant. Especially, if this function
+is used as a helper.
 
 ```python
 @router.get('/status')
-def get_status() -> dict[str, Union[str, bool]]: ...
+def get_status() -> dict[str, Union[str, bool]]: pass
 
 get_status()
 ```
@@ -372,10 +371,10 @@ get_status()
 
 ```
 
-Or if this endpoint provides useful headers, we can get it using `dict` response type.
+Or if this endpoint provides useful headers, we can get it using the `dict` response type.
 ```python
 @router.head('/status')
-def get_status() -> dict[str, Any]: ...
+def get_status() -> dict[str, Any]: pass
 
 get_status()
 ```
@@ -385,33 +384,33 @@ get_status()
 ### `list[dict]`
 
 `list[dict]` response type also refers to the JSON representation of the response, but it refers to JSON as a `list[dict]`. 
-If this type is present, the result of `json()` method of `Response` object is returned.
+If this type is present, the result of the `json()` method of the `Response` object is returned.
 
-Instead of `list[dict]` you can provide `list[dict[KT, VT]]`, where `KT` is key type and `VT` is value type.
+Instead of `list[dict]` you can provide `list[dict[KT, VT]]`, where `KT` is the key type and `VT` is the value type.
 
 /// tip
-Most probably, you will not find a situation, where JSON is represented as `list`. 
+Most probably, you will not find a situation, where JSON is represented as a `list`. 
 But a list can be wrapped in a field, such as "data". 
 You can use this type in combination with `__finalize_json__` hook, that we will cover in 
 [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html). 
 
 This response type also should be used when response validation is redundant or useless.
    
-In this example, if we need this model only as output in this function and don't need the same model as input in other, 
+In this example, if we need this model only as output in this function and don't need the same model as input in others, 
 you can use `list[dict]`
 
 ```python
 @router.get('/users')
 def get_users() -> list[dict[str, Union[str, int]]]: 
-    ...
+    pass
 ```
 ///
 
 ### `<BaseModel>`
 `<BaseModel>` response type refers to unpacking JSON representation of the response to the constructor of a 
-subclass of `BaseModel` from `pydantic`. This means: 
+subclass of `pydantic.BaseModel`. This means: 
 
-1) If response is represented as a dictionary, like that:
+1) If the response is represented as a dictionary, like that:
         ```json
         {"name":  "alex", "id":  1, "city":  "Manchester"}
         ```
@@ -424,18 +423,18 @@ subclass of `BaseModel` from `pydantic`. This means:
            city: str
        ```
 
-3) And unpack `{"name":  "alex", "id":  1, "city":  "Manchester"}` to `User`. As a result you will have `User` object. 
+3) And unpack `{"name":  "alex", "id":  1, "city":  "Manchester"}` to `User`. As a result, you will have a `User` object. 
        ```python
        User(id=1, name='alex', city='Manchester')
        ```
 
-The algorithm above is what Sensei does, when you provide `<BaseModel>` response type. 
+The algorithm above is what Sensei does when you provide a `<BaseModel>` response type. 
                             
 /// info
-Here `<BaseModel>` is a placeholder, that should be substituted by class name of model, inherited from `BaseModel`.  
+Here `<BaseModel>` is a placeholder, that should be substituted by the class name of the model, inherited from `BaseModel`.  
 ///        
 
-This response type is better than `dict`, because validations of `BaseModel` are
+This response type is better than `dict` because validations of `BaseModel` are
 performed. But unlike `dict`, this type can't be used for automatic header extraction.
 
 
@@ -450,14 +449,14 @@ performed. But unlike `dict`, this type can't be used for automatic header extra
     
     @router.get('/pokemon/{name}')
     def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon: 
-        ...
+        pass
     ```
 
 ### `list[<BaseModel>]`
 `list[BaseModel]` response type refers to **sequential** unpacking JSON representation of the response to the constructor of a 
-subclass of `BaseModel` from `pydantic`. That means: 
+subclass of `pydantic.BaseModel`. That means: 
 
-1) If response represented as a list of dictionaries of the same structure, like that:  
+1) If response is represented as a list of dictionaries of the same structure, like that:  
         ```json
         [{"name":  "alex", "id":  1, "city":  "Manchester"}, {"name":  "bob", "id":  2, "city":  "London"}, ...]
         ```
@@ -471,23 +470,23 @@ subclass of `BaseModel` from `pydantic`. That means:
         ```
 
 3) And unpack `{"name":  "alex", "id":  1, "city":  "Manchester"}` to `User`, `{"name":  "bob", "id":  2, "city":  "London"}`
-       to `User`, etc. As a result you will have list of `User` objects. 
+       to `User`, etc. As a result, you will have a list of `User` objects. 
        ```python
        [User(id=1, name='alex', city='Manchester'), User(id=2, name='bob', city='London'), ...]
        ```
 
-The algorithm above is what Sensei returns, when you provide `list[<BaseModel>]` response type.
+The algorithm above is what Sensei does when you provide a `list[<BaseModel>]` response type.
 
 
 /// info
-Here `<BaseModel>` is a placeholder, that should be substituted by class name of model, inherited from `BaseModel`.  
+Here `<BaseModel>` is a placeholder, that should be substituted by the class name of the model, inherited from `BaseModel`.  
 ///  
 
 This response type is better than `list[dict]`, because validations of `BaseModel` are
 performed.
        
 /// tip
-Most probably, you will not find a situation, where JSON is represented as `list`. 
+Most probably, you will not find a situation, where JSON is represented as a `list`. 
 But a list can be wrapped in a field, such as "data". 
 You can use this type in combination with `__finalize_json__` hook, that we will cover in 
 [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html).
@@ -495,21 +494,21 @@ You can use this type in combination with `__finalize_json__` hook, that we will
 ```python
 @router.get('/users')
 def get_users() -> list[User]: 
-    ...
+    pass
 ```
 ///
 
 ### `Self`
-`Self` response type is used only in [routed methods](/learn/user_guide/first_steps.html#routed-methods)
-of classes (will be explored in [Routed Model](/learn/user_guide/routed_model.html)), specifically in class method 
-(`@classmethod`) and instance methods (`self`). To use `Self`, you need to import it.
+`Self` response type is used only in [routed methods](/learn/user_guide/first_steps.html#routed-methods), 
+specifically in class method (`@classmethod`) and instance methods (`self`). 
+To use `Self`, you need to import it.
           
 In python 3.9
 ```python
 from typing_extensions import Self
 ```
 
-In python >3.10
+In python >=3.10
 ```python
 from typing import Self
 ```
@@ -518,7 +517,7 @@ Let's explore two use cases:
 
 #### Class Method
 `Self` in class method refers to the same as [`<BaseModel>`](/learn/user_guide/params_response.html#basemodel). 
-The current class in which the method is declared is taken as the model
+The current class in which the method is declared is taken as the model.
     
 !!! example
     ```python
@@ -526,7 +525,7 @@ The current class in which the method is declared is taken as the model
         @classmethod
         @router.get('/users/{id_}')
         def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: 
-            ...
+            pass
     ```
 
 #### Instance Method
@@ -536,7 +535,7 @@ The current class in which the method is declared is taken as the model
     You can use it in `PUT` and `PATCH` methods that update data related to the current model. It's a common approach, 
     to return the object for which the update was called.
 
-    In this example we use [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html) 
+    In this example, we use [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html) 
 
     ```python
     class User(APIModel):
@@ -547,7 +546,7 @@ The current class in which the method is declared is taken as the model
                 name: str,
                 job: str
         ) -> Self:
-            ...
+            pass
     
         @update.prepare
         def _update_in(self, args: Args) -> Args:
@@ -562,13 +561,13 @@ The current class in which the method is declared is taken as the model
     ```
 
 #### Forward Reference
-In python 3.9 `Self` is not included into `typing` module, but is included into `typing_extensions`. 
-Because of this, IDEs often cannot understand this return type in python `3.9`. 
+In Python 3.9 `Self` is not included in the `typing` module, but is included in `typing_extensions`. 
+Because of this, IDEs often cannot understand this return type in Python 3.9. 
 You can achieve the same functionality using **Forward References**.
 
 /// info
-[Forward reference](https://peps.python.org/pep-0484/#forward-references) is way to resolve issue, when a type hint contains names that have not been defined yet. 
-Basically, it is a string literal, that can express definition, to be resolved later. 
+[Forward reference](https://peps.python.org/pep-0484/#forward-references) is a way to resolve the issue, when a type hint contains names that have not been defined yet. 
+It is a string literal, that can express a definition, to be resolved later. 
 
 For example, the following code, namely constructor definition, does not work:
 
@@ -593,24 +592,26 @@ For instance, this code:
 
 ```python
 class User(APIModel):
+    ...
     @classmethod
     @router.get('/users/{id_}')
     def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: 
-        ...
+        pass
 ```
 
 Can also be written as:
 
 ```python
 class User(APIModel):
+    ...
     @classmethod
     @router.get('/users/{id_}')
     def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> "User": 
-        ...
+        pass
 ```
 
 /// warning
-Forward Reference can only be used in routed method (not routed functions). In the following example, Sensei cannot 
+Forward Reference can only be used in routed methods (not routed functions). In the following example, Sensei cannot 
 understand the response type.
 
 ```python
@@ -627,11 +628,11 @@ def list(
         page: Annotated[int, Query()] = 1,
         per_page: Annotated[int, Query(le=7)] = 3
 ) -> list["User"]:
-    ...
+    pass
 
 @router.get('/users/{id_}')
 def get(cls, id_: Annotated[int, Path(alias='id')]) -> "User": 
-    ...
+    pass
 ```
 
 
@@ -651,23 +652,25 @@ You can use [Forward References](/learn/user_guide/params_response.html#forward-
     ```python
     @router.get('/users')
     def get_users() -> list[User]: 
-        ...
+        pass
     ```
 
     Can be rewritten as
     ```python
     class User(APIModel)
+        ...
         @router.get('/users')
         def list() -> list[Self]: 
-            ...
+            pass
     ```    
 
     Or as
     ```python
     class User(APIModel)
+        ...
         @router.get('/users')
         def list() -> list["User"]: 
-            ...
+            pass
     ```
      
 ## Recap
@@ -676,9 +679,9 @@ In Sensei, defining [Param Types](#param-types) and [Response Types](#response-t
 promoting flexibility, code clarity, and effective validation. Here's a brief overview:
 
 1. **Param Types** are used to specify the origin of parameters in HTTP requests (`Path`, `Query`, `Cookie`, `Header`, 
-     `Body`, `File`, `Form`). They provide a consistent way to validate request:
-     - `Path` is for URL path params, `Query` for URL queries, and `Body` for JSON data in requests.
-     - `File` and `Form` types cater to form-data, with `File` designed for binary files.
+     `Body`, `File`, `Form`). They provide a consistent way to validate requests:
+     - `Path` is for URL path params, `Query` is for URL queries, and `Body` is for JSON data in requests.
+     - `File` and `Form` types cater to form data, with `File` designed for binary files.
      - `Header` and `Cookie` handle HTTP headers and cookies, respectively.
 
 2. **Response Types** define the structure of responses and support automated JSON parsing and response validation:

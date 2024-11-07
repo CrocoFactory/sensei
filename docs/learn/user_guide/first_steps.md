@@ -18,7 +18,7 @@ class Pokemon(APIModel):
 
 @router.get('/pokemon/{name}')
 def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon: 
-    ...
+    pass
 
 
 pokemon = get_pokemon(name="pikachu")
@@ -45,7 +45,7 @@ from sensei import Router, Path, APIModel
 `Router`, `Path`, and `APIModel` are imported from the Sensei framework.
 
 - `Router` helps manage API endpoints and routing.
-- `Path` specifies path (route) parameters and defines argument's validation.
+- `Path` specifies path (route) parameters and defines the argument's validation.
 - `APIModel` is used to define models for structuring API responses.
 
 ### Step 2: Creating a Router
@@ -86,7 +86,7 @@ in Sensei
 ```python
 @router.get('/pokemon/{name}')
 def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon: 
-    ...
+    pass
 ```
 
 This function is decorated with `@router.get`, defining it as a GET request for the `/pokemon/{name}` endpoint.
@@ -95,16 +95,16 @@ This function is decorated with `@router.get`, defining it as a GET request for 
 **Decorator** is a design pattern that allows you to modify or extend the behavior of functions or methods without
 changing their code directly.
 
-In Python they are applied by using the `@decorator` syntax just above a
-function definition. In most cases, decorator is some function, taking function and returning modified(decorated)
+In Python, they are applied using the `@decorator` syntax just above a
+function definition. In most cases, the decorator is some function, taking function and returning modified(decorated)
 function
 ///
 
 The `{name}` is a *path parameter*, dynamically inserted into the API call.
 
 - `name`: is an argument annotated as a *string* with `Path`, meaning it is a required URL path parameter. Also, in
-  `Path` we defined validation, namely checking whether length of name less or equal then 300. `Path` is placed in
-  `Annotated` object as metadata.
+  `Path` we defined validation rules, namely checking whether the length of the name is less or equal then 300. 
+  `Path` is placed in `Annotated` object as metadata.
         
 #### Routed Function
 
@@ -122,18 +122,8 @@ These decorators are called **route decorators** and the result of these decorat
 we will shorten this name to a **route**.
 
 /// warning
-Routed functions must not have body.
-This code will not be executed. Instead of body, place `...` statement or `pass` keyword.
-
-With `Ellipsis` (`...`)
-
-```python
-@router.get('/pokemon/{name}')
-def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon:
-    ...
-```
-
-or with `pass`
+Routed functions must not have the body.
+This code will not be executed. Instead of the body, place the `pass` keyword.
 
 ```python
 @router.get('/pokemon/{name}')
@@ -151,8 +141,8 @@ call [response type](/learn/user_guide/params_response.html#response-types).
 /// info
 This "omitting" pattern is called **Interface-driven function** or **Signature-driven function**, because we do not
 write any code achieving
-the result. We dedicate this responsibility to some tool, parsing the function's interface(signature). And according to
-it, tool handles a call automatically. This pattern is the basis for achieving a declarative code style
+the result. We dedicate this responsibility to some tool, parsing the function's interface(signature). According to
+it, the tool handles a call automatically. This pattern is the key to how Sensei achieves declarative code style.
 ///
 
 ### Step 5: Making the API Call
@@ -162,13 +152,13 @@ pokemon = get_pokemon(name="pikachu")
 print(pokemon)
 ```
 
-Let's consider the algorithm of call:
+Let's consider the algorithm of the call:
 
-1) Calling `get_pokemon` function with the argument `name="pikachu"`.
+1) Calling the `get_pokemon` function with the argument `name="pikachu"`.
 
-2) Collecting function's return type and arguments, including its names and
+2) Collecting the function's return type and arguments, including its names and
    types, [Param Types](/learn/user_guide/params_response.html#param-types),
-   such as `Path`, `Query`, `Body`, `Cookie`, `Header`, `File`, `Form`, including argument validations placed inside
+   such as `Path`, `Query`, `Body`, `Cookie`, `Header`, `File`, and `Form`, including argument validations placed inside
    them.
 
 3) Validating input args. In this case `name="pikachu"`
@@ -179,7 +169,7 @@ Let's consider the algorithm of call:
 
 ### Async Request
 
-If you want to make asynchronous request, the code will be almost the same
+If you want to make an asynchronous request, the code will be almost the same:
 
 ```python
 import asyncio
@@ -198,7 +188,7 @@ class Pokemon(APIModel):
 
 @router.get('/pokemon/{name}')
 async def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon:
-    ...
+    pass
 
 
 async def main() -> None:
@@ -219,7 +209,7 @@ visit [Concurrency/Parallelism](/learn/concurrency_parallelism.html)
 ## API Model
 
 As mentioned earlier, `APIModel` models use the same principles as `BaseModel` models from [
-`pydantic`](https://docs.pydantic.dev/).
+`pydantic`](https://docs.pydantic.dev/). You can explore its [documentation](https://docs.pydantic.dev/), to learn info for advanced users. 
 To make request with non-scalar input/output values, you definitely need to create models.
 Let’s go over the basics!
 
@@ -239,7 +229,7 @@ class User(APIModel):
 ```
 
 Models created using `APIModel` have validation.
-This means if you pass value not matching corresponding field constraints, `ValidationError` will be thrown.
+This means if you pass a value not matching corresponding field constraints, `ValidationError` will be thrown.
 
 ??? failure "ValidationError"
     ```python
@@ -269,14 +259,14 @@ In this `User` model, the fields are:
 
 
 /// tip
-Value validation is not force type validation.
-For example, if you define model with `id`, `due_date` and `priority` fields of types `int`, `bool`, and `datetime`
+Value validation is not force-type validation.
+For example, if you define a model with `id`, `due_date`, and `priority` fields of types `int`, `bool`, and `datetime`
 respectively,
 you can pass:
 
 - numerical string as `id`
 - **ISO-8601**, **UTC** or strings of the other date formats as `due_date`
-- `'yes'/'no'`, `'on'/'off'`, `'true'/'false'`, `0/1` etc. as `priority`
+- `'yes'/'no'`, `'on'/'off'`, `'true'/'false'`, `1/0` etc. as `priority`
 
 ```python
 from sensei import APIModel
@@ -312,7 +302,7 @@ you can enforce more specific constraints in your models using **Constrained typ
   or allowing only certain characters.
 - `conint`: Enforces restrictions on an integer field, such as minimum and maximum value.
 
-For instance, in the `User` model, you can add constraints for the `username`, `id` and `age` fields. Here's an updated
+For instance, in the `User` model, you can add constraints for the `username`, `id`, and `age` fields. Here's an updated
 version
 of the `User` model:
 
@@ -349,9 +339,9 @@ The same validation rules can also be applied using `Field`. There are two appro
 
 /// note | Technical Details
 Sensei's [Param Types](/learn/user_guide/params_response.html#param-types), such as `Path`, `Query`, `Cookie`, `Header`,
-`Body`, `File` and `Form` are inherited from
+`Body`, `File`, and `Form` are inherited from
 `FieldInfo`,
-produced by `Field` function. All approaches that will be described are applied
+produced by the `Field` function. All approaches that will be described are applied
 to [Param Types](/learn/user_guide/params_response.html#param-types).  
 ///
 
@@ -377,9 +367,9 @@ class User(APIModel):
 2. Same as `constr(pattern=r'^\w+$')`
 3. Same as `conint(ge=14)`
 
-Setting a default value of age can be achieved in different ways:
+Setting the default value of age can be achieved in different ways:
 
-1. Passing default value as argument to `Field`
+1. Passing default value as an argument to `Field`
 
     ```python
     age: Annotated[int, Field(18, ge=14)]  
@@ -414,7 +404,7 @@ class User(APIModel):
 2. Same as `constr(pattern=r'^\w+$')`
 3. Same as `conint(ge=14)`
 
-Here setting a default value of age can be achieved in only one way
+Here setting the default value of age can be achieved in only one way.
 
 ```python
 age: int = Field(18, ge=14)
@@ -423,7 +413,7 @@ age: int = Field(18, ge=14)
 /// info
 If you use **Field Types** simultaneously with **Constrained Types**, you should know about validation priority.
 
-1. When use `Field` directly, **Constrained Type** take precedence over `Field`.
+1. When using `Field` directly, **Constrained Type** takes precedence over `Field`.
     ```python
     username: constr(min_length=5) = Field(min_length=10)
     ```   
@@ -436,7 +426,7 @@ If you use **Field Types** simultaneously with **Constrained Types**, you should
 
 #### Validators
 
-In addition to using Constrained Types and Field for validation,
+In addition to using Constrained Types and Fields for validation,
 you can also define custom validation logic in your model using validators.
 Validators allow you to apply more complex validation rules that cannot be easily expressed using the built-in
 types or field constraints.
@@ -475,14 +465,14 @@ raise a `ValueError` or `TypeError` to signal a validation failure.
 
 /// tip
 In situations, when you use `@field_validator` along with other validators, like built-in `Field`, you may need to
-set execution order of your custom validator. There is `mode` argument, to customize it.
+set the execution order of your custom validator. There is `mode` argument, to customize it.
 
 - `mode="before"` - validator is executed before the `pydantic` internal parsing.
 - `mode="after"` - validator is executed after the `pydantic` internal parsing.
 - `mode="plain"` - validator terminates other validators, no further validators are called
 - `mode="wrap"` - validator can run code before the `pydantic` internal parsing and after.
 
-Here is an example how to use comma-separated tags, that in result will be represented as `list[str]`
+Here is an example of how to use comma-separated tags, in result will be represented as `list[str]`
 
 ```python
 from sensei import APIModel
@@ -513,7 +503,7 @@ Video(tags=['trend', 'unreal', 'good'])
 
 ### Serializing
 
-To serialize model, you can use `model_dump` method.
+To serialize a model, you can use the `model_dump` method.
 
 ```python
 user = User(id=1, username="johndoe", email="johndoe@example.com", age=30)
@@ -532,7 +522,7 @@ print(user_data)
 ```
 
 /// tip
-If you use response in another request or want to write it to file, you should serialize it with `mode="json"`.
+If you use a model in another request or want to write it to a file, you should serialize it with `mode="json"`.
 
 ```python
 user_data = user.model_dump(mode="json")
@@ -563,7 +553,7 @@ print(task)
 
 ### Routed Methods
 
-You can create a model that performs both validation and making request. This OOP Style is called [Routed Model](/learn/user_guide/routed_model.html)
+You can create a model that performs both validation and making requests. This OOP Style is called [Routed Model](/learn/user_guide/routed_model.html)
 (we will explore it later).
 
 ```python
@@ -582,7 +572,7 @@ class User(APIModel):
     @classmethod
     @router.get('/users/{id_}')
     def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: 
-        ... # (1)!
+        pass # (1)!
 ```
 
 1. This is called [routed method](/learn/user_guide/first_steps.html#routed-function)
@@ -598,10 +588,11 @@ The algorithm is the following:
     ```python
     @classmethod
     @router.get('/users/{id_}')
-    def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: ... 
+    def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: 
+        pass 
     ```    
 
-As result, `User.get` returns `User` object:
+As a result, `User.get` returns `User` object:
 
 ```python
 user = User.get(1)
@@ -612,11 +603,11 @@ print(user.email)
 george.bluth@gmail.com
 ```
 
-[Routed Model](/learn/user_guide/routed_model.html) is good practice to organize endpoints in one class when they related to one model.
+[Routed Model](/learn/user_guide/routed_model.html) is a good practice to organize endpoints in one class when they are related to one model.
 
 /// warning
 You must not decorate a method as routed in a class not inherited from `APIModel`.
-This makes impossible to use [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html), that we will learn in 
+This makes it impossible to use [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html), which we will learn in 
 the future, and can lead to issues in the other situations.
 
 For instance, there is a common error to use `BaseModel` for the same purpose as `APIModel`:
@@ -634,7 +625,7 @@ class User(BaseModel):
     @classmethod
     @router.get('/users/{id_}')
     def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: 
-        ... 
+        pass 
 ```
 
 ///
@@ -671,5 +662,5 @@ This uses `Annotated` to ensure that `name` is a string and adheres to the valid
 ### 5. Making the Request:
 
 By calling `get_pokemon(name="pikachu")`, Sensei automatically handles validation, makes the HTTP request,
-and maps the API response into the `Pokemon` model. The code omits the function body since Sensei handles call through
+and maps the API response into the `Pokemon` model. The code omits the function body since Sensei handles calls through
 the function's signature.

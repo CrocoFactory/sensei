@@ -4,8 +4,8 @@ If you don't know what are `Self`, `list[Self]` response types and
 [Params/Response](/learn/user_guide/params_response.html).
 ///
 
-**Routed Model** is OOP style of making Sensei models, when a model performs both validation and making request.
-To use this style, you need to implement model derived from `APIModel` and add inside routed methods.
+**Routed Model** is the OOP style of making Sensei models when a model performs both validation and making requests.
+To use this style, you need to implement a model derived from `APIModel` and add inside routed methods.
                                        
 ```python
 from typing import Annotated
@@ -23,7 +23,7 @@ class User(APIModel):
     @classmethod
     @router.get('/users/{id_}')
     def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: 
-        ... # (1)!
+        pass # (1)!
 ```
 
 1. This is called [routed method](/learn/user_guide/first_steps.html#routed-function)
@@ -33,7 +33,7 @@ described in [First Steps/API Model](/learn/user_guide/first_steps.html#api-mode
 
 /// warning
 You must not decorate a method as routed in a class not inherited from `APIModel`.
-This makes impossible to use [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html) and 
+This makes it impossible to use [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html) and 
 [Class Hooks](#class-hooks)
 
 For instance, there is a common error to use `BaseModel` for the same purpose as `APIModel`:
@@ -55,14 +55,14 @@ class User(BaseModel):
     @classmethod
     @router.get('/users/{id_}')
     def get(cls, id_: Annotated[NonNegativeInt, Path()]) -> Self: 
-        ... 
+        pass 
 ```
 ///
 
 ## Class Hooks
 "Apply class hook" means the same as "apply hook at routed model level." Hook names are the same as
-names of python dunder methods (short for "double underscore"). That is, the name starts with "\_\_" and ends with "\_\_".
-In other words hooks are called by pattern `<__hook_name__>`.
+the names of Python dunder methods (short for "double underscore"). That is, the name starts with "\_\_" and ends with "\_\_".
+In other words, hooks are called by pattern `<__hook_name__>`.
 
 ??? info "Dunder methods"
     Dunder methods (short for "double underscore") are special methods in Python that start and end with double 
@@ -84,8 +84,8 @@ In other words hooks are called by pattern `<__hook_name__>`.
     Dunder methods allow you to customize the behavior of instances, often making them behave like built-in types in Python. 
     For example, by implementing `__add__`, you can enable the `+` operator to add two instances of a class in a custom way.
                    
-To define some hook, you need to create a method `<__hook_name__>` inside model.
-These methods can be represented as `@classmethod` or `@staticmethod`, but not instance method.
+To define some hook, you need to create a method `<__hook_name__>` inside the model.
+These methods can be represented as a `@classmethod` or a `@staticmethod`, but not an instance method.
 
 !!! failure "ValueError"
     ```python
@@ -106,7 +106,7 @@ These methods can be represented as `@classmethod` or `@staticmethod`, but not i
     ValueError: Class hook \_\_finalize_json\_\_ cannot be instance method
 
 ### Case Converters
-As we know, there are some parameter types, such as query, path, body, header, cookie.
+As we know, there are some parameter types, such as query, path, body, header, and cookie.
 Each `<param_type>` corresponds to `__<param_type>_case__` hook. Let's look at the example below:
 
 ```python
@@ -130,13 +130,13 @@ class User(APIModel):
     @classmethod
     @router.get('/users/{id_}')
     def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: 
-        ...
+        pass
 ```
 
-As was mentioned before, hook function can be represented both as class method and as static method, but not instance methods.
+As was mentioned before, a hook function can be represented both as a class method and as a static method, but not instance methods.
    
 /// tip
-If you don't know why `response_case=camel_case` statement in `Router` constructor is ignored here, you should
+If you don't know why the `response_case=camel_case` statement in the `Router` constructor is ignored here, you should
 read about [Priority Levels](/learn/user_guide/making_aliases.html#hook-levels-priority)             
 ///
 
@@ -177,6 +177,12 @@ class User(APIModel):
     
     ...
 ```
+
+## Self/list[Self]
+ 
+If you don't know about [`Self`](/learn/user_guide/params_response.html#self) and 
+[`list[Self]`](/learn/user_guide/params_response.html#listself) response types you should read 
+[Params/Response](/learn/user_guide/params_response.html).
 
 ## Naming conventions 
 
@@ -221,7 +227,7 @@ to use directly.
     which can be accessed or modified externally, but they don’t enforce strict restrictions.
 
      
-In the following example preparer `_login_in` and response finalizer `_login_out` have protected access modifier. 
+In the following example preparer `_login_in` and response finalizer `_login_out` have protected access modifiers. 
 
 ```python
 class User(APIModel):
@@ -230,7 +236,7 @@ class User(APIModel):
     email: EmailStr
     
     @router.post('/token')
-    def login(self) -> str: ...
+    def login(self) -> str: pass
 
     @login.prepare
     def _login_in(self, args: Args) -> Args:
@@ -242,8 +248,8 @@ class User(APIModel):
         return response.json()['token']
 ```
 
-In addition, preparer should end with `in` and start with routed function name, that is `_<routed_function>_in`.
-And finalizer should end with `out` and start the same as preparer, that is `_<routed_function>_out`.
+In addition, the preparer should end with `in` and start with the routed function name, that is `_<routed_function>_in`.
+And finalizer should end with `out` and start the same as the preparer, that is `_<routed_function>_out`.
        
 ## Inheritance
 
@@ -253,7 +259,7 @@ It is often necessary to implement models with the same methods. One way to avoi
 
 For example, you have different models that require the same authorization headers and return primary data in the "data" field.
 In addition, each response must be converted to a snake_case.
-The solution is to create a base class that implements `__finalize_json__`, `__prepare_args__` and `__response_case__` and inherit
+The solution is to create a base class that implements `__finalize_json__`, `__prepare_args__`, and `__response_case__` and inherit
 all models from it.
 
 ```python
@@ -287,7 +293,7 @@ class User(Base):
     @classmethod
     @router.get('/users/{id_}')
     def get(cls, id_: Annotated[int, Path(alias='id')]) -> "User":
-        ...
+        pass
 
 
 class Video(Base):
@@ -301,7 +307,7 @@ class Video(Base):
             video: Annotated[bytes, File()], 
             tags: Annotated[list[str], Form(min_length=1)]
     ) -> "Video":
-        ...
+        pass
 ```
 
 When you apply inheritance, you must know that inherited routed methods use hooks declared in the class hierarchy above,
@@ -329,7 +335,7 @@ class BaseUser(APIModel):
     @classmethod
     @router.get('/users/{id_}')
     def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self:
-        ...
+        pass
 
 
 class User(BaseUser):
@@ -344,13 +350,13 @@ class User(BaseUser):
             page: Annotated[int, Query()] = 1,
             per_page: Annotated[int, Query(le=7)] = 3
     ) -> list[Self]:
-        ...
+        pass
 
 
 class SubUser(User):
     @router.delete('/users/{id_}')
     def delete(self) -> Self: 
-        ...
+        pass
 
     @delete.prepare
     def _delete_in(self, args: Args) -> Args:
@@ -360,10 +366,10 @@ class SubUser(User):
         return args
 ```
 
-Hook `__response_case__` will not be applied to `get` route. It will be applied to routes, declared in `User`, such as
+Hook `__response_case__` will not be applied to the `get` route. It will be applied to routes, declared in `User`, such as
 `query` and in its subclasses, such as `delete`.
 
-This can be explained in this diagram
+This can be explained in this diagram:
 
 ```mermaid
 classDiagram 
@@ -398,7 +404,7 @@ You should prefer to use `Self` instead of [Forward References](/learn/user_guid
 This is related to inheritance. If you make a subclass of a class, having [Forward Reference](/learn/user_guide/params_response.html#forward-reference)
 as the type hint, the subclass will try to return superclass and encounter the error. 
 
-Setting `Self` resolve issue, because this response type allows to dynamically retrieve the current class. 
+Setting `Self` resolves the issue, because this response type allows to dynamically retrieve the current class. 
          
 === "ValueError"
     !!! failure "ValueError"
@@ -409,7 +415,7 @@ Setting `Self` resolve issue, because this response type allows to dynamically r
             @classmethod
             @router.get('/users/{id_}')
             def get(cls, id_: Annotated[int, Path(alias='id')]) -> "BaseUser":
-                ...
+                pass
         
         
         class User(BaseUser):
@@ -422,7 +428,7 @@ Setting `Self` resolve issue, because this response type allows to dynamically r
                     page: Annotated[int, Query()] = 1,
                     per_page: Annotated[int, Query(le=7)] = 3
             ) -> list["User"]:
-                ...
+                pass
         
         user = User.get(1)
         print(user)
@@ -439,7 +445,7 @@ Setting `Self` resolve issue, because this response type allows to dynamically r
             @classmethod
             @router.get('/users/{id_}')
             def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self:
-                ...
+                pass
         
         
         class User(BaseUser):
@@ -452,7 +458,7 @@ Setting `Self` resolve issue, because this response type allows to dynamically r
                     page: Annotated[int, Query()] = 1,
                     per_page: Annotated[int, Query(le=7)] = 3
             ) -> list[Self]:
-                ...
+                pass
         
         user = User.get(1)
         print(user)
@@ -497,8 +503,8 @@ Inheritance from an abstract class is a good choice.
     In this example, both `Dog` and `Cat` are subclasses of `Animal` and implement the `make_sound` method, 
     providing their specific sounds. This way, each subclass meets the requirements of the abstract base class `Animal`.
 
-When you use abstract classes, most of the IDEs provide autocompletion when you type the name of abstract method
-in subclass. If you use autocompletion, the method with its full signature will be provided. 
+When you use abstract classes, most of the IDEs provide autocompletion when you type the name of an abstract method
+in a subclass. If you use autocompletion, the method with its full signature will be provided. 
 Consequently, inheritance from abstract class is a fast and deduplicated way to make sync and async code versions.
 
 ```python
@@ -533,14 +539,14 @@ class User(BaseUser):
     @classmethod
     @router.get('/users/{id_}')
     def get(cls, id_: Annotated[int, Path(alias='id')]) -> "User":
-        ...
+        pass
 
 
 class AsyncUser(BaseUser):
     @classmethod
     @router.get('/users/{id_}')
     async def get(cls, id_: Annotated[int, Path(alias='id')]) -> "User":
-        ...
+        pass
 ```
 
 ## Multiple APIs
@@ -577,11 +583,11 @@ class ShopAPI(APIModel):
 
     @user_api.get('/users/{id_}')
     def get_user_info(self, id_: NonNegativeInt) -> User:
-        ...
+        pass
     
     @order_api.get('/orders/{id_}')
     def get_order(self, id_: NonNegativeInt) -> Order:
-        ...
+        pass
 
 ```
 

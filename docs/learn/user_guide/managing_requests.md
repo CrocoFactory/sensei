@@ -1,9 +1,9 @@
-The base of Sensei HTTP request is `httpx` library.
-When Sensei makes requests it uses `httpx.Client` (or `httpx.AsyncClient`) object.
+The base of Sensei HTTP requests is the [`httpx`](https://www.python-httpx.org) library.
+When Sensei makes requests it uses`httpx.Client` (or `httpx.AsyncClient`) object.
 You, too, might use these objects, and you don't suspect it. 
 
 /// tip
-If you don't know, why `httpx` is better than `requests` library, you should read
+If you don't know, why [`httpx`](https://www.python-httpx.org) is better than the `requests` library, you should read
 [HTTP Requests/Introducing `httpx`](/learn/http_requests.html#introducing-httpx)
 ///
 
@@ -34,10 +34,10 @@ sequenceDiagram
 If you have used `requests`, it does the same. But `httpx.Client` corresponds to `requests.Session`.
 
 ??? note "Technical Details"
-    Here is implementation of `get` function in `requests` and `httpx`.
+    Here is the implementation of the `get` function in `requests` and `httpx`.
                      
     === "httpx"
-        Here the most of arguments are omitted and replaced with `...`
+        Here most of the arguments are omitted and replaced with `...`
         ```python
         def request(
             method: str,
@@ -97,7 +97,7 @@ for url, params in zip(urls, params_list):
 ```
 
 `httpx` will open the client for each request. It slows your application. The better
-solution is use single client instance. You can close it whenever you want.
+solution is to use a single client instance. You can close it whenever you want.
    
 ```python
 import httpx
@@ -111,8 +111,8 @@ with httpx.Client() as client:
         print(response.json())
 ```
 
-In the example above `httpx.Client` is closed after last statement inside `with` block. You can close it
-manually, calling `close` method.
+In the example above `httpx.Client` is closed after the last statement inside `with` block. You can close it
+manually, calling the `close` method.
 
 ```python
 import httpx
@@ -129,17 +129,18 @@ for url, params in zip(urls, params_list):
 client.close()
 ```
 
-Furthermore, client can be used for advanced request configuration. You can read 
-[the article](https://www.python-httpx.org/advanced/clients/) from the `httpx` documentation, to learn more about `httpx.Client`.
+Furthermore, a client can be used for advanced request configuration. You can read 
+[the article](https://www.python-httpx.org/advanced/clients/) from the [`httpx`](https://www.python-httpx.org) 
+documentation, to learn more about `httpx.Client`.
 
 When you call routed functions, Sensei makes the same: Open client → Make request → Close client.
-How you can use your own client, that you will close whenever you want? Let's introduce `Manager`
+How you can use your client so that you will close whenever you want? Let's introduce `Manager`
 
 ## Manager
 
-`Manager` serves as a bridge between application and Sensei, to dynamically provide a client for routed functions calls.
+`Manager` serves as a bridge between the application and Sensei, to dynamically provide a client for routed function calls.
 It separately stores `httpx.AsyncClient` and `httpx.Client`.
-To use `Manager` you need to create it and pass to router.
+To use `Manager` you need to create it and pass it to the router.
               
 !!! example
     ```python
@@ -150,7 +151,7 @@ To use `Manager` you need to create it and pass to router.
     
     @router.get('/users/{id_}')
     def get_user(id_: int) -> User:
-        ...
+        pass
     
     with Client(base_url=router.base_url) as client:
         manager.set(client)
@@ -175,7 +176,7 @@ Let's explore common actions.
 
 ### Setting 
 
-You must know, that `Manager` can store only one instance of client of each type (one `httpx.AsyncClient` and one `httpx.Client`)
+You must know, that `Manager` can store only one instance of a client of each type (one `httpx.AsyncClient` and one `httpx.Client`)
 
 There are two ways to set client.
 
@@ -206,7 +207,7 @@ There are two ways to set client.
     ```
 
 /// warning
-Client base URL and router base URL must be equal
+Client's base URL and router's base URL must be equal
       
 ??? failure "ValueError"
     ```python
@@ -219,7 +220,7 @@ Client base URL and router base URL must be equal
     
     @router.get('/users/{id_}')
     def get_user(id_: int) -> User:
-        ...
+        pass
 
     print(get_user(1))
     ```
@@ -228,11 +229,11 @@ Client base URL and router base URL must be equal
 
 ### Retrieving
 
-There are two ways to retrieve client.
+There are two ways to retrieve a client.
 
 === "Get"
-    This returns client without removing it from `Manager`. If `required=True` (default is `True`) in `Manager` constructor, the error 
-    will be thrown if client is not set.  
+    This returns a client without removing it from `Manager`. If `required=True` (default is `True`) in the `Manager` constructor, the error 
+    will be thrown if the client is not set.  
 
     ```python
     manager = Manager()
@@ -258,7 +259,7 @@ There are two ways to retrieve client.
 
 ### Is empty
 
-You can check whether client is empty
+You can check whether a client is empty:
 
 ```python
 manager = Manager()
@@ -271,8 +272,8 @@ print(manager.empty()) # Output: True
 ## Rate Limiting
 
 Many APIs enforce [rate limits](https://en.wikipedia.org/wiki/Rate_limiting) to control how frequently clients can make
-requests. You can add automatic waiting between requests, based on the time period and the maximum number of requests allowed per this
-period. This is achieved through `RateLimit` instance 
+requests. You can add automatic waiting between requests, based on the period and the maximum number of requests allowed per this
+period. This is achieved through a `RateLimit` instance 
             
 This code is equivalent to **5 requests per second**.
 
@@ -284,12 +285,12 @@ rate_limit = RateLimit(calls, period)
 router = Router('https://example-api.com', rate_limit=rate_limit)
 ```
 
-`RateLimit` class implements a token bucket rate-limiting system.  Tokens are added at a fixed rate, and each request uses one token. 
+The `RateLimit` class implements a token bucket rate-limiting system.  Tokens are added at a fixed rate, and each request uses one token. 
 If tokens run out, Sensei waits until new tokens are available, preventing rate-limit violations. 
-If token was consumed, the new one will appear in `period / calls` seconds. That is **5 requests per second** is equivalent
+If a token was consumed, the new one will appear in `period / calls` seconds. That is **5 requests per second** is equivalent
 **1 token per 1/5 seconds**.
                   
-In the following example, code will be paused for 1 second after each request:
+In the following example, the code will be paused for 1 second after each request:
 
 ```python
 from sensei import RateLimit, Router
@@ -300,7 +301,7 @@ router = Router('https://example-api.com', rate_limit=rate_limit)
 
 @router.get('/users/{id_}')
 def get_user(id_: int) -> User:
-    ...
+    pass
 
 for i in range(5):
     get_user(i)  # (1)!
@@ -308,7 +309,7 @@ for i in range(5):
 
 1. Here code will be paused for 1 second after each iteration
                                                  
-If you want to use another rate limiting system, you can implement `IRateLimit` interface and use it like before.
+If you want to use another rate-limiting system, you can implement the `IRateLimit` interface and use it like before.
 Namely, you need to implement the following two methods.
 
 ```python
@@ -324,7 +325,7 @@ class CustomLimit(IRateLimit):
 
 ## Setting Port
 
-If you connect to some local API, that allows configuring port, you can make dynamic URL with `{port}` placeholder.
+If you connect to some local API, that allows configuring port, you can make a dynamic URL with `{port}` placeholder.
 In addition, you can change `port` attribute in `Router`. 
 Here is an example:
 
@@ -338,7 +339,7 @@ router.port = 4000
 print(router.base_url) # Output: https://local-api.com:4000/api/v2
 ```
 
-If `{port}` placeholder is not provided, port will be appended to end of the URL
+If `{port}` placeholder is not provided, the port will be appended to the end of the URL
 
 ```python                                    
 from sensei import Router
@@ -346,4 +347,27 @@ from sensei import Router
 router = Router(host='https://local-api.com', port=3000)
 print(router.base_url) # Output: https://local-api.com:3000
 ```
+                          
+## Recap
 
+Here’s a recap of working with `httpx` clients for efficient HTTP request management:
+
+### Sensei’s `Manager` and Routing System
+- The `Manager` provides a single client for multiple requests, managing both `httpx.Client` and `httpx.AsyncClient` instances.
+- `Manager` can store one synchronous and one asynchronous client, ensuring only one of each type is available at any time.
+- To link the `Manager` to requests, create a `Router` instance that defines a base URL for all endpoints.
+
+### Managing Clients with `Manager`
+- **Setting Clients**: Assign clients to the `Manager` when created or later with `.set()`.
+- **Retrieving Clients**: Use `.get()` to access clients without removal or `.pop()` to retrieve and remove the client from `Manager`.
+- **Checking Clients**: Use `.empty()` to check if there are no clients in `Manager`.
+
+### Rate Limiting with `RateLimit`
+- APIs often have rate limits, and `Sensei` includes a `RateLimit` class to enforce these.
+- Set calls per second or minute to prevent exceeding rate limits.
+- Implement custom rate-limiting by subclassing `IRateLimit`.
+
+### Configuring Ports Dynamically
+- Specify a `{port}` placeholder in the base URL to dynamically adjust the API port as needed with `Router`.
+
+By efficiently managing HTTP clients and rate limits, `Sensei` optimizes API interactions, reducing latency and improving performance.
