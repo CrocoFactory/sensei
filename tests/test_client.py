@@ -1,20 +1,19 @@
-import time
-
 import pytest
+
 from sensei import Manager, Client, Router, AsyncClient, RateLimit
 from sensei.client.exceptions import CollectionLimitError
 
 
 class TestClient:
-    def test_manager_validation(self):
-        with pytest.raises(TypeError):
-            manager = Manager(None)
-
-        client = Client(host='https://google.com')
+    def test_manager_validation(self, sync_maker, base_maker, base_url):
+        client = Client(base_url='https://google.com')
+        aclient = AsyncClient(base_url='https://google.com')
         manager = Manager(client)
 
         with pytest.raises(CollectionLimitError):
             manager.set(client)
+
+        manager.set(aclient)
 
         manager.pop()
 
@@ -24,11 +23,29 @@ class TestClient:
         with pytest.raises(AttributeError):
             manager.pop()
 
+        manager.get(is_async=True)
+        manager.pop(is_async=True)
+
         with pytest.raises(AttributeError):
             manager.get()
 
+        router = Router(host=base_url, manager=manager)
+        base = base_maker(router)
+        model = sync_maker(router, base)
+
+        with pytest.raises(AttributeError):
+            model.get(1)
+
+        manager = Manager(required=False)
+
+        router = Router(host=base_url, manager=manager)
+        base = base_maker(router)
+        model = sync_maker(router, base)
+
+        model.get(1)
+
     def test_sync_manager(self, sync_maker, base_maker, base_url):
-        client = Client(host=base_url)
+        client = Client(base_url=base_url)
 
         with client as client:
             manager = Manager(client)
@@ -42,10 +59,10 @@ class TestClient:
 
     @pytest.mark.asyncio
     async def test_async_manager(self, async_maker, base_maker, base_url):
-        client = AsyncClient(host=base_url)
+        client = AsyncClient(base_url=base_url)
 
         async with client as client:
-            manager = Manager(client)
+            manager = Manager(async_client=client)
             router = Router(host=base_url, manager=manager)
 
             base = base_maker(router)
@@ -53,21 +70,6 @@ class TestClient:
             await model.get(1)  # type: ignore
 
         assert client.is_closed
-
-    def test_client_validation(self):
-        client = Client(host='https://google.com')
-        with pytest.raises(AttributeError):
-            client.port = 3000
-
-        with pytest.raises(ValueError):
-            client1 = Client(host='https://google.com', port=-2000)
-
-        with pytest.raises(TypeError):
-            client = Client(host='https://google.com', rate_limit='hello')
-
-    def test_formatting(self):
-        client = Client(host='https://domain.com:{port}/sumdomain', port=3000)
-        assert str(client.base_url) == 'https://domain.com:3000/sumdomain/'
 
     def test_rate_limit(self, base_url, sync_maker, base_maker):
         rate_limit = RateLimit(2, 1)

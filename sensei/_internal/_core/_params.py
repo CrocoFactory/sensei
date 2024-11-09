@@ -193,7 +193,6 @@ class Path(Param):
             json_schema_extra: Union[Dict[str, Any], None] = None,
             **extra: Any,
     ):
-        assert default is ..., "Path parameters cannot have a default value"
         self.in_ = self.in_
         super().__init__(
             default=default,

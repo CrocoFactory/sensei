@@ -498,7 +498,7 @@ Query parameters are appended to the URL of an HTTP request and are used to send
 They typically appear after a question mark (`?`) in the URL and are separated by ampersands (`&`).
 Query parameters are commonly used for filtering, sorting, or paginating data.
 
-!!! example
+??? example
     ![Query Example](/img/http_requests/query.png)
 
     URL with query parameters might look like this:
@@ -541,7 +541,7 @@ files = {'file': open('mynotes.txt')}
 response = requests.post('https://api.example.com/data', files=files)
 ```
 
-!!! example
+??? example
     ![Body example](/img/http_requests/body.png)
 
     When sending JSON data, you can use the `json` argument in `requests`:
@@ -559,7 +559,7 @@ Path parameters are used to specify specific resources within the URL. They are 
 enclosed in curly braces `{}` in the API definition. This is related to placeholders. Placeholder is a temporary symbol
 used to represent a value that will be provided or substituted later.
 
-!!! example
+??? example
     ![Path example](/img/http_requests/path.png)
 
     For example, {id} is path parameter (placeholder). In the following URL, `123` is a path parameter
@@ -584,7 +584,7 @@ Headers are key-value pairs sent along with the request that provide additional 
 Headers can include information such as content type, authorization tokens, user agents, and more.
 They are essential for ensuring the server correctly processes the request.
 
-!!! example
+??? example
     You can pass headers in `requests` using the `headers` argument:
 
     ```python
@@ -600,7 +600,7 @@ Cookies are small pieces of data stored on the client side and sent along with H
 They are often used for session management, tracking user preferences, or maintaining state between requests.
 When the server sets a cookie, it can be sent back with subsequent requests to maintain the session or other data.
 
-!!! example
+??? example
     In `requests`, you can manage cookies by passing them in the `cookies` argument:
 
     ```python
@@ -610,7 +610,7 @@ When the server sets a cookie, it can be sent back with subsequent requests to m
     response = requests.get('https://api.example.com/data', cookies=cookies)
     ```
                     
-## Better Solution for HTTP Requests: Introducing `httpx`
+## Introducing `httpx`
 
 While the `requests` library is a popular choice for making HTTP requests in Python, `httpx` offers several enhancements and modern features that can improve your API interaction experience. Here’s a closer look at `httpx`, its similarities with `requests`, the concept of the client, client parameters, and the importance of closing the client.
 

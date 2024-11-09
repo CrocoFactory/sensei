@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'sensei'
-version = '0.1.0.rc4'
+version = '0.1.0'
 description = 'The Python framework that provides a quick way to build robust HTTP requests. Use type hints, to build requests, with little or no implementation'
 authors = ['Alexey  <axbelenkov@gmail.com>']
 license = 'MIT'
@@ -16,6 +16,7 @@ classifiers = [
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
     'License :: OSI Approved :: MIT License',
     'Operating System :: OS Independent',
     'Typing :: Typed'
@@ -37,6 +38,16 @@ httpx = "^0.27.2"
 pydantic = "^2.9.2"
 httpcore = "^1.0.6"
 
+[tool.poetry.group.docs]
+optional = true
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.5.39"
+markdown-include-variants = "^0.0.2"
+mkdocstrings-python = "^1.12.2"
+mdx-include = "^1.4.2"
+
 [tool.poetry.group.dev.dependencies]
 build = "^1.2.1"
 twine = "^5.1.1"
@@ -46,10 +57,6 @@ pyjwt = "^2.9.0"
 email-validator = "^2.2.0"
 coverage = "^7.6.1"
 pytest-asyncio = "^0.24.0"
-mkdocs = "^1.6.1"
-mkdocs-material = "^9.5.39"
-mdx-include = "^1.4.2"
-markdown-include-variants = "^0.0.2"
 pytest = "^8.3.3"
 
 [build-system]

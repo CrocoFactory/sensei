@@ -5,7 +5,7 @@
 </h1><br>
 </a>
 
-*Build painless HTTP Requests with minimal implementation*
+*Build robust HTTP Requests with minimal implementation*
 
 [![Python versions](https://img.shields.io/pypi/pyversions/sensei?color=%23F94526)](https://pypi.org/project/sensei/)
 [![PyPi Version](https://img.shields.io/pypi/v/sensei?color=%23F94526)](https://pypi.org/project/sensei/)
@@ -19,8 +19,6 @@ little or no implementation
 **Documentation:** [https://sensei.crocofactory.dev](https://sensei.crocofactory.dev)
 
 **Source code:** [https://github.com/CrocoFactory/sensei](https://github.com/CrocoFactory/sensei)
-
-**Maintain:** [https://www.patreon.com/user/...](https://www.patreon.com/user/membership?u=142083211)
 
 ---
     
@@ -65,7 +63,8 @@ class Pokemon(APIModel):
 
 
 @router.get('/pokemon/{name}')
-def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon: ...
+def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon: 
+    ...
 
 
 pokemon = get_pokemon(name="pikachu")
@@ -73,7 +72,7 @@ print(pokemon)
 ```
 
 Sensei abstracts away much of the manual work, letting developers focus on function signatures while the framework
-handles the API logic and data validation.
+handles the API logic and data validation. This enables a declarative style for your apps.
 
 The example of [First Request](#first-request) demonstrates a simple and robust HTTP request using the Sensei framework.
 Here's the key breakdown of the process:
@@ -95,14 +94,14 @@ It inherits from `APIModel`, which provides validation and serialization.
 
 #### 4. Creating the Endpoint:
 
-The `get_pokemon` function is a [routed function](/learn/user_guide/first_steps.html#routed-function) decorated with 
-`@router.get`, defining a GET request for `/pokemon/{name}`.
+The `get_pokemon` function is a routed function decorated with `@router.get`, defining a GET request for
+`/pokemon/{name}`.
 This uses `Annotated` to ensure that `name` is a string and adheres to the validation rule (max length of 300).
 
 #### 5. Making the Request:
 
 By calling `get_pokemon(name="pikachu")`, Sensei automatically handles validation, makes the HTTP request,
-and maps the API response into the `Pokemon` model. The code omits the function body since Sensei handles call through
+and maps the API response into the `Pokemon` model. The code omits the function body since Sensei handles calls through
 the function's signature.
 
 ## Installing sensei

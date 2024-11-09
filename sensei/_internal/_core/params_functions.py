@@ -32,7 +32,14 @@ def Path(
         **extra: Any,
 ) -> _params_Path:
     """
-    Declare a path parameter for a path operation.
+    Declare a path parameter for a **path operation**.
+
+    Example:
+        ```python
+        @router.get('/posts/{id_}')
+        def get_post(cls, id_: Annotated[int, Path()]) -> Post:
+            pass
+        ```
 
     Args:
         default (Any):
@@ -78,7 +85,7 @@ def Path(
             Extra fields for JSON Schema. This argument is deprecated in favor of `json_schema_extra`.
 
     Returns:
-        _params_Path: path parameter for a *path operation*.
+        _params_Path: Path parameter for a **path operation**
     """
     return _params_Path(
         default=default,
@@ -129,7 +136,14 @@ def Query(
         **extra: Any,
 ) -> _params_Query:
     """
-    Declare a query parameter for a path operation.
+    Declare a query parameter for a **path operation**.
+
+    Example:
+        ```python
+        @router.get('/search')
+        def search_users(cls, query: Annotated[str, Query()] = "") -> list[User]:
+            pass
+        ```
 
     Args:
         default (Any):
@@ -175,7 +189,7 @@ def Query(
             Extra fields for JSON Schema.
 
     Returns:
-        _params_Query: query parameter for a *path operation*.
+        _params_Query: Query parameter for a **path operation**
     """
     return _params_Query(
         default=default,
@@ -206,7 +220,6 @@ def Header(
         *,
         default_factory: Union[Callable[[], Any], None] = _Unset,
         alias: Optional[str] = None,
-        convert_underscores: bool = True,
         title: Optional[str] = None,
         description: Optional[str] = None,
         gt: Optional[float] = None,
@@ -226,7 +239,14 @@ def Header(
         **extra: Any,
 ) -> _params_Header:
     """
-    Declare a header parameter for a path operation.
+    Declare a header parameter for a **path operation**.
+
+    Example:
+        ```python
+        @router.get('/download')
+        def download_file(cls, x_token: Annotated[str, Header()]) -> bytes:
+            pass
+        ```
 
     Args:
         default (Any):
@@ -236,8 +256,6 @@ def Header(
         alias (Optional[str]):
             Alternative name for the parameter field, used when parameter name
             conflicts with reserved words.
-        convert_underscores (bool):
-            Automatically converts underscores to hyphens in the parameter name.
         title (Optional[str]):
             Human-readable title for the parameter.
         description (Optional[str]):
@@ -274,7 +292,7 @@ def Header(
             Extra fields for JSON Schema.
 
     Returns:
-        _params_Header: header parameter for a *path operation*.
+        _params_Header: Header parameter for a **path operation**
     """
     return _params_Header(
         default=default,
@@ -324,7 +342,14 @@ def Cookie(
         **extra: Any,
 ) -> _params_Cookie:
     """
-    Declare a cookie parameter for a path operation.
+    Declare a cookie parameter for a **path operation**.
+
+    Example:
+        ```python
+        @router.get('/verify')
+        def verify_user(cls, session_id: Annotated[str, Cookie()]) -> bool:
+            pass
+        ```
 
     Args:
         default (Any):
@@ -370,7 +395,7 @@ def Cookie(
             Extra fields for JSON Schema.
 
     Returns:
-        _params_Cookie: cookie parameter for a *path operation*.
+        _params_Cookie: Cookie parameter for a *path operation*.
     """
     return _params_Cookie(
         default=default,
@@ -422,7 +447,14 @@ def Body(
         **extra: Any,
 ) -> _params_Body:
     """
-    Declare a body parameter for a path operation.
+    Declare a body parameter for a **path operation**
+
+    Example:
+        ```python
+        @router.post('/create_user')
+        def create_user(cls, user: Annotated[User, Body()]) -> User:
+            pass
+        ```
 
     Args:
         default (Any):
@@ -473,7 +505,7 @@ def Body(
             Extra fields for JSON Schema.
 
     Returns:
-        _params_Body: body parameter for a *path operation*.
+        _params_Body: Body parameter for a **path operation**
     """
     return _params_Body(
         default=default,
@@ -526,7 +558,14 @@ def Form(
         **extra: Any,
 ) -> Any:
     """
-    Declare a form parameter for a path operation.
+    Declare a form parameter for a **path operation**.
+
+    Example:
+        ```python
+        @router.post('/login')
+        def login_user(cls, username: Annotated[str, Form()], password: Annotated[str, Form()]) -> str:
+            pass
+        ```
 
     Args:
         default (Any):
@@ -575,7 +614,7 @@ def Form(
             Extra fields for JSON Schema.
 
     Returns:
-        Any: form parameter for a *path operation*.
+        _params_Form: Form parameter for a **path operation**
     """
     media_type = "application/x-www-form-urlencoded"
     return _params_Form(
@@ -628,7 +667,14 @@ def File(
         **extra: Any,
 ) -> Any:
     """
-    Declare a file parameter for a path operation.
+    Declare a file parameter for a **path operation**.
+
+    Example:
+        ```python
+        @router.post('/upload')
+        def upload_image(cls, image: Annotated[bytes, File()]) -> str:
+            pass
+        ```
 
     Args:
         default (Any):
@@ -674,7 +720,7 @@ def File(
             Extra fields for JSON Schema.
 
     Returns:
-        Any: file parameter for a *path operation*.
+        _params_File: File parameter for a **path operation**
     """
     media_type = "multipart/form-data"
     return _params_File(

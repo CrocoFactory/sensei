@@ -26,14 +26,17 @@ def router(base_url) -> Router:
 def base_maker() -> Callable[[Router], type[APIModel]]:
     def model_base(router) -> type[APIModel]:
         class BaseModel(APIModel):
-            def __finalize_json__(self, json: dict[str, Any]) -> dict[str, Any]:
+            @classmethod
+            def __finalize_json__(cls, json: dict[str, Any]) -> dict[str, Any]:
                 return json['data']
 
-            def __prepare_args__(self, args: Args) -> Args:
+            @classmethod
+            def __prepare_args__(cls, args: Args) -> Args:
                 args.headers['X-Token'] = 'secret_token'
                 return args
 
-            def __response_case__(self, s: str) -> str:
+            @classmethod
+            def __response_case__(cls, s: str) -> str:
                 return snake_case(s)
 
         return BaseModel

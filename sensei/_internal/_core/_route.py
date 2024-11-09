@@ -3,15 +3,12 @@ from __future__ import annotations
 import inspect
 from abc import ABC, abstractmethod
 from functools import wraps, partial
-from typing import Callable, TypeVar
+from typing import Callable
 
-from sensei._base_client import BaseClient
 from ._callable_handler import CallableHandler, AsyncCallableHandler
 from ._requester import ResponseFinalizer, Preparer
 from ._types import IRouter, Hooks
 from ..tools import HTTPMethod, MethodType
-
-_Client = TypeVar('_Client', bound=BaseClient)
 
 
 class Route(ABC):
@@ -19,7 +16,6 @@ class Route(ABC):
         '_path',
         '_method',
         '_func',
-        '_host',
         '_method_type',
         '_is_async',
         '__self__',
@@ -36,7 +32,6 @@ class Route(ABC):
             router: IRouter,
             *,
             func: Callable,
-            host: str,
             hooks: Hooks,
             skip_preparer: bool = False,
             skip_finalizer: bool = False,
@@ -59,7 +54,6 @@ class Route(ABC):
             router: IRouter,
             *,
             func: Callable,
-            host: str,
             hooks: Hooks,
             skip_preparer: bool = False,
             skip_finalizer: bool = False,
@@ -68,8 +62,6 @@ class Route(ABC):
         self._method = method
         self._func = func
         self._router = router
-
-        self._host = host
 
         self._hooks = hooks
         self._skip_preparer = skip_preparer
@@ -166,7 +158,6 @@ class _SyncRoute(Route):
     def __call__(self, *args, **kwargs):
         with CallableHandler(
             func=self._func,
-            host=self._host,
             router=self._router,
             request_args=(args, kwargs),
             method_type=self._method_type,
@@ -183,7 +174,6 @@ class _AsyncRoute(Route):
     async def __call__(self, *args, **kwargs):
         async with AsyncCallableHandler(
             func=self._func,
-            host=self._host,
             router=self._router,
             request_args=(args, kwargs),
             method_type=self._method_type,

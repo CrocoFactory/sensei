@@ -5,7 +5,7 @@ import pytest
 from pydantic import EmailStr, PositiveInt, AnyHttpUrl
 from typing_extensions import assert_type
 
-from sensei import Client, Manager, Router, Path, Query, Header, Cookie, Args, Body, Form, File, RateLimit, APIModel
+from sensei import Client, Manager, Router, Path, Query, Header, Cookie, Args, Body, Form, File, APIModel
 
 
 class TestRouter:
@@ -19,25 +19,17 @@ class TestRouter:
             with pytest.raises(ValueError):
                 model.get(1)
 
-        client1 = Client(host='https://google.com')
+        client1 = Client(base_url='https://google.com')
         validate(client1)
-        client2 = Client(host=base_url, port=3000)
-        validate(client2)
-        client3 = Client(host=f'{base_url}//')
+        client3 = Client(base_url=f'{base_url}//')
         validate(client3)
 
-        manager = Manager(Client(host=f'{base_url}/'))
+        manager = Manager(Client(base_url=f'{base_url}/'))
         router = Router(host=base_url, manager=manager)
         base = base_maker(router)
         model = sync_maker(router, base)
         model.get(1)
 
-        with pytest.raises(ValueError):
-            manager = Manager(Client(host=base_url, rate_limit=RateLimit(10, 5)))
-            router = Router(host=base_url, manager=manager, rate_limit=RateLimit(10, 6))
-            base = base_maker(router)
-            model = sync_maker(router, base)
-            model.get(1)
 
     def test_function_style(self, base_url):
         def __finalize_json__(json: dict[str, Any]) -> dict[str, Any]:
@@ -164,11 +156,11 @@ class TestRouter:
     def test_formatting(self):
         router = Router(host='https://domain.com:{port}/sumdomain', port=3000)
         assert str(router.base_url) == 'https://domain.com:3000/sumdomain'
-        router.port = 4000
+        router._port = 4000
         assert str(router.base_url) == 'https://domain.com:4000/sumdomain'
 
     def test_props(self):
-        client = Client(host='https://google.com', port=3000)
+        client = Client(base_url='https://google.com:3000')
         manager = Manager(client)
         router = Router(manager=manager, host='https://google.com', port=3000)
 
@@ -176,8 +168,8 @@ class TestRouter:
         def validate() -> None:
             ...
 
-        router.port = 4000
-        router.manager = Manager(Client(host='https://google.com', port=4000))
+        router._port = 4000
+        router.manager = Manager(Client(base_url='https://google.com:4000'))
 
         @validate.prepare()
         def _validate_in(args: Args) -> Args:
@@ -188,7 +180,7 @@ class TestRouter:
         except ReferenceError:
             pass
 
-        router.port = None
+        router._port = None
 
     def test_unset_params(self, base_url, router):
         router = Router(base_url, __finalize_json__=lambda x: x['data'])

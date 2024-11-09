@@ -6,6 +6,7 @@ use_directory_urls: false
 
 theme:
   name: material
+  custom_dir: docs/overrides
   palette:
     - media: "(prefers-color-scheme)"
       toggle:
@@ -14,14 +15,14 @@ theme:
     - media: '(prefers-color-scheme: light)'
       scheme: default
       primary: red
-      accent: amber
+      accent: pink
       toggle:
         icon: material/lightbulb
         name: Switch to dark mode
     - media: '(prefers-color-scheme: dark)'
       scheme: slate
       primary: red
-      accent: amber
+      accent: pink
       toggle:
         icon: material/lightbulb-outline
         name: Switch to system preference
@@ -50,13 +51,38 @@ theme:
   favicon: img/favicon.png
   language: en
 
+extra:
+  analytics:
+    provider: google
+    property: G-BBNVDQKG5R
+    feedback:
+      title: Was this page helpful?
+      ratings:
+        - icon: material/emoticon-happy-outline
+          name: This page was helpful
+          data: 1
+          note: >-
+            Thanks for your feedback!
+        - icon: material/emoticon-sad-outline
+          name: This page could be improved
+          data: 0
+          note: >-
+            Thanks for your feedback!
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/CrocoFactory/sensei
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/CrocoFactory
+    - icon: fontawesome/solid/globe
+      link: https://crocofactory.dev
+
 repo_name: CrocoFactory/sensei
 repo_url: https://github.com/CrocoFactory/sensei
 
 nav:
   - Sensei: index.md
   - Learn:
-    - learn/learn.md
+    - learn/index.md
     - Type Hints: learn/type_hints.md
     - Concurrency/Parallelism: learn/concurrency_parallelism.md
     - HTTP Requests: learn/http_requests.md
@@ -66,10 +92,39 @@ nav:
       - Params/Response: learn/user_guide/params_response.md
       - Making Aliases: learn/user_guide/making_aliases.md
       - Preparers/Finalizers: learn/user_guide/preparers_finalizers.md
-      - OOP Style: learn/user_guide/oop_style.md
+      - Routed Model: learn/user_guide/routed_model.md
       - Managing Requests: learn/user_guide/managing_requests.md
-  - About: about.md
+  - API Documentation:
+      - api_documentation/index.md
+      - api_documentation/api_model.md
+      - api_documentation/case_converters.md
+      - api_documentation/manager.md
+      - api_documentation/parameters.md
+      - api_documentation/rate_limit.md
+      - api_documentation/routed_function.md
+      - api_documentation/router.md
+  - Sensei People: people.md
 
+plugins:
+  mkdocstrings:
+    handlers:
+      python:
+        options:
+          docstring_style: google
+          show_root_heading: true
+          show_if_no_docstring: true
+          preload_modules:
+            - httpx
+          inherited_members: true
+          members_order: source
+          separate_signature: true
+          filters:
+            - '!^_'
+          docstring_section_style: spacy
+          merge_init_into_class: true
+          signature_crossrefs: true
+          show_symbol_type_heading: true
+          show_symbol_type_toc: true
 
 markdown_extensions:
   admonition:
@@ -97,6 +152,9 @@ markdown_extensions:
         format: !!python/name:pymdownx.superfences.fence_code_format
   pymdownx.tilde:
 
+  pymdownx.tabbed:
+    alternate_style: true
+
   pymdownx.details:
   pymdownx.blocks.admonition:
     types:
@@ -119,3 +177,6 @@ markdown_extensions:
 
 extra_css:
   - css/style.css
+
+extra_javascript:
+  - js/script.js

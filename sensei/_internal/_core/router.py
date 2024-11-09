@@ -5,7 +5,6 @@ from typing import Callable, Optional, Any, TypeVar
 
 from httpx import URL
 
-from sensei._descriptors import RateLimitAttr, PortAttr
 from sensei._utils import get_base_url
 from sensei.cases import header_case as to_header_case
 from sensei.client import Manager
@@ -17,61 +16,13 @@ from ..tools import HTTPMethod, set_method_type, identical, MethodType, bind_att
 
 _KT = TypeVar('_KT')
 _VT = TypeVar('_VT')
+_RF = TypeVar('_RF', bound=RoutedFunction)
 
 
-_RouteDecorator = Callable[[Callable], RoutedFunction]
+_RouteDecorator = Callable[[_RF], _RF]
 
 
 class Router(IRouter):
-    """
-    Router for managing API routes and handling HTTP requests.
-
-    The `Router` class provides decorators for defining API endpoints with various HTTP methods
-    (GET, POST, PATCH, PUT, DELETE, HEAD, OPTIONS).
-    It handles URL construction, request preparation, JSON finalization, and rate limiting.
-
-    Args:
-        host (str):
-            The root URL of the associated API. It may contain a colon and a placeholder for the port, e.g., `:{port}`.
-            If a port is provided, it will replace the placeholder.
-        port (int, optional):
-            The port number of the associated API. If `None`, the port placeholder in `host` will not be replaced.
-            Defaults to `None`.
-        rate_limit (IRateLimit, optional):
-            An object implementing the `IRateLimit` interface to handle API rate limiting.
-            Defaults to `None`.
-        manager (Manager, optional):
-            A `Manager` instance used to provide an HTTP client to the router.
-            Defaults to `None`.
-        default_case (CaseConverter, optional):
-            Case converter for all parameters.
-            Defaults to identical case
-        query_case (CaseConverter, optional):
-            Case converter of query parameters.
-            Defaults to the identical case.
-        body_case (CaseConverter, optional):
-            Case converter of body parameters.
-            Defaults to the identical case.
-        cookie_case (CaseConverter, optional):
-            Case converter of cookies.
-            Defaults to the identical case.
-        header_case (CaseConverter, optional):
-            Case converter of headers.
-            Defaults to the identical case.
-        response_case (CaseConverter, optional):
-            Case converter of JSON response.
-            Defaults to the identical case.
-        __finalize_json__ (JsonFinalizer, optional):
-            A function to finalize the JSON response. The final value must be JSON serializable.
-            Defaults to the identical case.
-        __prepare_args__ (Preparer, optional):
-            A preparer function used to prepare the arguments for the request before it is sent.
-            The final value must be an instance of `Args`. Defaults to the identical case.
-    """
-
-    rate_limit = RateLimitAttr()
-    port = PortAttr()
-
     def __init__(
             self,
             host: str,
@@ -88,11 +39,174 @@ class Router(IRouter):
             __finalize_json__: JsonFinalizer = identical,
             __prepare_args__: Preparer = identical
     ):
+        """
+        Router for managing API routes and handling HTTP requests.
+        Provides decorators for defining API endpoints with various HTTP methods:
+
+        - GET
+        - POST
+        - PATCH
+        - PUT
+        - DELETE
+        - HEAD
+        - OPTIONS
+
+        Import it directly from Sensei:
+
+        ```python
+        from sensei import Router
+        ```
+
+        Example:
+            ```python
+            from typing import Annotated
+            from sensei import Router, Path, APIModel
+
+            router = Router('https://pokeapi.co/api/v2/')
+
+
+            class Pokemon(APIModel):
+                name: str
+                id: int
+                height: int
+                weight: int
+
+
+            @router.get('/pokemon/{name}')
+            def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon:
+                pass
+
+            pokemon = get_pokemon(name="pikachu")
+            print(pokemon)
+            ```
+
+        Args:
+            host:
+                The root URL of the associated API. It may contain a colon and a placeholder for the port,
+                e.g., `:{port}`.
+                If a port is provided, it will replace the placeholder.
+
+                **Example**
+
+                ```python
+                from sensei import Router
+
+                router = Router(host="https://exqmple-api.com:{port}/api/v1", port=3000)
+                ```
+            port (int, optional):
+                The port number of the associated API. If `None`, the port placeholder in `host` will not be replaced.
+            rate_limit (IRateLimit, optional):
+                An object implementing the `IRateLimit` interface to handle API rate limiting.
+
+                **Example**
+                ```python
+                from sensei import RateLimit, Router
+
+                calls, period = 1, 1
+                rate_limit = RateLimit(calls, period)
+                router = Router('https://example-api.com', rate_limit=rate_limit)
+
+                @router.get('/users/{id_}')
+                def get_user(id_: int) -> User:
+                    pass
+
+                for i in range(5):
+                    get_user(i)  # Here code will be paused for 1 second after each iteration
+                ```
+            manager (Manager, optional):
+                A `Manager` instance used to provide an HTTP client to the router.
+
+                **Example**
+                ```python
+                from sensei import Manager, Router, Client
+
+                manager = Manager()
+                router = Router('httpx://example-api.com', manager=manager)
+
+                @router.get('/users/{id_}')
+                def get_user(id_: int) -> User:
+                    pass
+
+                with Client(base_url=router.base_url) as client:
+                    manager.set(client)
+                    user = get_user(1)
+                    print(user)
+                    manager.pop()
+                ```
+            default_case (CaseConverter, optional):
+                Case converter for all parameters.
+            query_case (CaseConverter, optional):
+                Case converter of query parameters.
+
+                **Example**
+                ```python
+                from sensei import Router, camel_case, snake_case
+
+                router = Router(
+                    'https://api.example.com',
+                    query_case=camel_case,
+                    response_case=snake_case
+                )
+
+                @router.get('/users')
+                def get_user(id: int) -> User:
+                    pass
+                ```
+            body_case (CaseConverter, optional):
+                Case converter of body.
+            cookie_case (CaseConverter, optional):
+                Case converter of cookies.
+            header_case (CaseConverter, optional):
+                Case converter of headers.
+            response_case (CaseConverter, optional):
+                Case converter of JSON response.
+            __finalize_json__ (JsonFinalizer, optional):
+                A function to finalize the JSON response. It's applied for each routed function,
+                associated with the Router.
+                The final value must be JSON serializable. Can be represented as **async function**.
+
+                JSON finalizer is used for JSON response transformation before internal or user-defined
+                response finalizing.
+
+                **Example**
+                ```python
+                from sensei import Router
+                from typing import Any
+
+                def _finalize_json(json: dict[str, Any]) -> dict[str, Any]:
+                    return json['data']
+
+                router = Router('https://api.example.com', __finalize_json__=_finalize_json)
+                ```
+
+            __prepare_args__ (Preparer, optional):
+                A preparer function used to prepare the arguments for the request before it is sent. It's applied for
+                each routed function, associated with the Router. The final value must be an instance of `Args`.
+                Can be represented as **async function**.
+
+                Preparer is executed after internal argument parsing. So, all request parameters are available in
+                `Args` model within a preparer.
+
+                **Example**
+                ```python
+                from sensei import APIModel, Router, Args
+
+                class Context:
+                    token: str
+
+
+                def prepare_args(args: Args) -> Args:
+                    args.headers['Authorization'] = f'Bearer {Context.token}'
+                    return args
+
+                router = Router('https://api.example.com', __prepare_args__=prepare_args)
+                ```
+        """
         self._manager = manager
         self._host = host
 
-        self.port = port
-        self.rate_limit = rate_limit
+        self._port = port
+        self._rate_limit = rate_limit
 
         self._default_case = default_case
         self._query_case = query_case
@@ -103,7 +217,6 @@ class Router(IRouter):
 
         self._finalize_json = __finalize_json__
         self._prepare_args = __prepare_args__
-        self._linked_to_model: bool = False
 
     @property
     def base_url(self) -> URL:
@@ -114,9 +227,57 @@ class Router(IRouter):
             str: The base URL.
         """
         host = self._host
-        port = self.port
+        port = self._port
         base = get_base_url(host, port)
         return URL(base)
+
+    @property
+    def port(self) -> int:
+        """
+        Get the port number of the associated API.
+
+        Returns:
+            int: The port number of the associated API. If `None`, the port placeholder in `host` will not be replaced.
+        """
+        return self._port
+
+    @port.setter
+    def port(self, value: int) -> None:
+        """
+        Set the port number of the associated API.
+
+        Args:
+            value (int):
+                A port number
+        """
+        if value is None or isinstance(value, int) and 1 <= value <= 65535:
+            self._port = value
+        else:
+            raise ValueError('Port must be between 1 and 65535')
+
+    @property
+    def rate_limit(self) -> IRateLimit:
+        """
+        Get the rate limit used to handle API rate limiting.
+
+        Returns:
+            IRateLimit: An object implementing the `IRateLimit` interface to handle API rate limiting.
+        """
+        return self._rate_limit
+
+    @rate_limit.setter
+    def rate_limit(self, value: IRateLimit) -> None:
+        """
+        Set the RateLimit used to handle API rate limiting.
+
+        Args:
+            value (IRateLimit):
+                An object implementing the `IRateLimit`
+        """
+        if value is None or isinstance(value, IRateLimit):
+            self._rate_limit = value
+        else:
+            raise TypeError(f'Value must implement {IRateLimit} interface')
 
     @property
     def manager(self) -> Optional[Manager]:
@@ -124,7 +285,7 @@ class Router(IRouter):
         Get the manager used to provide an HTTP client to the router.
 
         Returns:
-            Optional[Manager]: The `Manager` instance if set; otherwise, `None`.
+            Manager: The `Manager` instance if set; otherwise, `None`.
         """
         return self._manager
 
@@ -134,7 +295,7 @@ class Router(IRouter):
         Set the manager used to provide an HTTP client to the router.
 
         Args:
-            value (Optional[Manager], optional):
+            value (Manager, optional):
                 A `Manager` instance used to provide an HTTP client to the router.
                 Defaults to `None`.
         """
@@ -147,7 +308,7 @@ class Router(IRouter):
     def default_case(self) -> CaseConverter | None:
         """
         Returns:
-             Optional[CaseConverter]: Case converter for all parameters.
+             CaseConverter: Case converter for all parameters.
         """
         return self._default_case
 
@@ -155,7 +316,7 @@ class Router(IRouter):
     def query_case(self) -> CaseConverter | None:
         """
         Returns:
-             Optional[CaseConverter]: Case converter of query parameters.
+             CaseConverter: Case converter of query parameters.
         """
         return self._query_case
 
@@ -163,7 +324,7 @@ class Router(IRouter):
     def body_case(self) -> CaseConverter | None:
         """
         Returns:
-             Optional[CaseConverter]: Case converter of body parameters.
+             CaseConverter: Case converter of body parameters.
         """
         return self._body_case
 
@@ -171,7 +332,7 @@ class Router(IRouter):
     def cookie_case(self) -> CaseConverter | None:
         """
         Returns:
-             Optional[CaseConverter]: Case converter of cookies.
+             CaseConverter: Case converter of cookies.
         """
         return self._cookie_case
 
@@ -179,7 +340,7 @@ class Router(IRouter):
     def header_case(self) -> CaseConverter | None:
         """
         Returns:
-             Optional[CaseConverter]: Case converter of headers.
+             CaseConverter: Case converter of headers.
         """
         return self._header_case
 
@@ -187,7 +348,7 @@ class Router(IRouter):
     def response_case(self) -> CaseConverter | None:
         """
         Returns:
-             Optional[CaseConverter]: Case converter of JSON response.
+             CaseConverter: Case converter of JSON response.
         """
         return self._response_case
 
@@ -200,25 +361,6 @@ class Router(IRouter):
             skip_finalizer: bool = False,
             skip_preparer: bool = False,
     ) -> Callable:
-        """
-        Create a decorator for a specific HTTP method and path.
-
-        Args:
-            path (str):
-                The relative path of the route.
-            method (HTTPMethod):
-                The HTTP method for the route (e.g., GET, POST).
-            case_converters (CaseConverters):
-                A dictionary of case converters for query, body, cookie, and header parameters.
-            skip_finalizer (bool):
-                Skip JSON finalizer, when finalizing response. Defaults to `False`.
-            skip_preparer (bool):
-                Skip preparing the arguments for the request. Defaults to `False`.
-
-        Returns:
-            Callable: A decorator that transforms a function into a routed function.
-        """
-
         def decorator(func: Callable) -> Callable:
             hooks = Hooks(
                 case_converters=case_converters,
@@ -231,13 +373,12 @@ class Router(IRouter):
                 method=method,
                 router=self,
                 func=func,
-                host=self._host,
                 hooks=hooks,
                 skip_preparer=skip_preparer,
                 skip_finalizer=skip_finalizer,
             )
 
-            func.__routed__ = True
+            func.__sensei_routed_function__ = True
             func.__route__ = route
 
             def _setattrs(
@@ -289,21 +430,22 @@ class Router(IRouter):
             skip_preparer: bool = False,
     ) -> _RouteDecorator:
         """
-        Create a route using the HTTP GET method.
+        Create a route using the GET method.
 
         This decorator transforms a function into a routed function that sends a GET request
-        to the specified path, handling parameter case conversion and argument validation.
+        to the specified path. Routed function handles parameter case conversion, argument validation, argument
+        preparation, response finalizing.
 
         Args:
             path (str):
                 The relative path of the route.
-            default_case (CaseConverter | None, optional):
+            default_case (CaseConverter, optional):
                 Case converter for all parameters. Defaults to using the router's default.
-            query_case (CaseConverter | None, optional):
+            query_case (CaseConverter, optional):
                 Case converter for query parameters. Defaults to using the router's default.
-            cookie_case (CaseConverter | None, optional):
+            cookie_case (CaseConverter, optional):
                 Case converter for cookie parameters. Defaults to using the router's default.
-            header_case (CaseConverter | None, optional):
+            header_case (CaseConverter, optional):
                 Case converter for header parameters. Defaults to using the router's default.
             response_case (CaseConverter | None, optional):
                 Case converter for JSON response. Defaults to using the router's default.
@@ -352,10 +494,11 @@ class Router(IRouter):
             skip_preparer: bool = False,
     ) -> _RouteDecorator:
         """
-        Create a route using the HTTP POST method.
+        Create a route using the POST method.
 
         This decorator transforms a function into a routed function that sends a POST request
-        to the specified path, handling parameter case conversion and argument validation.
+        to the specified path. Routed function handles parameter case conversion, argument validation, argument
+        preparation, response finalizing.
 
         Args:
             path (str):
@@ -417,10 +560,11 @@ class Router(IRouter):
             skip_preparer: bool = False,
     ) -> _RouteDecorator:
         """
-        Create a route using the HTTP PATCH method.
+        Create a route using the PATCH method.
 
         This decorator transforms a function into a routed function that sends a PATCH request
-        to the specified path, handling parameter case conversion and argument validation.
+        to the specified path. Routed function handles parameter case conversion, argument validation, argument
+        preparation, response finalizing.
 
         Args:
             path (str):
@@ -482,10 +626,11 @@ class Router(IRouter):
             skip_preparer: bool = False,
     ) -> _RouteDecorator:
         """
-        Create a route using the HTTP PUT method.
+        Create a route using the PUT method.
 
         This decorator transforms a function into a routed function that sends a PUT request
-        to the specified path, handling parameter case conversion and argument validation.
+        to the specified path. Routed function handles parameter case conversion, argument validation, argument
+        preparation, response finalizing.
 
         Args:
             path (str):
@@ -546,10 +691,11 @@ class Router(IRouter):
             skip_preparer: bool = False,
     ) -> _RouteDecorator:
         """
-        Create a route using the HTTP DELETE method.
+        Create a route using the DELETE method.
 
         This decorator transforms a function into a routed function that sends a DELETE request
-        to the specified path, handling parameter case conversion and argument validation.
+        to the specified path. Routed function handles parameter case conversion, argument validation, argument
+        preparation, response finalizing.
 
         Args:
             path (str):
@@ -608,10 +754,11 @@ class Router(IRouter):
             skip_preparer: bool = False,
     ) -> _RouteDecorator:
         """
-        Create a route using the HTTP HEAD method.
+        Create a route using the HEAD method.
 
         This decorator transforms a function into a routed function that sends a HEAD request
-        to the specified path, handling parameter case conversion and argument validation.
+        to the specified path. Routed function handles parameter case conversion, argument validation, argument
+        preparation, response finalizing.
 
         Args:
             path (str):
@@ -670,10 +817,11 @@ class Router(IRouter):
             skip_preparer: bool = False,
     ) -> _RouteDecorator:
         """
-        Create a route using the HTTP OPTIONS method.
+        Create a route using the OPTIONS method.
 
         This decorator transforms a function into a routed function that sends a OPTIONS request
-        to the specified path, handling parameter case conversion and argument validation.
+        to the specified path. Routed function handles parameter case conversion, argument validation, argument
+        preparation, response finalizing.
 
         Args:
             path (str):

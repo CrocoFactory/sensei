@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block announce %}
+<div class="announce-wrapper">
+  <div id="announce-left">
+    <div class="item">
+      <a class="announce-link" href="https://x.com/CrocoFactory" target="_blank">
+        <span class="twemoji twitter">
+          {% include ".icons/fontawesome/brands/x-twitter.svg" %}
+        </span> Follow <strong>@CrocoFactory</strong> on <strong>Twitter</strong> to explore Sensei
+      </a>
+    </div>
+<!--    <div class="item">-->
+<!--      <iframe style="display: inline-block; vertical-align: middle; border: none; margin-right: 0.5rem;" src="https://github.com/sponsors/blnkoff/button" title="Sponsor tiangolo" height="35" width="116" style="border: 0;"></iframe> <a class="announce-link" target="_blank" href="https://github.com/sponsors/blnkoff">-->
+<!--      You can sponsor <strong>Sensei</strong> 🥷</a>-->
+<!--    </div>-->
+  </div>
+  <div id="announce-right" style="position: relative;">
+    <div class="item">
+      <a title="CrocoFactory: Crafting dev-friendly solutions" style="display: block; position: relative;" href="https://crocofactory.dev" target="_blank">
+        <span class="sponsor-badge">sponsor</span>
+        <img class="sponsor-image" src="/img/sponsors/croco_banner.svg" />
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
