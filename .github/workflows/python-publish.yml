@@ -26,6 +26,8 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: '3.x'
+    - name: Clear directory
+      run: rm -rf dist
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
