@@ -82,7 +82,8 @@ class Router(IRouter):
 
         Args:
             host:
-                The root URL of the associated API. It may contain a colon and a placeholder for the port, e.g., `:{port}`.
+                The root URL of the associated API. It may contain a colon and a placeholder for the port,
+                e.g., `:{port}`.
                 If a port is provided, it will replace the placeholder.
 
                 **Example**
@@ -160,10 +161,12 @@ class Router(IRouter):
             response_case (CaseConverter, optional):
                 Case converter of JSON response.
             __finalize_json__ (JsonFinalizer, optional):
-                A function to finalize the JSON response. It's applied for each routed function, associated with the Router
+                A function to finalize the JSON response. It's applied for each routed function,
+                associated with the Router.
                 The final value must be JSON serializable. Can be represented as **async function**.
 
-                JSON finalizer is used for JSON response transformation before internal or user-defined response finalizing.
+                JSON finalizer is used for JSON response transformation before internal or user-defined
+                response finalizing.
 
                 **Example**
                 ```python
@@ -258,7 +261,7 @@ class Router(IRouter):
         Get the rate limit used to handle API rate limiting.
 
         Returns:
-            IRateLimit: An object implementing the `IRateLimit` interface to handle API rate limiting. Defaults to `None`.
+            IRateLimit: An object implementing the `IRateLimit` interface to handle API rate limiting.
         """
         return self._rate_limit
 

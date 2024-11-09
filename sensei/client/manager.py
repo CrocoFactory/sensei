@@ -16,7 +16,8 @@ class Manager:
             required: bool = True,
     ) -> None:
         """
-        This class serves as a bridge between the application and Sensei, to dynamically provide a client for routed function calls.
+        This class serves as a bridge between the application and Sensei, to dynamically provide a client for
+        routed function calls.
         It separately stores `httpx.AsyncClient` and `httpx.Client`.
         To use `Manager`, you need to create it and pass it to the router.
 

@@ -244,7 +244,8 @@ class _ModelBase(BaseModel):
 
     def __str__(self):
         """
-        Get the string representation of the model. Wraps `pydantic` representation through the class name and parenthesis
+        Get the string representation of the model. Wraps `pydantic` representation through the class name and
+        parenthesis.
 
         Example:
             ```python
@@ -307,11 +308,12 @@ class _ModelMeta(ModelMetaclass):
 class APIModel(_ModelBase, metaclass=_ModelMeta):
     """
     Base class used to define models for structuring API responses.
-    There is the OOP style of making Sensei models when an `APIModel` class performs both validation and making requests
-    through its routed methods. This style is called **Routed Model**. To use this style, you need to implement a model derived
-    from `APIModel` and add inside routed methods.
+    There is the OOP style of making Sensei models when an `APIModel` class performs both validation and making
+    requests through its routed methods. This style is called **Routed Model**.
+    To use this style, you need to implement a model derived from `APIModel` and add inside routed methods.
 
-    You can apply the same techniques as for [`pydantic.BaseModel`](https://docs.pydantic.dev/2.9/concepts/models/){.external-link}
+    You can apply the same techniques as for
+    [`pydantic.BaseModel`](https://docs.pydantic.dev/2.9/concepts/models/){.external-link}
 
     Import it directly from Sensei:
 

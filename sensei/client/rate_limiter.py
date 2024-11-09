@@ -9,7 +9,8 @@ from sensei.types import IRateLimit
 class RateLimit(IRateLimit):
     """
     The class that manages rate limiting by maintaining tokens and enforcing rate limits.
-    This class implements a [token bucket](https://en.wikipedia.org/wiki/Token_bucket){.external-link} rate-limiting system.
+    This class implements a [token bucket](https://en.wikipedia.org/wiki/Token_bucket){.external-link}
+    rate-limiting system.
 
     Example:
         ```python
