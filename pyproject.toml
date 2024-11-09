@@ -1,6 +1,6 @@
 [tool.poetry]
 name = 'sensei'
-version = '0.1.0'
+version = '0.1.1'
 description = 'The Python framework that provides a quick way to build robust HTTP requests. Use type hints, to build requests, with little or no implementation'
 authors = ['Alexey  <axbelenkov@gmail.com>']
 license = 'MIT'
