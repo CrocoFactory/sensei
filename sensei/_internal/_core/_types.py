@@ -55,7 +55,7 @@ class RoutedFunction(Callable[..., _RT]):
         """
         Attach preparer to the routed function. Preparer is a function that takes an instance of `Args` as the argument
         and returns the modified. Preparers are used for request preparation. That means adding or changing arguments
-        before request.
+        before request. Can be represented as **async function**.
 
         Preparers are executed after internal argument parsing. So, all request parameters are available in
         `Args` model within a preparer.
@@ -98,7 +98,7 @@ class RoutedFunction(Callable[..., _RT]):
         """
         Attach response finalizer to the routed function. Response Finalizer is a function that takes an instance of
         `httpx.Response` as the argument and returns the result of calling the associated routed function.
-        The return value must be of the same type as the routed function.
+        The return value must be of the same type as the routed function. Can be represented as **async function**.
 
         Response Finalizers are used for response transformation, which can't be performed automatically if you set a
         corresponding response type from the category of automatically handled.

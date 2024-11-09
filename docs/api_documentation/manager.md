@@ -1,1 +1,3 @@
 # Manager
+
+:::sensei.Manager  

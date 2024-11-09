@@ -8,8 +8,24 @@ from sensei.types import IRateLimit
 
 class RateLimit(IRateLimit):
     """
-    A class that manages rate limiting by maintaining tokens and enforcing rate limits.
-    This class implements a token bucket rate-limiting system.
+    The class that manages rate limiting by maintaining tokens and enforcing rate limits.
+    This class implements a [token bucket](https://en.wikipedia.org/wiki/Token_bucket){.external-link} rate-limiting system.
+
+    Example:
+        ```python
+        from sensei import RateLimit, Router
+
+        calls, period = 1, 1
+        rate_limit = RateLimit(calls, period)
+        router = Router('https://example-api.com', rate_limit=rate_limit)
+
+        @router.get('/users/{id_}')
+        def get_user(id_: int) -> User:
+            pass
+
+        for i in range(5):
+            get_user(i)  # Here code will be paused for 1 second after each iteration
+        ```
 
     Args:
         calls (int): The maximum number of requests allowed per period.

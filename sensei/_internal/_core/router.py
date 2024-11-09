@@ -51,6 +51,12 @@ class Router(IRouter):
         - HEAD
         - OPTIONS
 
+        Import it directly from Sensei:
+
+        ```python
+        from sensei import Router
+        ```
+
         Example:
             ```python
             from typing import Annotated
@@ -90,6 +96,22 @@ class Router(IRouter):
                 The port number of the associated API. If `None`, the port placeholder in `host` will not be replaced.
             rate_limit (IRateLimit, optional):
                 An object implementing the `IRateLimit` interface to handle API rate limiting.
+
+                **Example**
+                ```python
+                from sensei import RateLimit, Router
+
+                calls, period = 1, 1
+                rate_limit = RateLimit(calls, period)
+                router = Router('https://example-api.com', rate_limit=rate_limit)
+
+                @router.get('/users/{id_}')
+                def get_user(id_: int) -> User:
+                    pass
+
+                for i in range(5):
+                    get_user(i)  # Here code will be paused for 1 second after each iteration
+                ```
             manager (Manager, optional):
                 A `Manager` instance used to provide an HTTP client to the router.
 
@@ -139,7 +161,7 @@ class Router(IRouter):
                 Case converter of JSON response.
             __finalize_json__ (JsonFinalizer, optional):
                 A function to finalize the JSON response. It's applied for each routed function, associated with the Router
-                The final value must be JSON serializable.
+                The final value must be JSON serializable. Can be represented as **async function**.
 
                 JSON finalizer is used for JSON response transformation before internal or user-defined response finalizing.
 
@@ -157,6 +179,7 @@ class Router(IRouter):
             __prepare_args__ (Preparer, optional):
                 A preparer function used to prepare the arguments for the request before it is sent. It's applied for
                 each routed function, associated with the Router. The final value must be an instance of `Args`.
+                Can be represented as **async function**.
 
                 Preparer is executed after internal argument parsing. So, all request parameters are available in
                 `Args` model within a preparer.

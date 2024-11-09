@@ -277,7 +277,7 @@ period. This is achieved through a `RateLimit` instance
             
 This code is equivalent to **5 requests per second**.
 
-```python
+```python   
 from sensei import RateLimit, Router
 
 calls, period = 5, 1
@@ -285,7 +285,8 @@ rate_limit = RateLimit(calls, period)
 router = Router('https://example-api.com', rate_limit=rate_limit)
 ```
 
-The `RateLimit` class implements a token bucket rate-limiting system.  Tokens are added at a fixed rate, and each request uses one token. 
+The `RateLimit` class implements a [token bucket](https://en.wikipedia.org/wiki/Token_bucket){.external-link} rate-limiting 
+system. Tokens are added at a fixed rate, and each request uses one token. 
 If tokens run out, Sensei waits until new tokens are available, preventing rate-limit violations. 
 If a token was consumed, the new one will appear in `period / calls` seconds. That is **5 requests per second** is equivalent
 **1 token per 1/5 seconds**.

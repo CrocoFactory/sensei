@@ -103,7 +103,7 @@ nav:
       - api_documentation/rate_limit.md
       - api_documentation/routed_function.md
       - api_documentation/router.md
-  - About: about.md
+  - Sensei People: people.md
 
 plugins:
   mkdocstrings:

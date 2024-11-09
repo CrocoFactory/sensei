@@ -13,7 +13,7 @@ These functions include:
 - Header
 - Cookie
 
-You can import them directly from `sensei`
+Import them directly from `sensei`
 
 ```python
 from sensei import Query, Body, Path, Form, File, Header, Cookie

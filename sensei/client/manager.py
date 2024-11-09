@@ -6,21 +6,6 @@ from .exceptions import CollectionLimitError
 
 
 class Manager:
-    """
-    A generic manager class for handling a single client instance of each type (async/sync).
-
-    This class manages an instance of a client (which must be a subclass of `BaseClient`),
-    ensuring that only one client is set at a time. The class provides methods to set,
-    pop, and check the presence of the client.
-
-    Args:
-        sync_client (Client): An instance of `httpx.Client`.
-        async_client (AsyncClient): An instance of `httpx.AsyncClient`.
-        required (bool): Whether to throw the error in `get`, if a client is not set
-    Raises:
-        ValueError: If the provided client is not an instance of `BaseClient`.
-    """
-
     __slots__ = ('_sync_client', '_async_client', '_required')
 
     def __init__(
@@ -30,6 +15,43 @@ class Manager:
             *,
             required: bool = True,
     ) -> None:
+        """
+        This class serves as a bridge between the application and Sensei, to dynamically provide a client for routed function calls.
+        It separately stores `httpx.AsyncClient` and `httpx.Client`.
+        To use `Manager`, you need to create it and pass it to the router.
+
+        Import it directly from Sensei:
+
+        ```python
+        from sensei import Manager
+        ```
+
+        Example:
+            ```python
+            from sensei import Manager, Router, Client
+
+            manager = Manager()
+            router = Router('httpx://example-api.com', manager=manager)
+
+            @router.get('/users/{id_}')
+            def get_user(id_: int) -> User:
+                pass
+
+            with Client(base_url=router.base_url) as client:
+                manager.set(client)
+                user = get_user(1)
+                print(user)
+                manager.pop()
+            ```
+
+        Args:
+            sync_client (Client): An instance of `httpx.Client`.
+            async_client (AsyncClient): An instance of `httpx.AsyncClient`.
+            required (bool): Whether to throw the error in `get` if a client is not set
+
+        Raises:
+            TypeError: If the provided client is not an instance of AsyncClient or Client.
+        """
         self._sync_client = self._validate_client(sync_client, True)
         self._async_client = self._validate_client(async_client, True, True)
         self._required = required
@@ -63,16 +85,28 @@ class Manager:
 
     def set(self, client: BaseClient) -> None:
         """
-        Set a client instance in the manager.
-
-        This method sets the client if no client is currently set. If a client is
+        Set a client instance in the manager if no client is currently set. If a client of the provided type is
         already set, it raises a `CollectionLimitError`.
+
+        Example:
+            ```python
+            from sensei import Manager, Router, Client, AsyncClient
+
+            manager = Manager()
+            router = Router('httpx://example-api.com', manager=manager)
+
+            client = Client(base_url=router.base_url)
+            aclient = AsyncClient(base_url=router.base_url)
+
+            manager.set(client)
+            manager.set(aclient)
+            ```
 
         Args:
             client (BaseClient): The client instance to set.
 
         Raises:
-            CollectionLimitError: If a client is already set.
+            CollectionLimitError: If a client of the provided type is already set.
             TypeError: If the provided client is not an instance of AsyncClient or Client.
         """
         is_async = isinstance(client, AsyncClient)
@@ -90,14 +124,21 @@ class Manager:
         """
         Remove and return the currently set client.
 
-        This method removes the managed client and returns it. After calling this method,
-        the manager will no longer have a client set. But the client type defined at creation is not reset.
+        Example:
+            ```python
+            manager = Manager()
+
+            manager = Manager(sync_client=client, async_client=aclient)
+            client = manager.pop(is_async=False)
+            aclient = manager.pop(is_async=True)
+            print(client, aclient)
+            ```
 
         Args:
             is_async (bool): Whether client instance is async
 
         Returns:
-            _Client: The client instance that was managed.
+            BaseClient: The client instance that was managed.
 
         Raises:
             AttributeError: If no client is set.
@@ -107,7 +148,16 @@ class Manager:
 
     def empty(self, is_async: bool = False) -> bool:
         """
-        Check if the manager has a client set.
+        Check if the manager has a client of the provided type set.
+
+        Example:
+            ```python
+            manager = Manager()
+
+            manager = Manager(sync_client=client)
+            manager.pop()
+            print(manager.empty()) # Output: True
+            ```
 
         Args:
             is_async (bool): Whether client instance is async
@@ -121,14 +171,24 @@ class Manager:
 
     def get(self, is_async: bool = False) -> BaseClient:
         """
-        Retrieve the currently set client.
+        Retrieve the currently set client of the provided type.
         This method returns the managed client without removing it.
+
+        Example:
+            ```python
+            manager = Manager()
+
+            manager = Manager(sync_client=client, async_client=aclient)
+            client = manager.get(is_async=False)
+            aclient = manager.get(is_async=True)
+            print(client, aclient)
+            ```
 
         Args:
             is_async (bool): Whether client instance is async
 
         Returns:
-            _Client: The client instance that is being managed.
+            BaseClient: The client instance that is being managed.
 
         Raises:
             AttributeError: If no client is set.

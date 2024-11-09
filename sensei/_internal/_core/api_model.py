@@ -54,7 +54,7 @@ class _ModelBase(BaseModel):
     def __finalize_json__(json: Json) -> Json:
         """
         Hook used to finalize the JSON response. It's applied for each routed method, associated with the model
-        The final value must be JSON serializable.
+        The final value must be JSON serializable. Can be represented as **async function**.
 
         JSON finalizer is used for JSON response transformation before internal or user-defined response finalizing.
 
@@ -97,6 +97,7 @@ class _ModelBase(BaseModel):
         """
         Hook used to prepare the arguments for the request before it is sent. It's applied for
         each routed method, associated with the model. The final value must be an instance of `Args`.
+        Can be represented as **async function**.
 
         Preparer is executed after internal argument parsing. So, all request parameters are available in
         `Args` model within a preparer.
@@ -311,6 +312,12 @@ class APIModel(_ModelBase, metaclass=_ModelMeta):
     from `APIModel` and add inside routed methods.
 
     You can apply the same techniques as for [`pydantic.BaseModel`](https://docs.pydantic.dev/2.9/concepts/models/){.external-link}
+
+    Import it directly from Sensei:
+
+    ```python
+    from sensei import APIModel
+    ```
 
     !!! example
         === "Simple Model"

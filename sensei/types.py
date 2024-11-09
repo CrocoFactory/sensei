@@ -14,10 +14,28 @@ class IRateLimit(ABC):
 
     def __init__(self, calls: int, period: int) -> None:
         """
-        Initialize the shared state for rate limiting.
+        The interface that can be used to implement a custom rate limiting system.
 
-        :param calls: Maximum number of requests allowed per period.
-        :param period: Time period (in seconds) for the rate limit.
+        The following methods have to be implemented:
+
+        - async_wait_for_slot
+        - wait_for_slot
+
+        Example:
+            ```python
+            from sensei.types import IRateLimit
+
+            class CustomLimit(IRateLimit):
+                async def async_wait_for_slot(self) -> None:
+                    ...
+
+                def wait_for_slot(self) -> None:
+                    ...
+            ```
+
+        Args:
+            calls (int): The maximum number of requests allowed per period.
+            period (int): The time period in seconds for the rate limit.
         """
         self._calls: int = calls
         self._period: int = period
@@ -41,14 +59,14 @@ class IRateLimit(ABC):
     @abstractmethod
     async def async_wait_for_slot(self) -> None:
         """
-        Wait until a slot becomes available by periodically acquiring a token.
+        Wait until a slot becomes available.
         """
         pass
 
     @abstractmethod
     def wait_for_slot(self) -> None:
         """
-        Wait until a slot becomes available by periodically acquiring a token.
+        Wait until a slot becomes.
         """
         pass
 
