@@ -4,3 +4,4 @@ from ._utils import format_str, placeholders
 from .cases import *
 from .client import RateLimit, Manager
 from .types import Json
+from httpx import Client, AsyncClient
