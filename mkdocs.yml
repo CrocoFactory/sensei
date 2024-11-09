@@ -106,6 +106,7 @@ nav:
   - Sensei People: people.md
 
 plugins:
+  social:
   mkdocstrings:
     handlers:
       python:

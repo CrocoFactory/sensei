@@ -47,6 +47,8 @@ mkdocs-material = "^9.5.39"
 markdown-include-variants = "^0.0.2"
 mkdocstrings-python = "^1.12.2"
 mdx-include = "^1.4.2"
+pillow = "10.2"
+cairosvg = "2.6"
 
 [tool.poetry.group.dev.dependencies]
 build = "^1.2.1"
