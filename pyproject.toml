@@ -40,6 +40,8 @@ httpcore = "^1.0.6"
 
 [tool.poetry.group.docs]
 optional = true
+
+[tool.poetry.group.docs.dependencies]
 mkdocs = "^1.6.1"
 mkdocs-material = "^9.5.39"
 markdown-include-variants = "^0.0.2"
