@@ -26,13 +26,121 @@ class RoutedMethod(Protocol):
 
 
 class RoutedFunction(Callable[..., _RT]):
+    """
+    Function produced by routed decorators, such as:
+
+    * `@router.get`
+    * `@router.post`
+    * `@router.put`
+    * `@router.delete`
+    * `@router.patch`
+    * `@router.head`
+    * `@router.options`
+
+    Example:
+        ```python
+        from sensei import Router
+
+        router = Router('https://api.example.com')
+
+        @router.get('/users')
+        def get_user(id: int) -> User:
+            pass
+        ```
+    """
     def __call__(self, *args, **kwargs) -> _RT:
         ...
 
     def prepare(self, preparer: Preparer | None = None) -> Preparer:
+        """
+        Attach preparer to the routed function. Preparer is a function that takes an instance of `Args` as the argument
+        and returns the modified. Preparers are used for request preparation. That means adding or changing arguments
+        before request.
+
+        Preparers are executed after internal argument parsing. So, all request parameters are available in
+        `Args` model within a preparer.
+
+        Example:
+            ```python
+            from sensei import APIModel, format_str, Router, Args
+            from pydantic import NonNegativeInt, EmailStr
+
+            router = Router('https://api.example.com')
+
+            class User(APIModel):
+                id: NonNegativeInt
+                email: EmailStr
+                nickname: str
+
+                @router.patch('/users/{id_}')
+                def update(
+                        self,
+                        name: str,
+                        job: str
+                ) -> None:
+                    pass
+
+                @update.prepare
+                def _update_in(self, args: Args) -> Args:
+                    args.url = format_str(args.url, {'id_': self.id})
+                    return args
+            ```
+
+        Args:
+            preparer (Preparer):
+                Function that takes an instance of `Args` as the argument and returns the modified
+
+        Returns (Preparer): Function that was passed
+        """
         ...
 
     def finalize(self, finalizer: ResponseFinalizer | None = None) -> ResponseFinalizer:
+        """
+        Attach response finalizer to the routed function. Response Finalizer is a function that takes an instance of
+        `httpx.Response` as the argument and returns the result of calling the associated routed function.
+        The return value must be of the same type as the routed function.
+
+        Response Finalizers are used for response transformation, which can't be performed automatically if you set a
+        corresponding response type from the category of automatically handled.
+
+        Example:
+            ```python
+            from sensei import Router, APIModel, Form
+            from pydantic import EmailStr
+            from typing import Annotated
+            from httpx import Response
+
+            router = Router('https://api.example.com')
+
+            class UserCredentials(APIModel):
+                email: EmailStr
+                password: str
+
+            @router.post('/register')
+            def sign_up(user: Annotated[UserCredentials, Form(embed=False)]) -> str:
+                pass
+
+            @sign_up.finalize
+            def _sign_up_out(response: Response) -> str:
+                print(f'Finalizing response for request {response.request.url}')
+                return response.json()['token']
+
+
+            token = sign_up(UserCredentials(
+                email='john@example.com',
+                password='secret_password')
+            )
+            print(f'JWT token: {token}')
+            ```
+
+        Args:
+            finalizer (ResponseFinalizer):
+                Function that takes an instance of `httpx.Response` as the argument and returns the result of calling
+                the routed function. The return value must be of the same type as the routed function.
+
+        Returns:
+            Function that was passed
+        """
         ...
 
     __method_type__: MethodType

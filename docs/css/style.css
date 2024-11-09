@@ -21,3 +21,68 @@ details.failure p:not(.admonition-title), .admonition.failure p:not(.admonition-
   -webkit-mask-image: var(--md-admonition-icon--api);
           mask-image: var(--md-admonition-icon--api);
 }
+
+a.internal-link, a.external-link {
+    border-bottom: .05rem dotted var(--md-default-fg-color--light)
+}
+
+a.external-link::after {
+  content: "\00A0[↪]";
+}
+
+a.internal-link::after {
+  content: "\00A0↪";
+}
+
+a.announce-link:link,
+a.announce-link:visited {
+  color: #fff;
+}
+
+a.announce-link:hover {
+  color: var(--md-accent-fg-color);
+}
+
+.announce-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.announce-wrapper div.item {
+  display: none;
+}
+
+.announce-wrapper .sponsor-badge {
+  display: block;
+  position: absolute;
+  top: -10px;
+  right: 0;
+  font-size: 0.5rem;
+  color: #999;
+  background-color: #666;
+  border-radius: 10px;
+  padding: 0 10px;
+  z-index: 10;
+}
+
+.announce-wrapper .sponsor-image {
+  display: block;
+  border-radius: 20px;
+}
+
+.announce-wrapper>div {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.twitter {
+  color: #00acee;
+}
+
+.md-ellipsis {
+    font-weight: normal;
+}

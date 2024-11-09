@@ -4,11 +4,11 @@
 There are `Path`, `Query`, `Cookie`,`Header`, `Body`, `File`, `Form`.
 
 /// tip
-If you don't know the types of "request parameters", visit [HTTP Requests](/learn/http_requests.html)
+If you don't know the types of "request parameters", visit [HTTP Requests](/learn/http_requests.html){.internal-link}
 ///
 
 Sensei's Param Types are inherited from `FieldInfo`, produced by the `Field` function. You can apply the same approaches
-that was described for [Field Types](/learn/user_guide/first_steps.html#field-types).
+that was described for [Field Types](/learn/user_guide/first_steps.html#field-types){.internal-link}.
 
 ??? example
     Here is a function that creates a user and returns a JWT token, corresponding to the user.
@@ -268,10 +268,10 @@ def verify_user(cls, session_id: Annotated[str, Cookie()]) -> bool:
 
 ## Response Types
 
-Response type is the return type of [routed function(method)](/learn/user_guide/first_steps.html#routed-function). 
-There is a category of response types, that doesn't require [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html), 
+Response type is the return type of [routed function(method)](first_steps.md#routed-function){.internal-link}. 
+There is a category of response types, that doesn't require [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html){.internal-link}, 
 that we will learn in the future. That means these types are handled automatically. This category includes:
-        
+
 ### `None`
 
 If this type is present or a function has no return type, `None` is returned.
@@ -341,7 +341,7 @@ of the `Response` object is returned.
 ### `dict`
 
 `dict` response type refers to the JSON representation of the response. 
-In particular, it refers to JSON as a `dict`. Don't confuse with [`list[dict]`](/learn/user_guide/params_response.html#listdict). 
+In particular, it refers to JSON as a `dict`. Don't confuse with [`list[dict]`](/learn/user_guide/params_response.html#listdict){.internal-link}. 
 
 If this type is present and the method is not OPTIONS or HEAD, the result of the `json()` method of the `Response` object is returned.
 Otherwise, if the method is OPTIONS or HEAD, the attribute `headers` of the `Response` object is returned. This is the only response
@@ -392,7 +392,7 @@ Instead of `list[dict]` you can provide `list[dict[KT, VT]]`, where `KT` is the 
 Most probably, you will not find a situation, where JSON is represented as a `list`. 
 But a list can be wrapped in a field, such as "data". 
 You can use this type in combination with `__finalize_json__` hook, that we will cover in 
-[Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html). 
+[Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html){.internal-link}. 
 
 This response type also should be used when response validation is redundant or useless.
    
@@ -439,7 +439,7 @@ performed. But unlike `dict`, this type can't be used for automatic header extra
 
 
 !!! example
-    Here is example was shown in [First Steps](/learn/user_guide/first_steps.html#first-request)
+    Here is example was shown in [First Steps](/learn/user_guide/first_steps.html#first-request){.internal-link}
     ```python
     class Pokemon(APIModel):
         name: str
@@ -489,7 +489,7 @@ performed.
 Most probably, you will not find a situation, where JSON is represented as a `list`. 
 But a list can be wrapped in a field, such as "data". 
 You can use this type in combination with `__finalize_json__` hook, that we will cover in 
-[Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html).
+[Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html){.internal-link}.
 
 ```python
 @router.get('/users')
@@ -499,7 +499,7 @@ def get_users() -> list[User]:
 ///
 
 ### `Self`
-`Self` response type is used only in [routed methods](/learn/user_guide/first_steps.html#routed-methods), 
+`Self` response type is used only in [routed methods](/learn/user_guide/first_steps.html#routed-methods){.internal-link}, 
 specifically in class method (`@classmethod`) and instance methods (`self`). 
 To use `Self`, you need to import it.
           
@@ -516,7 +516,7 @@ from typing import Self
 Let's explore two use cases:
 
 #### Class Method
-`Self` in class method refers to the same as [`<BaseModel>`](/learn/user_guide/params_response.html#basemodel). 
+`Self` in class method refers to the same as [`<BaseModel>`](/learn/user_guide/params_response.html#basemodel){.internal-link}. 
 The current class in which the method is declared is taken as the model.
     
 !!! example
@@ -535,7 +535,7 @@ The current class in which the method is declared is taken as the model.
     You can use it in `PUT` and `PATCH` methods that update data related to the current model. It's a common approach, 
     to return the object for which the update was called.
 
-    In this example, we use [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html) 
+    In this example, we use [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html){.internal-link} 
 
     ```python
     class User(APIModel):
@@ -566,7 +566,7 @@ Because of this, IDEs often cannot understand this return type in Python 3.9.
 You can achieve the same functionality using **Forward References**.
 
 /// info
-[Forward reference](https://peps.python.org/pep-0484/#forward-references) is a way to resolve the issue, when a type hint contains names that have not been defined yet. 
+[Forward reference](https://peps.python.org/pep-0484/#forward-references){.external-link} is a way to resolve the issue, when a type hint contains names that have not been defined yet. 
 It is a string literal, that can express a definition, to be resolved later. 
 
 For example, the following code, namely constructor definition, does not work:
@@ -639,13 +639,13 @@ def get(cls, id_: Annotated[int, Path(alias='id')]) -> "User":
 ///
          
 ### `list[Self]`
-`list[Self]` it's a mix of [`list[<BaseModel>]`](/learn/user_guide/params_response.html#listbasemodel) 
-and [`Self`](/learn/user_guide/params_response.html#self). It refers to **sequential** unpacking JSON representation 
+`list[Self]` it's a mix of [`list[<BaseModel>]`](/learn/user_guide/params_response.html#listbasemodel){.internal-link} 
+and [`Self`](/learn/user_guide/params_response.html#self){.internal-link}. It refers to **sequential** unpacking JSON representation 
 of the response to the constructor of a current `BaseModel` class from which the method was called. 
-But unlike [`Self`](/learn/user_guide/params_response.html#self), it can be used only in class methods.
+But unlike `Self`, it can be used only in class methods.
 
-You can use [Forward References](/learn/user_guide/params_response.html#forward-reference) as well as for 
-[`Self`](/learn/user_guide/params_response.html#self)
+You can use [Forward References](/learn/user_guide/params_response.html#forward-reference){.internal-link} as well as for 
+`Self`
 
 !!! example
     This code 
@@ -675,7 +675,7 @@ You can use [Forward References](/learn/user_guide/params_response.html#forward-
      
 ## Recap
 
-In Sensei, defining [Param Types](#param-types) and [Response Types](#response-types) enables structured request and response handling, 
+In Sensei, defining [Param Types](#param-types){.internal-link} and [Response Types](#response-types){.internal-link} enables structured request and response handling, 
 promoting flexibility, code clarity, and effective validation. Here's a brief overview:
 
 1. **Param Types** are used to specify the origin of parameters in HTTP requests (`Path`, `Query`, `Cookie`, `Header`, 

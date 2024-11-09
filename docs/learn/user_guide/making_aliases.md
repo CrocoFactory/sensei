@@ -4,10 +4,10 @@ to follow Python’s naming conventions.
 
 /// tip
 If you don't know what are "snake_case", "camelCase", "Header-Case" and why you need to convert cases, visit 
-[Motivation/Converting Case](/learn/user_guide/motivation.html#converting-case)
+[Motivation/Converting Case](/learn/user_guide/motivation.html#converting-case){.internal-link}
 ///
 
-When you call [routed function(method)](/learn/user_guide/first_steps.html#routed-function),
+When you call [routed function(method)](/learn/user_guide/first_steps.html#routed-function){.internal-link},
 Sensei collects argument names and adds the corresponding key to request arguments.  
 
 Assume, we have to make the following request:
@@ -23,8 +23,7 @@ Content-Type: application/json
 }
 ```
 
-Since the argument's name corresponds to the key in [routed function's](/learn/user_guide/first_steps.html#routed-function) 
-request arguments, you need to write this code:
+Since the argument's name corresponds to the key in routed function's request arguments, you need to write this code:
 
 ```python
 @router.post('/users')
@@ -146,8 +145,9 @@ Because headers are called this way:
       
 ### Route Decorator (Route Level)
 
-You can pass case converters as arguments to [route decorator](/learn/user_guide/first_steps.html#routed-function). This process is called "applying case converters at 
-Route level." These converters have higher priority, than [router level](#router-router-level) converters. 
+You can pass case converters as arguments to [route decorator](/learn/user_guide/first_steps.html#routed-function){.internal-link}. 
+This process is called "applying case converters at Route level." These converters have higher priority, than 
+[router level](#router-router-level){.internal-link} converters. 
 
 Arguments, responsible for applying converters, have the same names as the `Router` constructor.
         
@@ -171,7 +171,7 @@ Arguments, responsible for applying converters, have the same names as the `Rout
 
 ### Class Hooks (Routed Model level)
 
-When you use [Routed Models](/learn/user_guide/routed_model.html), you can define converters through hooks. 
+When you use [Routed Models](/learn/user_guide/routed_model.html){.internal-link}, you can define converters through hooks. 
 `<param_type>` corresponds to `__<param_type>_case__` hook. This process is called "applying case converters at 
 Routed Model level."   Let's look at the example below:
 
@@ -208,8 +208,8 @@ def __response_case__(s: str) -> str:
     return snake_case(s)
 ```
 
-Consequently, this level has the same priority as [router level](#router-router-level), because it replaces it. As well 
-as [router level](#router-router-level) level, it has lower priority than [route level](#route-decorator-route-level).
+Consequently, this level has the same priority as [router level](#router-router-level){.internal-link}, because it replaces it. As well 
+as router level level, it has lower priority than [route level](#route-decorator-route-level){.internal-link}.
        
 ## Hook Levels (Priority)
 
@@ -219,7 +219,7 @@ In the context of this article, hooks are the case converters.
 
 * **Router Level**: apply hook to each routed function associated with that router
 * **Route Level**: apply hook only to this routed function
-* **Routed Model Level**: replaces Router Level, but defined in a routed model.
+* **Routed Model Level**: apply hook to each routed method associated with that model. Replaces Router Level.
          
 Moreover, there are different types of hook levels, each of which has a special property. 
 In the case of case converters, this type is called **Priority Levels**. Because, if multiple hooks are applied
@@ -251,7 +251,7 @@ What if we need to apply case converters at the **deeper** nesting levels? Assum
 
 For some reason, the first endpoint returns a response of camelCase, but the second endpoint accepts a book of kebab case.
 To follow Python naming conventions, you have to make snake_case attributes. At the same time, you need to make only one model 
-that can handle both the kebab-case and the camel_case, to follow [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself).
+that can handle both the kebab-case and the camel_case, to follow [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself){.external-link}.
                                        
 /// info
 Even if the case of the first and second endpoints are equal, you still would not be able to apply anything other than 
@@ -259,8 +259,7 @@ the approach described below, because the `Book` has a nested `Author` model. Ca
 `validation_alias` and `serialization_alias` in one example.
 ///
      
-You can't apply case converters through [Router](/learn/user_guide/making_aliases.html#router) 
-, [Route Decorator](/learn/user_guide/making_aliases.html#route-decorator) or [Class Hooks](#hooks), because they can be used only 
+You can't apply case converters through router, route decorator or class hooks, because they can be used only 
 at the **first nesting level**. To achieve the goal, you can use the `AliasGenerator` class from `pydantic` with the 
 `model_config` attribute. 
 
@@ -436,7 +435,8 @@ that conform to Python's standards. Here’s a concise summary of the key concep
     providing it directly in the route decorator. This is useful for handling endpoints that do not conform to the 
     general conventions.
 
-4. **Class Hooks**: For [Routed Models](/learn/user_guide/routed_model.html), you can define case converters through 
+4. **Class Hooks**: For [Routed Models](/learn/user_guide/routed_model.html){.external-link}, you can define case converters through 
+4. **Class Hooks**: For [Routed Models](/learn/user_guide/routed_model.html){.external-link}, you can define case converters through 
     class hooks within your model classes.
 
 5. **AliasGenerator**: When dealing with nested models and varying case conventions (like camelCase for responses and 

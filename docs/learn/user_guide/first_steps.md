@@ -25,9 +25,13 @@ pokemon = get_pokemon(name="pikachu")
 print(pokemon)
 ```
 
+```text
+Pokemon(name='pikachu' id=25 height=4 weight=60)
+```
+
 /// tip
 If you don't know what are "request", "response" "route", "endpoint", "methods" and other HTTP terms, visit
-[HTTP Requests](/learn/http_requests.html)
+[HTTP Requests](/learn/http_requests.html){.internal-link}
 ///
 
 Let's take this request step by step.
@@ -40,7 +44,7 @@ from sensei import Router, Path, APIModel
 ```
 
 `Annotated` is imported from Python's `typing` module, allowing us to add metadata (like
-[Param Types](/learn/user_guide/params_response.html#param-types)) to variables.
+[Param Types](/learn/user_guide/params_response.html#param-types){.internal-link}) to variables.
 
 `Router`, `Path`, and `APIModel` are imported from the Sensei framework.
 
@@ -76,9 +80,8 @@ The attributes are:
 - `weight`: an *integer*
 
 /// note | Technical Details
-`APIModel` inherits from `BaseModel` of [`pydantic`](https://docs.pydantic.dev/) framework. You can apply the principles
-of [`pydantic`](https://docs.pydantic.dev/) for models
-in Sensei
+`APIModel` inherits from `pydantic.BaseModel`. You can apply the principles
+of [`pydantic`](https://docs.pydantic.dev/) for models in Sensei
 ///
 
 ### Step 4: Defining the Routed Function
@@ -136,7 +139,7 @@ def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon:
 The function body is omitted because **Sensei** automatically handles the API call and response mapping.
 In this case, the function returns a `Pokemon` object, ensuring that the data fetched from the API matches the
 `Pokemon` model. The return type we will also
-call [response type](/learn/user_guide/params_response.html#response-types).
+call [response type](/learn/user_guide/params_response.html#response-types){.internal-link}.
 
 /// info
 This "omitting" pattern is called **Interface-driven function** or **Signature-driven function**, because we do not
@@ -156,8 +159,7 @@ Let's consider the algorithm of the call:
 
 1) Calling the `get_pokemon` function with the argument `name="pikachu"`.
 
-2) Collecting the function's return type and arguments, including its names and
-   types, [Param Types](/learn/user_guide/params_response.html#param-types),
+2) Collecting the function's return type and arguments' names, types and values; [Param Types](/learn/user_guide/params_response.html#param-types){.internal-link},
    such as `Path`, `Query`, `Body`, `Cookie`, `Header`, `File`, and `Form`, including argument validations placed inside
    them.
 
@@ -203,13 +205,13 @@ Only add `async` before `def`!
 
 /// tip
 If you don't know what are "concurrency", "parallelism" and what does do "async/await" in Python,
-visit [Concurrency/Parallelism](/learn/concurrency_parallelism.html)
+visit [Concurrency/Parallelism](/learn/concurrency_parallelism.html){.internal-link}
 ///
 
 ## API Model
 
 As mentioned earlier, `APIModel` models use the same principles as `BaseModel` models from [
-`pydantic`](https://docs.pydantic.dev/). You can explore its [documentation](https://docs.pydantic.dev/), to learn info for advanced users. 
+`pydantic`](https://docs.pydantic.dev/). You can explore its [documentation](https://docs.pydantic.dev/){.external-link}, to learn info for advanced users. 
 To make request with non-scalar input/output values, you definitely need to create models.
 Let’s go over the basics!
 
@@ -338,11 +340,11 @@ There are also many constrained types called by pattern `con<type>`:
 The same validation rules can also be applied using `Field`. There are two approaches to use it.
 
 /// note | Technical Details
-Sensei's [Param Types](/learn/user_guide/params_response.html#param-types), such as `Path`, `Query`, `Cookie`, `Header`,
+Sensei's [Param Types](/learn/user_guide/params_response.html#param-types){.internal-link}, such as `Path`, `Query`, `Cookie`, `Header`,
 `Body`, `File`, and `Form` are inherited from
 `FieldInfo`,
 produced by the `Field` function. All approaches that will be described are applied
-to [Param Types](/learn/user_guide/params_response.html#param-types).  
+to param types.  
 ///
 
 ##### Annotated
@@ -553,7 +555,7 @@ print(task)
 
 ### Routed Methods
 
-You can create a model that performs both validation and making requests. This OOP Style is called [Routed Model](/learn/user_guide/routed_model.html)
+You can create a model that performs both validation and making requests. This OOP Style is called [Routed Model](/learn/user_guide/routed_model.html){.internal-link}
 (we will explore it later).
 
 ```python
@@ -575,7 +577,7 @@ class User(APIModel):
         pass # (1)!
 ```
 
-1. This is called [routed method](/learn/user_guide/first_steps.html#routed-function)
+1. This is called [routed method](/learn/user_guide/first_steps.html#routed-function){.internal-link}
 
 The algorithm is the following:
 
@@ -584,7 +586,7 @@ The algorithm is the following:
     router = Router('https://api.example.com/')
     ```
 
-2. Define endpoints through [routed methods](/learn/user_guide/first_steps.html#routed-function)
+2. Define endpoints through [routed methods](/learn/user_guide/first_steps.html#routed-function){.internal-link}
     ```python
     @classmethod
     @router.get('/users/{id_}')
@@ -603,11 +605,11 @@ print(user.email)
 george.bluth@gmail.com
 ```
 
-[Routed Model](/learn/user_guide/routed_model.html) is a good practice to organize endpoints in one class when they are related to one model.
+[Routed Model](/learn/user_guide/routed_model.html){.internal-link} is a good practice to organize endpoints in one class when they are related to one model.
 
 /// warning
 You must not decorate a method as routed in a class not inherited from `APIModel`.
-This makes it impossible to use [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html), which we will learn in 
+This makes it impossible to use [Preparers/Finalizers](/learn/user_guide/preparers_finalizers.html){.internal-link}, which we will learn in 
 the future, and can lead to issues in the other situations.
 
 For instance, there is a common error to use `BaseModel` for the same purpose as `APIModel`:
@@ -635,7 +637,7 @@ class User(BaseModel):
 Sensei abstracts away much of the manual work, letting developers focus on function signatures while the framework
 handles the API logic and data validation.
 
-The example of [First Request](#first-request) demonstrates a simple and robust HTTP request using the Sensei framework.
+The example of [First Request](#first-request){.internal-link} demonstrates a simple and robust HTTP request using the Sensei framework.
 Here's the key breakdown of the process:
 
 ### 1. Importing Dependencies:
@@ -655,7 +657,7 @@ It inherits from `APIModel`, which provides validation and serialization.
 
 ### 4. Creating the Endpoint:
 
-The `get_pokemon` function is a [routed function](/learn/user_guide/first_steps.html#routed-function)
+The `get_pokemon` function is a [routed function](/learn/user_guide/first_steps.html#routed-function){.internal-link}
 decorated with `@router.get`, defining a GET request for`/pokemon/{name}`.
 This uses `Annotated` to ensure that `name` is a string and adheres to the validation rule (max length of 300).
 

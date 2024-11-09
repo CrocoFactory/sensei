@@ -103,7 +103,7 @@ Process alternate between these two states.
 
 ![Comparison](/img/concurrency_parallelism/bursts.png)
 
-*Illustration from [this article](https://www.baeldung.com/cs/cpu-io-bound)*
+*Illustration from [this article](https://www.baeldung.com/cs/cpu-io-bound){.external-link}*
 
 Attempt to apply threading to a **CPU-bound** application suffers from the GIL
 because only one thread can execute at a time, preventing full utilization of multicore CPUs.

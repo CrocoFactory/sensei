@@ -1,11 +1,12 @@
 /// tip
 If you don't know what are `Self`, `list[Self]` response types and 
-[Forward Reference](/learn/user_guide/params_response.html#forward-reference), you should read 
-[Params/Response](/learn/user_guide/params_response.html).
+[Forward Reference](/learn/user_guide/params_response.html#forward-reference){.internal-link}, you should read 
+[Params/Response](/learn/user_guide/params_response.html){.internal-link}.
 ///
 
-**Routed Model** is the OOP style of making Sensei models when a model performs both validation and making requests.
-To use this style, you need to implement a model derived from `APIModel` and add inside routed methods.
+**Routed Model** is the OOP style of making Sensei models when a model performs both validation and making requests 
+through its routed methods. To use this style, you need to implement a model derived from `APIModel` and add inside 
+routed methods.
                                        
 ```python
 from typing import Annotated
@@ -28,7 +29,7 @@ class User(APIModel):
 
 1. This is called [routed method](/learn/user_guide/first_steps.html#routed-function)
 
-As was mentioned before, you apply can the same techniques as for `pydantic.BaseModel`. These key principles were 
+As was mentioned before, you can apply the same techniques as for `pydantic.BaseModel`. These key principles were 
 described in [First Steps/API Model](/learn/user_guide/first_steps.html#api-model).
 
 /// warning

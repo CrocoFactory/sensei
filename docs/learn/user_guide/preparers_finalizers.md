@@ -1,10 +1,10 @@
 When you need to handle a response in a nonstandard way or add or change arguments 
 before a request, you can apply preparers and finalizers respectively. Before the start, we need to remember about 
-[Hook Levels](/learn/user_guide/making_aliases.html#hook-levels-priority).
+hook levels.
 
 ## Hook Levels (Order)
 
-As was mentioned in [Hook Levels](/learn/user_guide/making_aliases.html#hook-levels-priority), there are three 
+As was mentioned in [Hook Levels](/learn/user_guide/making_aliases.html#hook-levels-priority){.internal-link}, there are three 
 ways of applying converters:
 
 !!! example
@@ -52,8 +52,8 @@ ways of applying converters:
             def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: pass
         ```
 
-These levels are not only related to [case converters](/learn/user_guide/making_aliases.html#case-converters). 
-They are also related to other hooks, such as [Preparers](#preparers) and [Finalizers](#finalizers). 
+These levels are not only related to [case converters](/learn/user_guide/making_aliases.html#case-converters){.internal-link}. 
+They are also related to other hooks, such as preparers and finalizers. 
 
 But here they don't determine the single Preparer/Finalizer from all that will be executed (determine priority), 
 like for case converters. Each of them will be executed but in a different order. So, this type of hook levels is 
@@ -271,7 +271,7 @@ There are a few examples of using preparers at different levels.
 #### Route (Routed Method)
 
 You can use preparers when some request parameter should be retrieved as the attribute of 
-a [Routed Model](/learn/user_guide/routed_model.html) object from which the method was called 
+a [Routed Model](/learn/user_guide/routed_model.html){.internal-link} object from which the method was called 
               
 ```python
 from sensei import APIModel, format_str, Router, Args
@@ -414,7 +414,7 @@ In the example above, there are two preparers of different levels.
         return args
     ```        
   
-According to [Order Levels](#hook-levels-order), preparer at routed model level (`__prepare_args__`) is executed before 
+According to [Order Levels](#hook-levels-order){.internal-link}, preparer at routed model level (`__prepare_args__`) is executed before 
 route level preparer (`_update_in` ).
 
 /// tip 
@@ -441,7 +441,7 @@ def _get_in(self, args: Args) -> Args:
   
 ## Finalizers
 
-There are two types of finalizers: [Response Finalizer](#response-finalizer) and [JSON Finalizer](#json-finalizer).
+There are two types of finalizers: response finalizer and JSON finalizer.
 Let's explore them:
                      
 ### Response Finalizer
@@ -456,15 +456,15 @@ type from the category of automatically handled.
 Response Finalizers can be defined only at the route level. 
 ///     
 
-If [response type](/learn/user_guide/params_response.html#response-types) is not from the category automatically handled, you have to define a response finalizer.
-Otherwise, an error will be thrown.
+If [response type](/learn/user_guide/params_response.html#response-types){.internal-link} is not from the category 
+automatically handled, you have to define a response finalizer. Otherwise, an error will be thrown.
 
 #### Algorithm
 
 Look at the example below:
 
 ```python
-from sensei import Router, APIModel, Body
+from sensei import Router, APIModel, Form
 from pydantic import EmailStr
 from typing import Annotated
 from httpx import Response
@@ -476,12 +476,7 @@ class UserCredentials(APIModel):
     password: str
 
 @router.post('/register')
-def sign_up(
-        user: Annotated[UserCredentials, Body(
-            embed=False, 
-            media_type='application/x-www-form-urlencoded'
-        )]
-) -> str:
+def sign_up(user: Annotated[UserCredentials, Form(embed=False)]) -> str:
     pass
 
 @sign_up.finalize
@@ -510,12 +505,7 @@ First, we need to define a route:
 
 ```python
 @router.post('/register')
-def sign_up(
-        user: Annotated[UserCredentials, Body(
-            embed=False, 
-            media_type='application/x-www-form-urlencoded'
-        )]
-) -> str:
+def sign_up(user: Annotated[UserCredentials, Form(embed=False)]) -> str:
     pass
 ```
    
@@ -560,10 +550,10 @@ Response Finalizers are used for response transformation, that can't be performe
 if set a corresponding response type from the category of automatically handled.
                                                 
 ??? example
-    This example was shown in [Algorithm](#algorithm_1)
+    This example was shown in [Algorithm](#algorithm_1){.internal-link}
 
     ```python
-    from sensei import Router, APIModel, Body
+    from sensei import Router, APIModel, Form
     from pydantic import EmailStr
     from typing import Annotated
     from httpx import Response
@@ -575,12 +565,7 @@ if set a corresponding response type from the category of automatically handled.
         password: str
     
     @router.post('/register')
-    def sign_up(
-            user: Annotated[UserCredentials, Body(
-                embed=False, 
-                media_type='application/x-www-form-urlencoded'
-            )]
-    ) -> str:
+    def sign_up(user: Annotated[UserCredentials, Form(embed=False)]) -> str:
         pass
     
     @sign_up.finalize
@@ -637,7 +622,7 @@ class User(APIModel):
     data: _UserData
 ```
 
-Which is inconvenient to use, or define the next [response finalizer](#response-finalizer)
+Which is inconvenient to use, or define the next [response finalizer](#response-finalizer){.internal-link}
 
 ```python
 class User(APIModel):
@@ -821,7 +806,7 @@ without a response finalizer.
 #### Usage
 
 JSON finalizers are used for JSON response transformation before internal or user-defined response finalizing. 
-The example was shown in [Algorithm](#algorithm_2)
+The example was shown in [Algorithm](#algorithm_2){.internal-link}
 
 !!! tip
     If some Router/Routed Model level finalizer should be excluded for some routes, you can use `skil_finalizer=True` in the route: 
@@ -870,8 +855,8 @@ class User(APIModel):
 ## Recap
 
 In summary, Sensei provides flexible hooks to customize how requests are prepared and responses are handled through 
-[Preparers](#preparers) and [Finalizers](#finalizers). These hooks can be applied at different levels with an organized execution order, 
-providing nuanced control over request handling and response processing:
+[Preparers](#preparers){.internal-link} and [Finalizers](#finalizers){.internal-link}. These hooks can be applied 
+at different levels with an organized execution order, providing nuanced control over request handling and response processing:
 
 - **Hook Levels**
    

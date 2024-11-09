@@ -53,9 +53,36 @@ class _ModelBase(BaseModel):
     @staticmethod
     def __finalize_json__(json: Json) -> Json:
         """
-        Finalize the JSON response.
+        Hook used to finalize the JSON response. It's applied for each routed method, associated with the model
+        The final value must be JSON serializable.
 
-        This hook is used to finalize the JSON response. The final value must be JSON serializable.
+        JSON finalizer is used for JSON response transformation before internal or user-defined response finalizing.
+
+        Example:
+            ```python
+            from sensei import Router, APIModel, Path
+            from typing import Any, Annotated
+
+
+            router = Router('https://reqres.in/api')
+
+
+            class User(APIModel):
+                email: str
+                id: int
+                first_name: str
+                last_name: str
+                avatar: str
+
+                @staticmethod
+                def __finalize_json__(json: dict[str, Any]) -> dict[str, Any]:
+                    return json['data']
+
+                @classmethod
+                @router.get('/users/{id_}')
+                def get(cls, id_: Annotated[int, Path()]) -> "User":
+                    pass
+            ```
 
         Args:
             json (Json): The original JSON response.
@@ -68,10 +95,39 @@ class _ModelBase(BaseModel):
     @staticmethod
     def __prepare_args__(args: Args) -> Args:
         """
-        Prepare the arguments for the request.
+        Hook used to prepare the arguments for the request before it is sent. It's applied for
+        each routed method, associated with the model. The final value must be an instance of `Args`.
 
-        This hook is used to prepare the arguments for the request before it is sent.
-        The final value must be an instance of `Args`.
+        Preparer is executed after internal argument parsing. So, all request parameters are available in
+        `Args` model within a preparer.
+
+        Example:
+            ```python
+            from sensei import APIModel, Router, Args, Path
+
+            class Context:
+                token: str
+
+            router = Router('https://api.example.com')
+
+
+            class User(APIModel):
+                email: str
+                id: int
+                first_name: str
+                last_name: str
+                avatar: str
+
+                @staticmethod
+                def __prepare_args__(args: Args) -> Args:
+                    args.headers['Authorization'] = f'Bearer {Context.token}'
+                    return args
+
+                @classmethod
+                @router.get('/users/{id_}')
+                def get(cls, id_: Annotated[int, Path()]) -> "User":
+                    pass
+            ```
 
         Args:
             args (Args): The original arguments.
@@ -84,94 +140,130 @@ class _ModelBase(BaseModel):
     @staticmethod
     def __default_case__(s: str) -> str:
         """
-        Convert the case of all parameters.
-
-        This hook is used to convert the case of all parameters to the desired format.
+        Hook used to convert the case of all parameters.
 
         Args:
-            s (str): The original parameter string.
+            s (str): The original string.
 
         Returns:
-            str: The converted parameter string.
+            str: The converted string.
         """
         return s
 
     @staticmethod
     def __query_case__(s: str) -> str:
         """
-        Convert the case of query parameters.
+        Hook used to convert the case of query parameters.
 
-        This hook is used to convert the case of query parameters to the desired format.
+        Example:
+            ```python
+            from sensei import Router, APIModel, Path, camel_case
+            from typing import Any, Annotated
+
+
+            router = Router('https://reqres.in/api')
+
+
+            class User(APIModel):
+                email: str
+                id: int
+                first_name: str
+                last_name: str
+                avatar: str
+
+                @staticmethod
+                def __query_case__(s: str) -> str:
+                    return camel_case(s)
+
+                @classmethod
+                @router.get('/users/{id_}')
+                def get(cls, id_: Annotated[int, Path()]) -> "User":
+                    pass
+            ```
 
         Args:
-            s (str): The original query parameter string.
+            s (str): The original string.
 
         Returns:
-            str: The converted query parameter string.
+            str: The converted string.
         """
         return s
 
     @staticmethod
     def __body_case__(s: str) -> str:
         """
-        Convert the case of body parameters.
-
-        This hook is used to convert the case of body parameters to the desired format.
+        Hook used to convert the case of body.
 
         Args:
-            s (str): The original body parameter string.
+            s (str): The original string.
 
         Returns:
-            str: The converted body parameter string.
+            str: The converted string.
         """
         return s
 
     @staticmethod
     def __cookie_case__(s: str) -> str:
         """
-        Convert the case of cookie parameters.
-
-        This hook is used to convert the case of cookie parameters to the desired format.
+        Hook used to convert the case of cookies.
 
         Args:
-            s (str): The original cookie parameter string.
+            s (str): The original string.
 
         Returns:
-            str: The converted cookie parameter string.
+            str: The converted string.
         """
         return s
 
     @staticmethod
     def __header_case__(s: str) -> str:
         """
-        Convert the case of header parameters.
-
-        This hook is used to convert the case of header parameters to the desired format.
+        Hook used to convert the case of headers.
 
         Args:
-            s (str): The original header parameter string.
+            s (str): The original string.
 
         Returns:
-            str: The converted header parameter string.
+            str: The converted string.
         """
         return s
 
     @staticmethod
     def __response_case__(s: str) -> str:
         """
-        Convert the case of the JSON response keys.
-
-        This hook is used to convert the case of the JSON response keys to the desired format.
+        Hook used to convert the case of JSON response keys.
 
         Args:
-            s (str): The original JSON key string.
+            s (str): The original string.
 
         Returns:
-            str: The converted JSON key string.
+            str: The converted string.
         """
         return s
 
     def __str__(self):
+        """
+        Get the string representation of the model. Wraps `pydantic` representation through the class name and parenthesis
+
+        Example:
+            ```python
+            @router.get('/pokemon/{name}')
+            def get_pokemon(name: Annotated[str, Path(max_length=300)]) -> Pokemon:
+                pass
+
+
+            pokemon = get_pokemon(name="pikachu")
+            print(pokemon)
+            ```
+
+            ```text
+            Pokemon(name='pikachu' id=25 height=4 weight=60)
+            ```
+
+
+        Returns:
+            str: String representation of the model
+        """
         return f'{self.__class__.__name__}({super().__str__()})'
 
 
@@ -213,28 +305,57 @@ class _ModelMeta(ModelMetaclass):
 
 class APIModel(_ModelBase, metaclass=_ModelMeta):
     """
-    Base class for creating Sensei API models. Don't confuse it with Pydantic BaseModel. It can be used
-    for both validating output data and providing "routed" functions.
+    Base class used to define models for structuring API responses.
+    There is the OOP style of making Sensei models when an `APIModel` class performs both validation and making requests
+    through its routed methods. This style is called **Routed Model**. To use this style, you need to implement a model derived
+    from `APIModel` and add inside routed methods.
 
-    But rools are the same with BaseModel
-    Usage docs: https://docs.pydantic.dev/2.9/concepts/models/
+    You can apply the same techniques as for [`pydantic.BaseModel`](https://docs.pydantic.dev/2.9/concepts/models/){.external-link}
 
-    Examples:
-        >>> from typing import Annotated, Any, Self
-        >>> from sensei import Router, Query, Path, APIModel
-        ...
-        >>> router = Router('https://reqres.in/api')
-        ...
-        >>> class User(APIModel):
-        ...     email: str
-        ...     id: int
-        ...     first_name: str
-        ...     last_name: str
-        ...     avatar: str
-        ...
-        ...     @classmethod
-        ...     @router.get('/users/{id_}')
-        ...     def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self:
-        ...         ...
+    !!! example
+        === "Simple Model"
+            ```python
+            from typing import Annotated, Any
+            from sensei import Router, Path, APIModel
+
+            router = Router('https://example.com/api')
+
+            class User(APIModel):
+                 email: str
+                 id: int
+                 first_name: str
+                 last_name: str
+                 avatar: str
+
+            @router.get('/users/{id_}')
+            def get_user(id_: Annotated[int, Path()]) -> User:
+                pass
+
+            user = get_user(1)
+            print(user.email)
+            ```
+
+        === "Routed Model"
+            ```python
+            from typing import Annotated, Any
+            from sensei import Router, Path, APIModel
+
+            router = Router('https://example.com/api')
+
+            class User(APIModel):
+                 email: str
+                 id: int
+                 first_name: str
+                 last_name: str
+                 avatar: str
+
+                 @classmethod
+                 @router.get('/users/{id_}')
+                 def get(cls, id_: Annotated[int, Path()]) -> "User":
+                     pass
+
+            user = User.get(1)
+            print(user.email)
+            ```
     """
     pass

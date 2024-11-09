@@ -4,7 +4,7 @@ You, too, might use these objects, and you don't suspect it.
 
 /// tip
 If you don't know, why [`httpx`](https://www.python-httpx.org) is better than the `requests` library, you should read
-[HTTP Requests/Introducing `httpx`](/learn/http_requests.html#introducing-httpx)
+[HTTP Requests/Introducing `httpx`](/learn/http_requests.html#introducing-httpx){.internal-link}
 ///
 
 When you make a simple request, like the following:
@@ -130,7 +130,7 @@ client.close()
 ```
 
 Furthermore, a client can be used for advanced request configuration. You can read 
-[the article](https://www.python-httpx.org/advanced/clients/) from the [`httpx`](https://www.python-httpx.org) 
+[the article](https://www.python-httpx.org/advanced/clients/){.external-link} from the [`httpx`](https://www.python-httpx.org) 
 documentation, to learn more about `httpx.Client`.
 
 When you call routed functions, Sensei makes the same: Open client → Make request → Close client.
@@ -271,7 +271,7 @@ print(manager.empty()) # Output: True
 
 ## Rate Limiting
 
-Many APIs enforce [rate limits](https://en.wikipedia.org/wiki/Rate_limiting) to control how frequently clients can make
+Many APIs enforce [rate limits](https://en.wikipedia.org/wiki/Rate_limiting){.external-link} to control how frequently clients can make
 requests. You can add automatic waiting between requests, based on the period and the maximum number of requests allowed per this
 period. This is achieved through a `RateLimit` instance 
             

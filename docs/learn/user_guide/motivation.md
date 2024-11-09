@@ -1,5 +1,5 @@
 If you are already motivated to use the framework, go to
-[First steps](/learn/user_guide/first_steps.html)
+[First steps](/learn/user_guide/first_steps.html){.internal-link}
 
 ```mermaid
 mindmap
@@ -68,8 +68,8 @@ But mostly it's hard to implement both versions of the code, following the DRY p
 Most of the attempts lead to code duplication or bad code architecture.
 
 ///info
-[DRY (Don't Repeat Yourself)](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) principle is a software development concept aimed at reducing the repetition of code and
-logic.
+[DRY (Don't Repeat Yourself)](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself){.external-link} principle is a 
+software development concept aimed at reducing the repetition of code and logic.
 The idea is that every piece of knowledge or logic should be represented in a single place in your codebase, and no
 duplications
 should exist. If you find yourself copying and pasting code, that’s a sign you’re violating DRY.
@@ -461,7 +461,7 @@ avoiding the delay between sending a request to the server and waiting for the r
 
 ##### API Rate Limits
 
-Many APIs enforce [rate limits](https://en.wikipedia.org/wiki/Rate_limiting) to control how frequently clients can make
+Many APIs enforce [rate limits](https://en.wikipedia.org/wiki/Rate_limiting){.external-link} to control how frequently clients can make
 requests.
 By validating client-side, you reduce the chance of consuming API calls with invalid requests, preventing hitting
 rate limits unnecessarily.
@@ -760,4 +760,4 @@ graph TD
     E[Signature-Driven] --> C
 ```
 
-Let's go to [the first steps](/learn/user_guide/first_steps.html) of your learning curve!
+Let's go to [the first steps](/learn/user_guide/first_steps.html){.internal-link} of your learning curve!
