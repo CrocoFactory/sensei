@@ -5,14 +5,14 @@
 </h1><br>
 </a>
 
-*Build robust HTTP Requests with minimal implementation*
+*Build robust HTTP Requests and best API clients with minimal implementation*
 
 [![Python versions](https://img.shields.io/pypi/pyversions/sensei?color=%23F94526)](https://pypi.org/project/sensei/)
 [![PyPi Version](https://img.shields.io/pypi/v/sensei?color=%23F94526)](https://pypi.org/project/sensei/)
 [![Coverage](https://raw.githubusercontent.com/CrocoFactory/sensei/main/badges/coverage.svg)](https://pypi.org/project/sensei/)
 
-The Python framework that provides a quick way to build robust HTTP requests. Use type hints, to build requests, with
-little or no implementation
+The Python framework that provides a quick way to build robust HTTP requests and best API clients. Use type hints, to build requests, with
+little or no implementation.
 
 ---
 
@@ -32,7 +32,7 @@ There are key features provided by `sensei`:
 
 ## Quick Overview
 
-API Wrapper should provide these features for users:
+API Client (or API Wrapper) should provide these features for users:
 
 - Provide sync and async code versions
 - Validate data before accessing the API.
