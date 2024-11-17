@@ -16,9 +16,9 @@ mindmap
         Refactoring(Refactoring)
 ```
 
-## What is API Wrapper?
+## What is API Wrapper(Client)?
 
-API wrapper is a client-side code that simplifies the interaction between a client application and a
+API Wrapper (or API Client) is a client-side code that simplifies the interaction between a client application and a
 web API.
 Wrappers abstract the complexity of making HTTP requests, handling responses, and processing data, allowing
 developers
