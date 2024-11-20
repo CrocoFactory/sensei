@@ -145,7 +145,9 @@ call [response type](/learn/user_guide/params_response.html#response-types){.int
 This "omitting" pattern is called **Interface-driven function** or **Signature-driven function**, because we do not
 write any code achieving
 the result. We dedicate this responsibility to some tool, parsing the function's interface(signature). According to
-it, the tool handles a call automatically. This pattern is the key to how Sensei achieves declarative code style.
+it, the tool handles a call automatically. This pattern is the key to how Sensei achieves declarative and 
+[metaprogramming](https://en.wikipedia.org/wiki/Metaprogramming#:~:text=Metaprogramming%20is%20a%20computer%20programming,even%20modify%20itself%2C%20while%20running.) 
+code styles.
 ///
 
 ### Step 5: Making the API Call
