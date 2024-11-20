@@ -1,5 +1,5 @@
 site_name: Sensei
-site_description: The Python framework, providing a quick way to build API wrappers. Use type annotations to build requests with little or no implementation.
+site_description: The Python framework that provides a quick way to build robust HTTP requests and best API clients. Use type hints, to build requests, with little or no implementation.
 site_url: https://sensei.crocofactory.dev
 use_directory_urls: false
 
