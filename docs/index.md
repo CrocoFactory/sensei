@@ -35,12 +35,6 @@ There are key features provided by `sensei`:
 - **Sync/Async:** Implement sync and async quickly, without headaches ⚡
 - **Robust:** Auto validation data before and after request 🛡️️
 
-Table of Contents:
-1. [First Request](#first-request)
-2. [Comparison](#comparison)
-3. [OOP Style](#oop-style)
-4. [Installing](#installing)
-
 ## First Request
 
 Do you want to see the simplest and most robust HTTP Request? He's already here!
