@@ -24,7 +24,7 @@ little or no implementation.
 
 <a href="https://pypi.org/project/sensei/">
 <h1 align="center">
-<img alt="Logo Banner" src="https://raw.githubusercontent.com/CrocoFactory/sensei/dev/assets/mindmap.svg" width="300">
+<img alt="Logo Banner" src="https://raw.githubusercontent.com/CrocoFactory/sensei/main/assets/mindmap.svg" height="350px">
 </h1><br>
 </a>
     
@@ -145,11 +145,11 @@ postprocessing as `finalize`
 
 ## Comparison
 
-**Sensei**: It provides a high level of abstraction. Sensei simplifies creating API wrappers, offering decorators for 
+**Sensei** 👍: It provides a high level of abstraction. Sensei simplifies creating API wrappers, offering decorators for 
 easy routing, data validation, and automatic mapping of API responses to models. This reduces boilerplate and improves 
 code readability and maintainability.
 
-**Bare HTTP Client**: A bare HTTP client like `requests` or `httpx` requires manually managing requests, 
+**Bare HTTP Client** 👎: A bare HTTP client like `requests` or `httpx` requires manually managing requests, 
 handling response parsing, data validation, and error handling. You have to write repetitive code for each endpoint.
 
 
