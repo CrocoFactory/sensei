@@ -24,7 +24,7 @@ little or no implementation.
 
 <a href="https://pypi.org/project/sensei/">
 <h1 align="center">
-<img alt="Logo Banner" src="https://raw.githubusercontent.com/CrocoFactory/sensei/main/assets/mindmap.svg" height="350px">
+<img alt="Mindmap" src="https://raw.githubusercontent.com/CrocoFactory/sensei/main/assets/mindmap.svg" height="350px">
 </h1><br>
 </a>
     
@@ -34,6 +34,12 @@ There are key features provided by `sensei`:
 - **Short:** Avoid code duplication 🧹 
 - **Sync/Async:** Implement sync and async quickly, without headaches ⚡
 - **Robust:** Auto validation data before and after request 🛡️️
+
+Table of Contents:
+1. [First Request](#first-request)
+2. [Comparison](#comparison)
+3. [OOP Style](#oop-style)
+4. [Installing](#installing)
 
 ## First Request
 
@@ -97,6 +103,15 @@ By calling `get_pokemon(name="pikachu")`, Sensei automatically handles validatio
 and maps the API response into the `Pokemon` model. The code omits the function body since Sensei handles calls through
 the function's signature.
 
+## Comparison
+
+**Sensei** 👍: It provides a high level of abstraction. Sensei simplifies creating API wrappers, offering decorators for 
+easy routing, data validation, and automatic mapping of API responses to models. This reduces boilerplate and improves 
+code readability and maintainability.
+
+**Bare HTTP Client** 👎: A bare HTTP client like `requests` or `httpx` requires manually managing requests, 
+handling response parsing, data validation, and error handling. You have to write repetitive code for each endpoint.
+
 ## OOP Style
 
 There is a wonderful OOP approach proposed by Sensei:
@@ -141,19 +156,9 @@ user.login() # User(id=1, email="john@example.com", first_name="John", ...)
 ```
 
 When Sensei doesn't know how to handle a request, you can do it yourself, using preprocessing as `prepare` and 
-postprocessing as `finalize` 
+postprocessing as `finalize`
 
-## Comparison
-
-**Sensei** 👍: It provides a high level of abstraction. Sensei simplifies creating API wrappers, offering decorators for 
-easy routing, data validation, and automatic mapping of API responses to models. This reduces boilerplate and improves 
-code readability and maintainability.
-
-**Bare HTTP Client** 👎: A bare HTTP client like `requests` or `httpx` requires manually managing requests, 
-handling response parsing, data validation, and error handling. You have to write repetitive code for each endpoint.
-
-
-## Installing sensei
+## Installing
 To install `sensei` from PyPi, you can use that:
 
 ```shell
