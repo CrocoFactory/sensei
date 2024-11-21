@@ -1,11 +1,11 @@
 [tool.poetry]
 name = 'sensei'
-version = '0.1.1.post2'
+version = '0.1.1.post3'
 description = 'The Python framework that provides a quick way to build robust HTTP requests and best API clients. Use type hints, to build requests, with little or no implementation.'
 authors = ['Alexey  <axbelenkov@gmail.com>']
 license = 'MIT'
 readme = 'README.md'
-keywords = ['api', 'client', 'api-client', 'api-wrapper', 'python-client', 'http-client', 'rest-api', 'pydantic', 'httpx']
+keywords = ['api', 'client', 'api-client', 'api-wrapper', 'python-client', 'http-client', 'rest-api', 'pydantic', 'httpx', 'http-requests', 'requests']
 classifiers = [
     'Development Status :: 4 - Beta',
     'Intended Audience :: Developers',

@@ -21,28 +21,19 @@ little or no implementation.
 **Source code:** [https://github.com/CrocoFactory/sensei](https://github.com/CrocoFactory/sensei)
 
 ---
+
+<a href="https://pypi.org/project/sensei/">
+<h1 align="center">
+<img alt="Logo Banner" src="https://raw.githubusercontent.com/CrocoFactory/sensei/dev/assets/mindmap.svg" width="300">
+</h1><br>
+</a>
     
 There are key features provided by `sensei`:
 
-- **Fast:** Do not write any request-handling code, dedicate responsibility to the function's interface(signature)
-- **Short:** Avoid code duplication. 
-- **Sync/Async:** Implement sync and async quickly, without headaches
-- **Robust:** Auto validation data before and after request
-
-
-## Quick Overview
-
-API Client (or API Wrapper) should provide these features for users:
-
-- Provide sync and async code versions
-- Validate data before accessing the API.
-- Handle RPS (Requests per second) limits.
-- Return relevant response
-
-And as a developer, you want to avoid code duplication and make routine things faster. To follow all these principles,
-you either violate DRY or have to maintain bad code architecture.
-
-**Sensei is a tool to avoid these issues.**
+- **Fast:** Do not write any request-handling code, dedicate responsibility to the function's interface(signature) 🚀
+- **Short:** Avoid code duplication 🧹 
+- **Sync/Async:** Implement sync and async quickly, without headaches ⚡
+- **Robust:** Auto validation data before and after request 🛡️️
 
 ## First Request
 
@@ -105,6 +96,62 @@ This uses `Annotated` to ensure that `name` is a string and adheres to the valid
 By calling `get_pokemon(name="pikachu")`, Sensei automatically handles validation, makes the HTTP request,
 and maps the API response into the `Pokemon` model. The code omits the function body since Sensei handles calls through
 the function's signature.
+
+## OOP Style
+
+There is a wonderful OOP approach proposed by Sensei:
+
+```python
+class User(APIModel):
+    email: EmailStr
+    id: PositiveInt
+    first_name: str
+    last_name: str
+    avatar: AnyHttpUrl
+
+    @classmethod
+    @router.get('/users')
+    def query(
+            cls,
+            page: Annotated[int, Query()] = 1,
+            per_page: Annotated[int, Query(le=7)] = 3
+    ) -> list[Self]:
+        pass
+
+    @classmethod
+    @router.get('/users/{id_}')
+    def get(cls, id_: Annotated[int, Path(alias='id')]) -> Self: 
+        pass
+
+    @router.post('/token')
+    def login(self) -> str: 
+        pass
+
+    @login.prepare
+    def _login_in(self, args: Args) -> Args:
+        args.json_['email'] = self.email
+        return args
+
+    @login.finalize
+    def _login_out(self, response: Response) -> str:
+        return response.json()['token']
+
+user = User.get(1)
+user.login() # User(id=1, email="john@example.com", first_name="John", ...)
+```
+
+When Sensei doesn't know how to handle a request, you can do it yourself, using preprocessing as `prepare` and 
+postprocessing as `finalize` 
+
+## Comparison
+
+**Sensei**: It provides a high level of abstraction. Sensei simplifies creating API wrappers, offering decorators for 
+easy routing, data validation, and automatic mapping of API responses to models. This reduces boilerplate and improves 
+code readability and maintainability.
+
+**Bare HTTP Client**: A bare HTTP client like `requests` or `httpx` requires manually managing requests, 
+handling response parsing, data validation, and error handling. You have to write repetitive code for each endpoint.
+
 
 ## Installing sensei
 To install `sensei` from PyPi, you can use that:
