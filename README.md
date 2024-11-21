@@ -23,9 +23,9 @@ little or no implementation.
 ---
 
 <a href="https://pypi.org/project/sensei/">
-<h1 align="center">
+<p align="center">
 <img alt="Mindmap" src="https://raw.githubusercontent.com/CrocoFactory/sensei/main/assets/mindmap.svg" height="350px">
-</h1><br>
+</p><br>
 </a>
     
 There are key features provided by `sensei`:
