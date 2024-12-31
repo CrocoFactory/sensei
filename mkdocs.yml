@@ -94,15 +94,15 @@ nav:
       - Preparers/Finalizers: learn/user_guide/preparers_finalizers.md
       - Routed Model: learn/user_guide/routed_model.md
       - Managing Requests: learn/user_guide/managing_requests.md
-  - API Documentation:
-      - api_documentation/index.md
-      - api_documentation/api_model.md
-      - api_documentation/case_converters.md
-      - api_documentation/manager.md
-      - api_documentation/parameters.md
-      - api_documentation/rate_limit.md
-      - api_documentation/routed_function.md
-      - api_documentation/router.md
+  - Reference:
+      - reference/index.md
+      - reference/api_model.md
+      - reference/case_converters.md
+      - reference/manager.md
+      - reference/parameters.md
+      - reference/rate_limit.md
+      - reference/routed_function.md
+      - reference/router.md
   - Sensei People: people.md
 
 plugins:
